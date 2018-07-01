@@ -1,0 +1,16 @@
+[package]
+name = "proc-gen-experiment"
+version = "0.1.0"
+authors = ["Thomas Cheng <thomascheng1998@googlemail.com>"]
+
+[dependencies]
+specs = "*"
+image = "*"
+gfx = "0.17"
+glutin = "0.16"
+gfx_window_glutin = "0.24"
+gfx_device_gl = "0.15"
+failure = "0.1"
+failure_derive = "0.1"
+rand = "0.5"
+rusttype = "0.6"
