@@ -4,7 +4,8 @@ version = "0.1.0"
 authors = ["Thomas Cheng <thomascheng1998@googlemail.com>"]
 
 [dependencies]
-specs = "*"
+specs = "0.12"
+specs-derive = "0.2"
 image = "*"
 gfx = "0.17"
 glutin = "0.16"
