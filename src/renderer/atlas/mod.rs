@@ -74,6 +74,47 @@ impl UvRect {
     }
 }
 
+#[derive(Debug, Clone)]
+pub struct Tileset {
+    /// The rect fot the whole tileset
+    pub rect: UvRect,
+    /// Width in tiles
+    pub w: u32,
+    /// Height in tiles
+    pub h: u32,
+}
+
+impl Tileset {
+    /// X Y W H pixel rect
+    /// #Params
+    /// neg_border is an additional pixel-space offset for the edges of the UV
+    /// rect. This is useful for textures like 1x1 white squares, where the UV
+    /// coordinates will include the surrounding pixels too.
+    /// # Params
+    /// Same as UvRect::from_pixel_rect, but with:
+    /// * `tiles_x` - The amount of tiles in this tileset width-wise
+    /// * `tiles_y` - The amount of tiles in this tileset width-wise
+    pub fn from_pixel_rect(rect: &[u16; 4], w: u16, h: u16, neg_border: f32, tiles_x: u32, tiles_y: u32) -> Self {
+        Tileset {
+            rect: UvRect::from_pixel_rect(rect, w, h, neg_border),
+            w: tiles_x,
+            h: tiles_y
+        }
+    }
+
+    /// Get the UvRect of a given tile in this set
+    pub fn tile(&self, x: u32, y: u32) -> UvRect {
+        let total_w = self.rect.right - self.rect.left;
+        let total_h = self.rect.bottom - self.rect.top;
+        UvRect {
+            left: self.rect.left + x as f32 * (total_w / self.w as f32),
+            right: self.rect.left + (x+1) as f32 * (total_w / self.w as f32),
+            top: self.rect.top + y as f32 * (total_h / self.h as f32),
+            bottom: self.rect.top + (y+1) as f32 * (total_h / self.h as f32),
+        }
+    }
+}
+
 /// Used to build a texture atlas, and a matching texture.
 /// K - The type of key used to map texture UVs.
 pub struct AtlasBuilder<K : Ord> {
@@ -132,6 +173,30 @@ impl<K : Ord> AtlasBuilder<K> {
             key,
             UvRect::from_pixel_rect(&pixel_rect_unpadded,
                                     self.width, self.height, border_offset));
+        self.blit(&img_buf[..], &pixel_rect_unpadded);
+        Ok(self)
+    }
+
+    /// # Params
+    /// * border_offset - See add_tex()
+    /// * `tiles_x` - Amount of tiles width-wise
+    /// * `tiles_y` - Amount of tiles height-wise
+    pub fn add_tilemap<P: AsRef<Path>>(mut self, key: K, img_path: P, border_offset: f32,
+                                   tiles_x: u32, tiles_y: u32) -> Result<Self, AtlasPackErr> {
+        // Load the texture
+        let img = image::open(img_path)?.to_rgba();
+        let (w, h) = img.dimensions();
+        let img_buf = img.into_raw();
+        let pixel_rect = self.bin_pack_tree.pack_rect(w as u16 + SPACING*2, h as u16 + SPACING*2)?;
+        let pixel_rect_unpadded = [
+            pixel_rect[0]+SPACING,
+            pixel_rect[1]+SPACING,
+            pixel_rect[2]-SPACING*2,
+            pixel_rect[3]-SPACING*2];
+        self.atlas.tilesets.insert(
+            key,
+            Tileset::from_pixel_rect(&pixel_rect_unpadded, self.width,
+                                     self.height, border_offset, tiles_x, tiles_y));
         self.blit(&img_buf[..], &pixel_rect_unpadded);
         Ok(self)
     }
@@ -217,6 +282,7 @@ pub struct TextureAtlas<K : Ord> {
     textures : BTreeMap<K, UvRect>,
     /// Maps chars to UV rects
     glyphs : BTreeMap<char, (UvRect, PositionedGlyph<'static>)>,
+    tilesets: BTreeMap<K, Tileset>,
 }
 
 impl<K : Ord> TextureAtlas<K> {
@@ -224,6 +290,7 @@ impl<K : Ord> TextureAtlas<K> {
         TextureAtlas {
             textures: BTreeMap::new(),
             glyphs: BTreeMap::new(),
+            tilesets: BTreeMap::new(),
         }
     }
 
@@ -233,5 +300,9 @@ impl<K : Ord> TextureAtlas<K> {
 
     pub fn rect_for_key(&self, k: K) -> Option<&UvRect> {
         self.textures.get(&k)
+    }
+
+    pub fn rect_for_tileset(&self, k: K) -> Option<&Tileset> {
+        self.tilesets.get(&k)
     }
 }
