@@ -124,31 +124,10 @@ impl Renderer {
         // Create the encoder
         let encoder : gfx::Encoder<_, _> = factory.create_command_buffer().into();
 
-        // Allocate CPU side vertex buffer.
-        let mut v_buf = vec![Default::default(); V_BUF_SIZE];
-        {
-            let white = atlas.rect_for_key(TextureKey::White).unwrap();
-            v_buf[0] = Vertex {
-                pos: [0.0, 0.0],
-                col: [1.0, 1.0, 1.0, 1.0],
-                uv: [white.left, white.top],
-            };
-            v_buf[1] = Vertex {
-                pos: [100.0, 0.0],
-                col: [1.0, 1.0, 1.0, 1.0],
-                uv: [white.right, white.top],
-            };
-            v_buf[2] = Vertex {
-                pos: [100.0, 100.0],
-                col: [1.0, 1.0, 1.0, 1.0],
-                uv: [white.right, white.bottom],
-            };
-        }
-
         // Allocate buffers
         let transform_buffer = factory.create_constant_buffer(1);
 
-        let vertex_buffer = factory.create_buffer::<Vertex>(v_buf.len(), Role::Vertex, Usage::Dynamic, Bind::SHADER_RESOURCE).unwrap();
+        let vertex_buffer = factory.create_buffer::<Vertex>(V_BUF_SIZE, Role::Vertex, Usage::Dynamic, Bind::SHADER_RESOURCE).unwrap();
 
         let transform = Transform {
             proj: gen_ortho_mat(0.0, 800.0, 0.0, 600.0, -1.0, 1.0),
