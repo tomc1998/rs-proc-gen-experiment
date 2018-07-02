@@ -21,6 +21,7 @@ use gfx::Device;
 use gfx_window_glutin as gfx_glutin;
 use glutin::{GlRequest, GlContext};
 use glutin::Api::OpenGl;
+use std::time;
 
 /// Empty specs::System to use in the dispatcher as a combiner for system
 /// dependencies.
@@ -94,7 +95,10 @@ fn main() {
 
     let mut should_close = false;
 
+    /// Number of frames until we print another frame time
+    let mut fps_count_timer = 60;
     while !should_close {
+        let start = time::Instant::now();
         input_state.process_input(&input_map, &mut events_loop);
         should_close = input_state.should_close;
         if should_close { break; } // Early return for speedy exit
@@ -108,5 +112,12 @@ fn main() {
 
         window.swap_buffers().unwrap();
         device.cleanup();
+        let elapsed = start.elapsed();
+        if fps_count_timer <= 0 {
+            println!("Time taken (millis): {:?}",
+                     elapsed.as_secs() * 1000 + elapsed.subsec_millis() as u64);
+            fps_count_timer = 60;
+        }
+        fps_count_timer -= 1;
     }
 }

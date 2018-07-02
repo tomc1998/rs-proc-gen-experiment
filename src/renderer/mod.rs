@@ -14,7 +14,7 @@ use gfx_device_gl::Factory;
 use gfx::memory::{Usage, Bind};
 use gfx_device_gl::{Resources, CommandBuffer, Device};
 
-pub const V_BUF_SIZE: usize = 2048;
+pub const V_BUF_SIZE: usize = 65536;
 const BLACK: [f32; 4] = [0.0, 0.0, 0.0, 1.0];
 
 pub type ColorFormat = gfx::format::Srgba8;
@@ -183,7 +183,9 @@ impl Renderer {
         // Update the GPU side vertices
         // TODO: if we haven't updated v_buf cpu side we can potentially skip
         // this as an optimisation
-        self.encoder.update_buffer(&self.data.v_buf, &vertex_buffer.v_buf[..], 0).unwrap();
+        self.encoder.update_buffer(&self.data.v_buf,
+                                   &vertex_buffer.v_buf[0..vertex_buffer.size as usize],
+                                   0).unwrap();
 
         let slice = Slice {
             start: 0,
