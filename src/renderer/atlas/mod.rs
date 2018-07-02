@@ -181,7 +181,7 @@ impl<K : Ord> AtlasBuilder<K> {
     /// * border_offset - See add_tex()
     /// * `tiles_x` - Amount of tiles width-wise
     /// * `tiles_y` - Amount of tiles height-wise
-    pub fn add_tilemap<P: AsRef<Path>>(mut self, key: K, img_path: P, border_offset: f32,
+    pub fn add_tileset<P: AsRef<Path>>(mut self, key: K, img_path: P, border_offset: f32,
                                    tiles_x: u32, tiles_y: u32) -> Result<Self, AtlasPackErr> {
         // Load the texture
         let img = image::open(img_path)?.to_rgba();

@@ -2,9 +2,10 @@ mod atlas;
 mod tex_key;
 mod paint_sys;
 
-use self::atlas::*;
+pub use self::tex_key::TextureKey;
 pub use self::paint_sys::*;
-use self::tex_key::TextureKey;
+
+use self::atlas::*;
 use std::default::Default;
 use gfx::{IndexBuffer, Slice, self};
 use gfx::handle::RenderTargetView;
@@ -120,6 +121,7 @@ impl Renderer {
                       .into_iter(),
                       32.0).unwrap()
             .add_tex(TextureKey::White, "res/white.png", 0.5).unwrap()
+            .add_tileset(TextureKey::TilesetGrass, "res/tileset-grass.png", 0.5, 16, 16).unwrap()
             .build(factory);
         let sampler = factory.create_sampler_linear();
 

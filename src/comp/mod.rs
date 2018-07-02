@@ -1,6 +1,7 @@
 //! Components for the ECS
 
 use specs::{DenseVecStorage, HashMapStorage};
+use renderer;
 
 #[derive(Component)]
 pub struct Pos {
@@ -33,6 +34,7 @@ pub struct DebugRender {
 
 /// An anum of tilesets. Named this way to avoid collisions with
 /// renderer::atlas::Tileset.
+#[derive(Clone, Copy, Debug)]
 pub enum TilesetEnum {
     /// 0 - Dirt
     /// 1 - Grass
@@ -40,8 +42,16 @@ pub enum TilesetEnum {
     Grass,
 }
 
+impl TilesetEnum {
+    pub fn convert_to_tex_key(&self) -> renderer::TextureKey {
+        match *self {
+            TilesetEnum::Grass => renderer::TextureKey::TilesetGrass,
+        }
+    }
+}
+
 /// The width / height of tilemaps.
-pub const TILEMAP_SIZE : usize = 32;
+pub const TILEMAP_SIZE : usize = 16;
 
 /// A tilemap component. Coupled with a Pos component (for offset), this will
 /// render a tilemap at a given position with the given tileset.
@@ -52,5 +62,5 @@ pub struct Tilemap {
     pub tileset: TilesetEnum,
     /// Each u8 will correspond to a tile. This is defined implicitly by the
     /// TilesetEnum.
-    pub data: [u8; TILEMAP_SIZE],
+    pub data: [u8; TILEMAP_SIZE * TILEMAP_SIZE],
 }
