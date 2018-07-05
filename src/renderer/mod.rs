@@ -14,11 +14,27 @@ use gfx_device_gl::Factory;
 use gfx::memory::{Usage, Bind};
 use gfx_device_gl::{Resources, CommandBuffer, Device};
 
-pub const V_BUF_SIZE: usize = 65536;
+pub const V_BUF_SIZE: usize = 262144;
 const BLACK: [f32; 4] = [0.0, 0.0, 0.0, 1.0];
 
 pub type ColorFormat = gfx::format::Srgba8;
 pub type DepthFormat = gfx::format::DepthStencil;
+
+pub struct Camera {
+    x: f32,
+    y: f32,
+    w: f32,
+    h: f32,
+}
+
+impl Camera {
+    pub fn new(w: f32, h: f32) -> Camera {
+        Camera { x: 0.0, y: 0.0, w: w, h: h }
+    }
+    pub fn gen_ortho_mat(&self) -> [[f32; 4]; 4] {
+        gen_ortho_mat(self.x, self.x + self.w, self.y, self.y + self.h, -1.0, 1.0)
+    }
+}
 
 /// State for rendering. Passed to the render function.
 fn gen_ortho_mat(l: f32, r: f32, t: f32, b: f32, n: f32, f: f32) -> [[f32; 4]; 4] {
@@ -179,7 +195,9 @@ impl Renderer {
     /// Actually issue the draw commands to the GPU. This should be called after
     /// the ECS has run. Device can't be sent over threads, so this is the
     /// simplest way to call draw.
-    pub fn flush_render(&mut self, device: &mut Device, vertex_buffer: &VertexBuffer) {
+    pub fn flush_render(&mut self, device: &mut Device,
+                        vertex_buffer: &VertexBuffer,
+                        camera: &Camera) {
         // Update the GPU side vertices
         // TODO: if we haven't updated v_buf cpu side we can potentially skip
         // this as an optimisation
@@ -195,8 +213,7 @@ impl Renderer {
             buffer: IndexBuffer::Auto,
         };
 
-        let (l, r, t, b) = (0.0, self.window_size.0 as f32, 0.0, self.window_size.1 as f32);
-        self.transform.proj = gen_ortho_mat(l, r, t, b, -1.0, 1.0);
+        self.transform.proj = camera.gen_ortho_mat();
         self.encoder.update_buffer(&self.data.transform, &[self.transform], 0).unwrap();
         self.encoder.clear(&self.color_view, BLACK);
         self.encoder.draw(&slice, &self.pso, &self.data);

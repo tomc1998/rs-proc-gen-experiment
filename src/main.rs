@@ -57,6 +57,7 @@ fn main() {
 
     let (w, h) = window.get_inner_size().unwrap();
     let (mut renderer, atlas) = renderer::Renderer::new(&mut factory, color_view, w, h, Default::default());
+    let camera = renderer::Camera::new(w as f32, h as f32);
 
     // Create the ECS world, and a test entity
     let mut world = create_world();
@@ -66,11 +67,15 @@ fn main() {
         .with(comp::Vel { x: 0.0, y: 0.0 })
         .with(comp::PlayerControlled { move_speed: 100.0 })
         .with(comp::DebugRender { w: 64.0, h: 64.0, col: [1.0, 0.0, 0.0, 1.0] });
-    // Create tilemap
-    world.create_entity()
-        .with(comp::Pos { x: 100.0, y: 100.0 })
-        .with(comp::Tilemap { tileset: comp::TilesetEnum::Grass,
-                              data: [0u8; comp::TILEMAP_SIZE * comp::TILEMAP_SIZE] });
+    // Create tilemaps
+    for x in 0..10 {
+        for y in 0..10 {
+            world.create_entity()
+                .with(comp::Pos { x: x as f32 * (32.0 * 16.0), y: y as f32 * (32.0 * 16.0) })
+                .with(comp::Tilemap { tileset: comp::TilesetEnum::Grass,
+                                      data: [0u8; comp::TILEMAP_SIZE * comp::TILEMAP_SIZE] });
+        }
+    }
 
     let input_map = input::InputMap::new();
     let mut input_state = input::InputState::new();
@@ -78,6 +83,7 @@ fn main() {
     // Allocate cpu side v_buf
     let v_buf = vec![Default::default(); renderer::V_BUF_SIZE];
     world.add_resource(atlas);
+    world.add_resource(camera);
     world.add_resource(input_state.clone());
     world.add_resource(sys_phys::DeltaTime(0.016));
     world.add_resource(renderer::VertexBuffer {
@@ -89,13 +95,13 @@ fn main() {
         .with(sys_control::PlayerControllerSys, "player_controller", &[])
         .with(sys_phys::PhysSys, "phys", &["player_controller"])
         .with(MarkerSys, "update", &["phys", "player_controller"])
-        .with(renderer::DebugPainter, "debug_paint", &["update"])
         .with(renderer::TilemapPainter, "tilemap_paint", &["update"])
+        .with(renderer::DebugPainter, "debug_paint", &["update"])
         .build();
 
     let mut should_close = false;
 
-    /// Number of frames until we print another frame time
+    // Number of frames until we print another frame time
     let mut fps_count_timer = 60;
     while !should_close {
         let start = time::Instant::now();
@@ -107,7 +113,7 @@ fn main() {
         world.add_resource(input_state.clone());
         dispatcher.dispatch(&mut world.res);
         let mut v_buf = world.write_resource::<renderer::VertexBuffer>();
-        renderer.flush_render(&mut device, &v_buf);
+        renderer.flush_render(&mut device, &v_buf, &world.read_resource::<renderer::Camera>());
         v_buf.size = 0; // After painting, we need to clear the v_buf
 
         window.swap_buffers().unwrap();

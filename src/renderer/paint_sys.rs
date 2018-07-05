@@ -38,11 +38,12 @@ pub struct TilemapPainter;
 impl<'a> System<'a> for TilemapPainter {
     type SystemData = (
         WriteExpect<'a, VertexBuffer>,
+        ReadExpect<'a, Camera>,
         ReadExpect<'a, TextureAtlas<TextureKey>>,
         ReadStorage<'a, Pos>,
         ReadStorage<'a, Tilemap>);
 
-    fn run(&mut self, (mut vertex_buffer, atlas, pos_s, tm_s): Self::SystemData) {
+    fn run(&mut self, (mut vertex_buffer, camera, atlas, pos_s, tm_s): Self::SystemData) {
         use specs::Join;
 
         let mut ix = vertex_buffer.size as usize;
@@ -51,6 +52,17 @@ impl<'a> System<'a> for TilemapPainter {
             ix += 6;
             for x in 0..TILEMAP_SIZE {
                 for y in 0..TILEMAP_SIZE {
+                    // Camera frustum cull.
+                    // TODO: This is slower than it could be, even though branch
+                    // prediction for something like this should be pretty fast
+                    // - we should just loop over the tiles that we need to
+                    // draw.
+                    let x_pos = pos.x + x as f32 * 32.0;
+                    let y_pos = pos.y + y as f32 * 32.0;
+                    if x_pos + 32.0 < camera.x || x_pos > camera.x + camera.w ||
+                        y_pos + 32.0 < camera.y || y_pos > camera.y + camera.h {
+                            continue;
+                        }
                     // Figure out the tile ix
                     let (tx, ty) = match tm.tileset {
                         TilesetEnum::Grass => match tm.data[x + y * TILEMAP_SIZE] {
