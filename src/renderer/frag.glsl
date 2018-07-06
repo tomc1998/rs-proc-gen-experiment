@@ -8,5 +8,5 @@ in vec2 v_uv;
 out vec4 col;
 
 void main() {
-  col = v_col * texture(tex, v_uv);
+  col = v_col * texture(tex, v_uv + (vec2(0.5, 0.5) / textureSize(tex, 0)));
 }

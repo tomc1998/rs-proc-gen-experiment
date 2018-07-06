@@ -136,10 +136,13 @@ impl Renderer {
                       .and(Charset::common_punc())
                       .into_iter(),
                       32.0).unwrap()
-            .add_tex(TextureKey::White, "res/white.png", 0.5).unwrap()
-            .add_tileset(TextureKey::TilesetGrass, "res/tileset-grass.png", 0.5, 8, 8).unwrap()
+            .add_tex(TextureKey::White, "res/white.png").unwrap()
+            .add_tileset(TextureKey::TilesetGrass, "res/tileset-grass.png", 8, 8).unwrap()
             .build(factory);
-        let sampler = factory.create_sampler_linear();
+        let sampler = factory.create_sampler(
+            gfx::texture::SamplerInfo::new(
+                gfx::texture::FilterMethod::Scale,
+                gfx::texture::WrapMode::Clamp));
 
         // Create the encoder
         let encoder : gfx::Encoder<_, _> = factory.create_command_buffer().into();

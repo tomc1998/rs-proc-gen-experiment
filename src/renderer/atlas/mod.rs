@@ -59,16 +59,12 @@ pub struct UvRect {
 
 impl UvRect {
     // X Y W H pixel rect
-    // #Params
-    // neg_border is an additional pixel-space offset for the edges of the UV
-    // rect. This is useful for textures like 1x1 white squares, where the UV
-    // coordinates will include the surrounding pixels too.
-    pub fn from_pixel_rect(rect: &[u16; 4], w: u16, h: u16, neg_border: f32) -> UvRect {
+    pub fn from_pixel_rect(rect: &[u16; 4], w: u16, h: u16) -> UvRect {
         UvRect {
-            left: (rect[0] as f32 + neg_border) / w as f32,
-            top: (rect[1] as f32 + neg_border) / h as f32,
-            right: ((rect[2] + rect[0]) as f32 - neg_border) / w as f32,
-            bottom: ((rect[3] + rect[1]) as f32 - neg_border) / h as f32,
+            left: (rect[0] as f32) / w as f32,
+            top: (rect[1] as f32) / h as f32,
+            right: ((rect[2] + rect[0]) as f32 - 1.0) / w as f32,
+            bottom: ((rect[3] + rect[1]) as f32 - 1.0) / h as f32,
         }
     }
 }
@@ -81,31 +77,19 @@ pub struct Tileset {
     pub w: u32,
     /// Height in tiles
     pub h: u32,
-    /// A neg_border to apply around all tiles
-    pub neg_x_border: f32,
-    /// A neg_border to apply around all tiles
-    pub neg_y_border: f32,
 }
 
 impl Tileset {
     /// X Y W H pixel rect
-    /// #Params
-    /// neg_border is an additional pixel-space offset for the edges of the UV
-    /// rect. This is useful for textures like 1x1 white squares, where the UV
-    /// coordinates will include the surrounding pixels too.
     /// # Params
     /// Same as UvRect::from_pixel_rect, but with:
     /// * `tiles_x` - The amount of tiles in this tileset width-wise
     /// * `tiles_y` - The amount of tiles in this tileset width-wise
-    /// * `neg_border` - This is applied per tile
-    pub fn from_pixel_rect(rect: &[u16; 4], w: u16, h: u16, neg_border: f32,
-                           tiles_x: u32, tiles_y: u32) -> Self {
+    pub fn from_pixel_rect(rect: &[u16; 4], w: u16, h: u16, tiles_x: u32, tiles_y: u32) -> Self {
         Tileset {
-            rect: UvRect::from_pixel_rect(rect, w, h, 0.0),
+            rect: UvRect::from_pixel_rect(rect, w, h),
             w: tiles_x,
             h: tiles_y,
-            neg_x_border: neg_border / w as f32,
-            neg_y_border: neg_border / h as f32,
         }
     }
 
@@ -114,10 +98,10 @@ impl Tileset {
         let total_w = self.rect.right - self.rect.left;
         let total_h = self.rect.bottom - self.rect.top;
         UvRect {
-            left: self.rect.left + total_w * x as f32 / self.w as f32 + self.neg_x_border,
-            right: self.rect.left + total_w * (x+1) as f32 / self.w as f32 - self.neg_x_border,
-            top: self.rect.top + total_h * y as f32 / self.h as f32 + self.neg_y_border,
-            bottom: self.rect.top + total_h * (y+1) as f32 / self.h as f32 - self.neg_y_border,
+            left: self.rect.left + total_w * x as f32 / self.w as f32,
+            right: self.rect.left + total_w * (x+1) as f32 / self.w as f32,
+            top: self.rect.top + total_h * y as f32 / self.h as f32,
+            bottom: self.rect.top + total_h * (y+1) as f32 / self.h as f32,
         }
     }
 }
@@ -160,11 +144,7 @@ impl<K : Ord> AtlasBuilder<K> {
     }
 
     /// # Params
-    /// * border_offset - An additional offset for the resultant UVs. If you
-    /// have a texture that needs to be solid, but due to linear sampling ends
-    /// up with black borders, set this to 0.5 or more to eliminate these.
-    /// Otherwise, use 0.0.
-    pub fn add_tex<P: AsRef<Path>>(mut self, key: K, img_path: P, border_offset: f32)
+    pub fn add_tex<P: AsRef<Path>>(mut self, key: K, img_path: P)
                                    -> Result<Self, AtlasPackErr> {
         // Load the texture
         let img = image::open(img_path)?.to_rgba();
@@ -179,17 +159,15 @@ impl<K : Ord> AtlasBuilder<K> {
         self.atlas.textures.insert(
             key,
             UvRect::from_pixel_rect(&pixel_rect_unpadded,
-                                    self.width, self.height, border_offset));
+                                    self.width, self.height));
         self.blit(&img_buf[..], &pixel_rect_unpadded);
         Ok(self)
     }
 
     /// # Params
-    /// * border_offset - See add_tex()
     /// * `tiles_x` - Amount of tiles width-wise
     /// * `tiles_y` - Amount of tiles height-wise
-    /// * `neg_border` - Unlike add_tex, this is applied per-tile
-    pub fn add_tileset<P: AsRef<Path>>(mut self, key: K, img_path: P, border_offset: f32,
+    pub fn add_tileset<P: AsRef<Path>>(mut self, key: K, img_path: P,
                                    tiles_x: u32, tiles_y: u32) -> Result<Self, AtlasPackErr> {
         // Load the texture
         let img = image::open(img_path)?.to_rgba();
@@ -204,7 +182,7 @@ impl<K : Ord> AtlasBuilder<K> {
         self.atlas.tilesets.insert(
             key,
             Tileset::from_pixel_rect(&pixel_rect_unpadded, self.width,
-                                     self.height, border_offset, tiles_x, tiles_y));
+                                     self.height, tiles_x, tiles_y));
         self.blit(&img_buf[..], &pixel_rect_unpadded);
         Ok(self)
     }
@@ -259,7 +237,7 @@ impl<K : Ord> AtlasBuilder<K> {
                     pixel_rect[3]-SPACING*2];
                 self.atlas.glyphs.insert(
                     c, (UvRect::from_pixel_rect(&pixel_rect_unpadded,
-                                                self.width, self.height, 0.0),
+                                                self.width, self.height),
                         g.standalone()));
                 self.blit(&buf[..], &pixel_rect_unpadded);
                 Ok(())
