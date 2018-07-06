@@ -19,7 +19,7 @@ use std::path::Path;
 use std::fs::File;
 
 /// Spacing in pixels between items in the atlas
-const SPACING : u16 = 1;
+const SPACING : u16 = 2;
 
 #[derive(Fail, Debug)]
 pub enum AtlasPackErr {
@@ -48,7 +48,6 @@ impl From<bin_packer::PackRectError> for AtlasPackErr {
 impl From<image::ImageError> for AtlasPackErr {
     fn from(e: image::ImageError) -> Self { AtlasPackErr::ImageErr(e) }
 }
-
 
 #[derive(Debug, Clone)]
 pub struct UvRect {
@@ -82,6 +81,10 @@ pub struct Tileset {
     pub w: u32,
     /// Height in tiles
     pub h: u32,
+    /// A neg_border to apply around all tiles
+    pub neg_x_border: f32,
+    /// A neg_border to apply around all tiles
+    pub neg_y_border: f32,
 }
 
 impl Tileset {
@@ -94,11 +97,15 @@ impl Tileset {
     /// Same as UvRect::from_pixel_rect, but with:
     /// * `tiles_x` - The amount of tiles in this tileset width-wise
     /// * `tiles_y` - The amount of tiles in this tileset width-wise
-    pub fn from_pixel_rect(rect: &[u16; 4], w: u16, h: u16, neg_border: f32, tiles_x: u32, tiles_y: u32) -> Self {
+    /// * `neg_border` - This is applied per tile
+    pub fn from_pixel_rect(rect: &[u16; 4], w: u16, h: u16, neg_border: f32,
+                           tiles_x: u32, tiles_y: u32) -> Self {
         Tileset {
-            rect: UvRect::from_pixel_rect(rect, w, h, neg_border),
+            rect: UvRect::from_pixel_rect(rect, w, h, 0.0),
             w: tiles_x,
-            h: tiles_y
+            h: tiles_y,
+            neg_x_border: neg_border / w as f32,
+            neg_y_border: neg_border / h as f32,
         }
     }
 
@@ -107,10 +114,10 @@ impl Tileset {
         let total_w = self.rect.right - self.rect.left;
         let total_h = self.rect.bottom - self.rect.top;
         UvRect {
-            left: self.rect.left + x as f32 * (total_w / self.w as f32),
-            right: self.rect.left + (x+1) as f32 * (total_w / self.w as f32),
-            top: self.rect.top + y as f32 * (total_h / self.h as f32),
-            bottom: self.rect.top + (y+1) as f32 * (total_h / self.h as f32),
+            left: self.rect.left + total_w * x as f32 / self.w as f32 + self.neg_x_border,
+            right: self.rect.left + total_w * (x+1) as f32 / self.w as f32 - self.neg_x_border,
+            top: self.rect.top + total_h * y as f32 / self.h as f32 + self.neg_y_border,
+            bottom: self.rect.top + total_h * (y+1) as f32 / self.h as f32 - self.neg_y_border,
         }
     }
 }
@@ -147,7 +154,7 @@ impl<K : Ord> AtlasBuilder<K> {
             let range_dst = ((y * self.width as usize + rect[0] as usize) * 4) ..
                 ((y * self.width as usize + rect[0] as usize + rect[2] as usize) * 4);
             let range_src = (((y - rect[1] as usize) * rect[2] as usize) * 4) ..
-                (((y - rect[1] as usize + 1) * rect[2] as usize ) * 4);
+                (((y - rect[1] as usize + 1) * rect[2] as usize) * 4);
             self.buf[range_dst].copy_from_slice(&buf[range_src]);
         }
     }
@@ -181,6 +188,7 @@ impl<K : Ord> AtlasBuilder<K> {
     /// * border_offset - See add_tex()
     /// * `tiles_x` - Amount of tiles width-wise
     /// * `tiles_y` - Amount of tiles height-wise
+    /// * `neg_border` - Unlike add_tex, this is applied per-tile
     pub fn add_tileset<P: AsRef<Path>>(mut self, key: K, img_path: P, border_offset: f32,
                                    tiles_x: u32, tiles_y: u32) -> Result<Self, AtlasPackErr> {
         // Load the texture

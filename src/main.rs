@@ -73,7 +73,7 @@ fn main() {
             world.create_entity()
                 .with(comp::Pos { x: x as f32 * (32.0 * 16.0), y: y as f32 * (32.0 * 16.0) })
                 .with(comp::Tilemap { tileset: comp::TilesetEnum::Grass,
-                                      data: [0u8; comp::TILEMAP_SIZE * comp::TILEMAP_SIZE] });
+                                      data: [2u8; comp::TILEMAP_SIZE * comp::TILEMAP_SIZE] });
         }
     }
 

@@ -137,7 +137,7 @@ impl Renderer {
                       .into_iter(),
                       32.0).unwrap()
             .add_tex(TextureKey::White, "res/white.png", 0.5).unwrap()
-            .add_tileset(TextureKey::TilesetGrass, "res/tileset-grass.png", 0.5, 16, 16).unwrap()
+            .add_tileset(TextureKey::TilesetGrass, "res/tileset-grass.png", 0.5, 8, 8).unwrap()
             .build(factory);
         let sampler = factory.create_sampler_linear();
 
