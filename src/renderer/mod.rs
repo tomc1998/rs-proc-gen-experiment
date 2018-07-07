@@ -13,6 +13,7 @@ use gfx::buffer::Role;
 use gfx_device_gl::Factory;
 use gfx::memory::{Usage, Bind};
 use gfx_device_gl::{Resources, CommandBuffer, Device};
+use std::collections::BTreeMap;
 
 pub const V_BUF_SIZE: usize = 262144;
 const BLACK: [f32; 4] = [0.0, 0.0, 0.0, 1.0];
@@ -129,6 +130,14 @@ impl Renderer {
                settings: RendererSettings) -> (Renderer, TextureAtlas<TextureKey>) {
         use gfx::{Factory, traits::FactoryExt};
         // Load the texture atlas
+
+        // Initialise common frame maps
+        let mut human_frame_map = BTreeMap::new();
+        human_frame_map.insert(TextureKey::Human00WalkDown,  &[(0, 0), (1, 0), (2, 0), (3, 0)][..]);
+        human_frame_map.insert(TextureKey::Human00WalkUp, &[(0, 1), (1, 1), (2, 1), (3, 1)][..]);
+        human_frame_map.insert(TextureKey::Human00WalkRight,    &[(0, 2), (1, 2), (2, 2), (3, 2)][..]);
+        human_frame_map.insert(TextureKey::Human00WalkLeft,  &[(0, 3), (1, 3), (2, 3), (3, 3)][..]);
+
         let (atlas, tex_view) = AtlasBuilder::<TextureKey>::new(512, 512)
             .set_font("res/open-sans.ttf",
                       Charset::alpha()
@@ -138,6 +147,7 @@ impl Renderer {
                       32.0).unwrap()
             .add_tex(TextureKey::White, "res/white.png").unwrap()
             .add_tileset(TextureKey::TilesetGrass, "res/tileset-grass.png", 8, 8).unwrap()
+            .add_anim_sprite("res/sprites/human-00.png", human_frame_map.clone(), 8, 8).unwrap()
             .build(factory);
         let sampler = factory.create_sampler(
             gfx::texture::SamplerInfo::new(

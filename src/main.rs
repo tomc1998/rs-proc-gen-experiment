@@ -54,7 +54,6 @@ fn main() {
         gfx_glutin::init::<renderer::ColorFormat, renderer::DepthFormat>(
             windowbuilder, contextbuilder, &events_loop);
 
-
     let (w, h) = window.get_inner_size().unwrap();
     let (mut renderer, atlas) = renderer::Renderer::new(&mut factory, color_view, w, h, Default::default());
     let camera = renderer::Camera::new(w as f32, h as f32);

@@ -106,6 +106,19 @@ impl Tileset {
     }
 }
 
+/// An animated sprite.
+pub struct AnimSprite {
+    /// TODO: Make this a more efficient storage of data, this is pretty bad for
+    /// memory with the indirect access
+    frames: Vec<UvRect>
+}
+
+impl AnimSprite {
+    pub fn frame(&self, frame_num: usize) -> &UvRect {
+        &self.frames[frame_num]
+    }
+}
+
 /// Used to build a texture atlas, and a matching texture.
 /// K - The type of key used to map texture UVs.
 pub struct AtlasBuilder<K : Ord> {
@@ -187,6 +200,53 @@ impl<K : Ord> AtlasBuilder<K> {
         Ok(self)
     }
 
+    /// # Params
+    /// * `anim_frames` - map of a list of frame numbers, where each sublist
+    ///     contains a list of frames that make up an animation, and each key is an
+    ///     animation name. Each frame is specified by an x and y pos (not a
+    ///     pixel offset, but a frame offset, assuming the input image is
+    ///     divided into tiles).
+    /// * `frame_w` - The width of a frame
+    /// * `frame_h` - The height of a frame
+    /// # Example
+    /// ```
+    /// // Load a 32*32 image which is made up of 4 animations on each row,
+    /// // where each frame is 8x8.
+    /// let mut frame_map = BTreeMap::new();
+    /// frame_map.insert(TextureKey::WalkLeft,  &[(0, 0), (1, 0), (2, 0), (3, 0)][..]);
+    /// frame_map.insert(TextureKey::WalkRight, &[(0, 1), (1, 1), (2, 1), (3, 1)][..]);
+    /// frame_map.insert(TextureKey::WalkUp,    &[(0, 2), (1, 2), (2, 2), (3, 2)][..]);
+    /// frame_map.insert(TextureKey::WalkDown,  &[(0, 3), (1, 3), (2, 3), (3, 3)][..]);
+    /// atlas.add_anim_sprite("spritesheet.png", frame_map, 8, 8);
+    /// ```
+    pub fn add_anim_sprite<P: AsRef<Path>>(mut self, img_path: P,
+                                               anim_frames: BTreeMap<K, &[(u16, u16)]>,
+                                               frame_w: u16, frame_h: u16) -> Result<Self, AtlasPackErr> {
+        // Load the texture
+        let img = image::open(img_path)?.to_rgba();
+        let (img_w, img_h) = img.dimensions();
+        let img_buf = img.into_raw();
+        let pixel_rect = self.bin_pack_tree.pack_rect(img_w as u16 + SPACING*2, img_h as u16 + SPACING*2)?;
+        let pixel_rect_unpadded = [
+            pixel_rect[0]+SPACING,
+            pixel_rect[1]+SPACING,
+            pixel_rect[2]-SPACING*2,
+            pixel_rect[3]-SPACING*2];
+        self.blit(&img_buf[..], &pixel_rect_unpadded);
+        // Loop over and assign frames
+        for (k, v) in anim_frames.into_iter() {
+            let anim_uvs = v.iter().map(|(x, y)| {
+                UvRect::from_pixel_rect(&[
+                    pixel_rect_unpadded[0] + x * frame_w,
+                    pixel_rect_unpadded[1] + y * frame_h,
+                    frame_w,
+                    frame_h], self.width, self.height)
+            }).collect();
+            self.atlas.anim_sprites.insert(k, AnimSprite {frames : anim_uvs});
+        }
+        Ok(self)
+    }
+
     /// Set the font to use, with the given charset. Duplicate chars will
     /// probably fuck shit up here.
     ///
@@ -265,10 +325,11 @@ impl<K : Ord> AtlasBuilder<K> {
 /// Only 1 distinct font per atlas.
 pub struct TextureAtlas<K : Ord> {
     /// Maps tex keys to UV rects
-    textures : BTreeMap<K, UvRect>,
+    textures: BTreeMap<K, UvRect>,
     /// Maps chars to UV rects
-    glyphs : BTreeMap<char, (UvRect, PositionedGlyph<'static>)>,
+    glyphs: BTreeMap<char, (UvRect, PositionedGlyph<'static>)>,
     tilesets: BTreeMap<K, Tileset>,
+    anim_sprites: BTreeMap<K, AnimSprite>,
 }
 
 impl<K : Ord> TextureAtlas<K> {
@@ -277,6 +338,7 @@ impl<K : Ord> TextureAtlas<K> {
             textures: BTreeMap::new(),
             glyphs: BTreeMap::new(),
             tilesets: BTreeMap::new(),
+            anim_sprites: BTreeMap::new(),
         }
     }
 
@@ -286,6 +348,10 @@ impl<K : Ord> TextureAtlas<K> {
 
     pub fn rect_for_key(&self, k: K) -> Option<&UvRect> {
         self.textures.get(&k)
+    }
+
+    pub fn rect_for_anim_sprite(&self, k: K) -> Option<&AnimSprite> {
+        self.anim_sprites.get(&k)
     }
 
     pub fn rect_for_tileset(&self, k: K) -> Option<&Tileset> {
