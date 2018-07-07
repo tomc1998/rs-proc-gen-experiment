@@ -1,7 +1,7 @@
 //! Components for the ECS
 
 use specs::{DenseVecStorage, HashMapStorage};
-use renderer;
+use renderer::{TextureKey, self};
 
 #[derive(Component)]
 pub struct Pos {
@@ -20,6 +20,37 @@ pub struct Vel {
 #[derive(Component)]
 pub struct PlayerControlled {
     pub move_speed: f32,
+}
+
+/// Temporary component for quick rendering system testing. Will probably be
+/// removed, but tells the renderer to draw a coloured rect at the Pos of this
+/// entity. Centred.
+#[derive(Component)]
+pub struct AnimSprite {
+    pub w: f32,
+    pub h: f32,
+    pub curr_frame: usize,
+    /// Frame time in millis
+    pub frame_time: f32,
+    /// Frame time counter
+    pub curr_frame_time: f32,
+    /// When curr_frame == num_frames, curr_frame will be set to 0.
+    pub num_frames: usize,
+    /// The key of the animation
+    pub anim: TextureKey,
+}
+
+impl AnimSprite {
+    /// Change the current anim, resetting all counters
+    pub fn set_anim(&mut self, anim: TextureKey, num_frames: usize, frame_time: f32) {
+        if self.anim != anim {
+            self.curr_frame_time = 0.0;
+            self.curr_frame = 0;
+        }
+        self.anim = anim.clone();
+        self.num_frames = num_frames;
+        self.frame_time = frame_time;
+    }
 }
 
 /// Temporary component for quick rendering system testing. Will probably be

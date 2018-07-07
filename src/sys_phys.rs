@@ -2,10 +2,9 @@
 
 use specs::*;
 use comp::{Vel, Pos};
+use DeltaTime;
 
 pub struct PhysSys;
-
-pub struct DeltaTime(pub f32);
 
 impl<'a> System<'a> for PhysSys {
     type SystemData = (

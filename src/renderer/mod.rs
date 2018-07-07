@@ -133,9 +133,13 @@ impl Renderer {
 
         // Initialise common frame maps
         let mut human_frame_map = BTreeMap::new();
+        human_frame_map.insert(TextureKey::Human00IdleDown,  &[(0, 0)][..]);
+        human_frame_map.insert(TextureKey::Human00IdleUp,    &[(0, 1)][..]);
+        human_frame_map.insert(TextureKey::Human00IdleRight, &[(0, 2)][..]);
+        human_frame_map.insert(TextureKey::Human00IdleLeft,  &[(0, 3)][..]);
         human_frame_map.insert(TextureKey::Human00WalkDown,  &[(0, 0), (1, 0), (2, 0), (3, 0)][..]);
-        human_frame_map.insert(TextureKey::Human00WalkUp, &[(0, 1), (1, 1), (2, 1), (3, 1)][..]);
-        human_frame_map.insert(TextureKey::Human00WalkRight,    &[(0, 2), (1, 2), (2, 2), (3, 2)][..]);
+        human_frame_map.insert(TextureKey::Human00WalkUp,    &[(0, 1), (1, 1), (2, 1), (3, 1)][..]);
+        human_frame_map.insert(TextureKey::Human00WalkRight, &[(0, 2), (1, 2), (2, 2), (3, 2)][..]);
         human_frame_map.insert(TextureKey::Human00WalkLeft,  &[(0, 3), (1, 3), (2, 3), (3, 3)][..]);
 
         let (atlas, tex_view) = AtlasBuilder::<TextureKey>::new(512, 512)

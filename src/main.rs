@@ -8,6 +8,7 @@ extern crate failure;
 extern crate image;
 extern crate rusttype;
 extern crate specs;
+extern crate rayon;
 #[macro_use] extern crate specs_derive;
 
 mod renderer;
@@ -15,6 +16,7 @@ mod comp;
 mod input;
 mod sys_control;
 mod sys_phys;
+mod sys_anim;
 
 use specs::*;
 use gfx::Device;
@@ -22,6 +24,8 @@ use gfx_window_glutin as gfx_glutin;
 use glutin::{GlRequest, GlContext};
 use glutin::Api::OpenGl;
 use std::time;
+
+pub struct DeltaTime(pub f32);
 
 /// Empty specs::System to use in the dispatcher as a combiner for system
 /// dependencies.
@@ -39,6 +43,7 @@ fn create_world() -> specs::World {
     world.register::<comp::PlayerControlled>();
     world.register::<comp::DebugRender>();
     world.register::<comp::Tilemap>();
+    world.register::<comp::AnimSprite>();
     world
 }
 
@@ -65,7 +70,10 @@ fn main() {
         .with(comp::Pos { x: 100.0, y: 100.0 })
         .with(comp::Vel { x: 0.0, y: 0.0 })
         .with(comp::PlayerControlled { move_speed: 100.0 })
-        .with(comp::DebugRender { w: 64.0, h: 64.0, col: [1.0, 0.0, 0.0, 1.0] });
+        .with(comp::AnimSprite { w: 32.0, h: 32.0,
+                                 curr_frame: 0, frame_time: 100.0, curr_frame_time: 0.0,
+                                 num_frames: 4,
+                                 anim: renderer::TextureKey::Human00WalkLeft});
     // Create tilemaps
     for x in 0..10 {
         for y in 0..10 {
@@ -84,7 +92,7 @@ fn main() {
     world.add_resource(atlas);
     world.add_resource(camera);
     world.add_resource(input_state.clone());
-    world.add_resource(sys_phys::DeltaTime(0.016));
+    world.add_resource(DeltaTime(0.016));
     world.add_resource(renderer::VertexBuffer {
         v_buf: v_buf, size: 0,
     });
@@ -93,8 +101,10 @@ fn main() {
     let mut dispatcher = specs::DispatcherBuilder::new()
         .with(sys_control::PlayerControllerSys, "player_controller", &[])
         .with(sys_phys::PhysSys, "phys", &["player_controller"])
+        .with(sys_anim::AnimSpriteSys, "anim_sprite", &["player_controller"])
         .with(MarkerSys, "update", &["phys", "player_controller"])
         .with(renderer::TilemapPainter, "tilemap_paint", &["update"])
+        .with(renderer::AnimSpritePainter, "anim_sprite_paint", &["update"])
         .with(renderer::DebugPainter, "debug_paint", &["update"])
         .build();
 

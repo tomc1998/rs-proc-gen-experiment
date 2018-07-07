@@ -1,6 +1,7 @@
 use super::*;
 use specs::*;
 use comp::*;
+use comp;
 
 #[derive(Clone, Debug)]
 pub struct VertexBuffer {
@@ -8,6 +9,30 @@ pub struct VertexBuffer {
     pub size: u32,
 }
 
+/// Paints components with AnimSprite and Pos.
+pub struct AnimSpritePainter;
+impl<'a> System<'a> for AnimSpritePainter {
+    type SystemData = (
+        WriteExpect<'a, VertexBuffer>,
+        ReadExpect<'a, TextureAtlas<TextureKey>>,
+        ReadStorage<'a, Pos>,
+        ReadStorage<'a, comp::AnimSprite>);
+
+    fn run(&mut self, (mut vertex_buffer, atlas, pos_s, anim_s): Self::SystemData) {
+        use specs::Join;
+
+        let mut ix = vertex_buffer.size as usize;
+        for (pos, anim) in (&pos_s, &anim_s).join() {
+            let tex = atlas.rect_for_anim_sprite(anim.anim.clone()).unwrap().frame(anim.curr_frame);
+            Renderer::rect(&mut vertex_buffer.v_buf[ix .. ix+6], &tex,
+                           pos.x - anim.w/2.0, pos.y - anim.h/2.0,
+                           anim.w, anim.h, [1.0, 1.0, 1.0, 1.0]);
+            ix += 6;
+        }
+        vertex_buffer.size = ix as u32;
+
+    }
+}
 /// Paints components with Pos and DebugRender.
 pub struct DebugPainter;
 impl<'a> System<'a> for DebugPainter {
