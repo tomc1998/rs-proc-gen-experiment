@@ -70,7 +70,7 @@ fn main() {
         .with(comp::Pos { x: 100.0, y: 100.0 })
         .with(comp::Vel { x: 0.0, y: 0.0 })
         .with(comp::PlayerControlled { move_speed: 100.0 })
-        .with(comp::AnimSprite { w: 32.0, h: 32.0,
+        .with(comp::AnimSprite { w: 128.0, h: 128.0,
                                  curr_frame: 0, frame_time: 100.0, curr_frame_time: 0.0,
                                  num_frames: 4,
                                  anim: renderer::TextureKey::Human00WalkLeft});
@@ -80,7 +80,7 @@ fn main() {
             world.create_entity()
                 .with(comp::Pos { x: x as f32 * (32.0 * 16.0), y: y as f32 * (32.0 * 16.0) })
                 .with(comp::Tilemap { tileset: comp::TilesetEnum::Grass,
-                                      data: [2u8; comp::TILEMAP_SIZE * comp::TILEMAP_SIZE] });
+                                      data: [1u8; comp::TILEMAP_SIZE * comp::TILEMAP_SIZE] });
         }
     }
 

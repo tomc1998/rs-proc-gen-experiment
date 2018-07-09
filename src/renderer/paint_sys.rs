@@ -91,9 +91,9 @@ impl<'a> System<'a> for TilemapPainter {
                     // Figure out the tile ix
                     let (tx, ty) = match tm.tileset {
                         TilesetEnum::Grass => match tm.data[x + y * TILEMAP_SIZE] {
-                            0 => (4, 0), // Dirt
-                            1 => (0, 0), // Grass
-                            2 => (4, 4), // Water
+                            0 => (5, 1), // Dirt
+                            1 => (1, 1), // Grass
+                            2 => (5, 5), // Water
                             t => panic!("Tile {} not found", t)
                         }
                     };

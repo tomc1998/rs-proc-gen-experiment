@@ -63,8 +63,8 @@ impl UvRect {
         UvRect {
             left: (rect[0] as f32) / w as f32,
             top: (rect[1] as f32) / h as f32,
-            right: ((rect[2] + rect[0]) as f32 - 1.0) / w as f32,
-            bottom: ((rect[3] + rect[1]) as f32 - 1.0) / h as f32,
+            right: ((rect[2] + rect[0]) as f32) / w as f32,
+            bottom: ((rect[3] + rect[1]) as f32) / h as f32,
         }
     }
 }
@@ -220,8 +220,8 @@ impl<K : Ord> AtlasBuilder<K> {
     /// atlas.add_anim_sprite("spritesheet.png", frame_map, 8, 8);
     /// ```
     pub fn add_anim_sprite<P: AsRef<Path>>(mut self, img_path: P,
-                                               anim_frames: BTreeMap<K, &[(u16, u16)]>,
-                                               frame_w: u16, frame_h: u16) -> Result<Self, AtlasPackErr> {
+                                           anim_frames: BTreeMap<K, &[(u16, u16)]>,
+                                           frame_w: u16, frame_h: u16) -> Result<Self, AtlasPackErr> {
         // Load the texture
         let img = image::open(img_path)?.to_rgba();
         let (img_w, img_h) = img.dimensions();
