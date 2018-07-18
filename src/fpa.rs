@@ -18,10 +18,10 @@ use num_integer::Roots;
 use std::ops::{Add, AddAssign, Sub, SubAssign, Mul, MulAssign, Div, DivAssign, Neg};
 
 /// Bits after the binary point
-const FPA_PREC : usize = 6;
+pub const FPA_PREC : usize = 6;
 /// The amount we have to multiply the number by to get the inner val (this
 /// should be 2 ^ FPA_PREC)
-const FPA_MUL : f32 = 64.0;
+pub const FPA_MUL : f32 = 64.0;
 
 /**** 32-bit ****/
 

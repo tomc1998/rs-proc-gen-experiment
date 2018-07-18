@@ -148,6 +148,10 @@ impl Renderer {
         human_frame_map.insert(TextureKey::Human00WalkRight, &[(0, 2), (1, 2), (2, 2), (3, 2)][..]);
         human_frame_map.insert(TextureKey::Human00WalkLeft,  &[(0, 3), (1, 3), (2, 3), (3, 3)][..]);
 
+        let mut slime_frame_map = BTreeMap::new();
+        slime_frame_map.insert(TextureKey::Slime00Idle,  &[(0, 0)][..]);
+        slime_frame_map.insert(TextureKey::Slime00Charge,  &[(1, 0)][..]);
+
         let (atlas, tex_view) = AtlasBuilder::<TextureKey>::new(512, 512)
             .set_font("res/open-sans.ttf",
                       Charset::alpha()
@@ -159,6 +163,7 @@ impl Renderer {
             .add_tex(TextureKey::GreenTree00, "res/sprites/green-tree-00.png").unwrap()
             .add_tileset(TextureKey::TilesetGrass, "res/tileset-grass.png", 8, 8).unwrap()
             .add_anim_sprite("res/sprites/human-00.png", human_frame_map.clone(), 8, 8).unwrap()
+            .add_anim_sprite("res/sprites/slime-00.png", slime_frame_map.clone(), 8, 8).unwrap()
             .build(factory);
         let sampler = factory.create_sampler(
             gfx::texture::SamplerInfo::new(

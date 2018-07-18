@@ -12,4 +12,6 @@ pub enum TextureKey {
     Human00WalkLeft,
     Human00WalkRight,
     GreenTree00,
+    Slime00Idle,
+    Slime00Charge,
 }

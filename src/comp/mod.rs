@@ -1,8 +1,10 @@
 //! Components for the ECS
 
 mod coll;
+mod control;
 
 pub use self::coll::*;
+pub use self::control::*;
 use fpa::*;
 use fpavec::*;
 use specs::{DenseVecStorage, HashMapStorage};
@@ -27,13 +29,6 @@ pub struct Vel {
 impl Vel {
     #[allow(dead_code)]
     pub fn to_vec(&self) -> Vec16 { Vec16::new(self.x, self.y) }
-}
-
-/// Any entity with this component will be controlled as if it was a player
-/// entity.
-#[derive(Component)]
-pub struct PlayerControlled {
-    pub move_speed: Fx16,
 }
 
 /// Draw a static sprite, using the Pos component as the bottom centre

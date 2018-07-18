@@ -56,6 +56,7 @@ fn create_world() -> specs::World {
     world.register::<AnimSprite>();
     world.register::<StaticSprite>();
     world.register::<CollCircle>();
+    world.register::<AISlime>();
     world
 }
 
@@ -84,7 +85,7 @@ fn main() {
         .with(Pos { x: Fx32::new(32.0), y: Fx32::new(32.0) })
         .with(Vel { x: Fx16::new(0.0), y: Fx16::new(0.0) })
         .with(PlayerControlled { move_speed: Fx16::new(100.0) })
-        .with(CollCircle { r: Fx16::new(16.0),
+        .with(CollCircle { r: Fx16::new(8.0),
                            off: Vec16::new(Fx16::new(0.0), Fx16::new(0.0)),
                            flags: CollFlags(COLL_SOLID)})
         .with(AnimSprite { w: 32.0, h: 32.0,
@@ -95,11 +96,25 @@ fn main() {
     // Tree
     world.create_entity()
         .with(Pos { x: Fx32::new(100.0), y: Fx32::new(100.0) })
-        .with(CollCircle { r: Fx16::new(16.0),
+        .with(CollCircle { r: Fx16::new(12.0),
                            off: Vec16::new(Fx16::new(0.0), Fx16::new(0.0)),
                            flags: CollFlags(COLL_SOLID | COLL_STATIC)})
         .with(StaticSprite { w: 64.0, h: 128.0,
                                  sprite: renderer::TextureKey::GreenTree00});
+    // Slime
+    world.create_entity()
+        .with(Pos { x: Fx32::new(400.0), y: Fx32::new(400.0) })
+        .with(AISlime { move_target: Vec32::new(Fx32::new(400.0), Fx32::new(400.0)),
+                        charge_time: Fx16::new(0.0),
+                        state: SlimeState::Idle })
+        .with(CollCircle { r: Fx16::new(8.0),
+                           off: Vec16::new(Fx16::new(0.0), Fx16::new(0.0)),
+                           flags: CollFlags(COLL_SOLID)})
+        .with(AnimSprite { w: 32.0, h: 32.0,
+                           curr_frame: 0, frame_time: Fx32::new(100000.0),
+                           curr_frame_time: Fx32::new(0.0),
+                           num_frames: 1,
+                           anim: renderer::TextureKey::Slime00Idle});
 
     // Create tilemaps
     for x in 0..10 {
