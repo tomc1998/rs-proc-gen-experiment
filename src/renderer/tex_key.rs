@@ -11,4 +11,5 @@ pub enum TextureKey {
     Human00WalkUp,
     Human00WalkLeft,
     Human00WalkRight,
+    GreenTree00,
 }

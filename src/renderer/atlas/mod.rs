@@ -346,7 +346,7 @@ impl<K : Ord> TextureAtlas<K> {
         self.glyphs.get(&c)
     }
 
-    pub fn rect_for_key(&self, k: K) -> Option<&UvRect> {
+    pub fn rect_for_tex(&self, k: K) -> Option<&UvRect> {
         self.textures.get(&k)
     }
 

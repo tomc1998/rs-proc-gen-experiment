@@ -33,7 +33,7 @@ impl Camera {
         Camera { x: 0.0, y: 0.0, w: w, h: h }
     }
     pub fn gen_ortho_mat(&self) -> [[f32; 4]; 4] {
-        gen_ortho_mat(self.x, self.x + self.w, self.y, self.y + self.h, -1.0, 1.0)
+        gen_ortho_mat(self.x, self.x + self.w, self.y, self.y + self.h, -10000.0, 10000.0)
     }
 }
 
@@ -62,7 +62,7 @@ fn blend() -> gfx::state::Blend {
 
 gfx_defines!{
     vertex Vertex {
-        pos: [f32; 2] = "pos",
+        pos: [f32; 3] = "pos",
         col: [f32; 4] = "col",
         uv: [f32; 2] = "uv",
     }
@@ -77,13 +77,14 @@ gfx_defines!{
         transform: gfx::ConstantBuffer<Transform> = "Transform",
         tex: gfx::TextureSampler<[f32; 4]> = "tex",
         out_col: gfx::BlendTarget<ColorFormat> = ("col", super::mask(), super::blend()),
+        out_depth: gfx::DepthTarget<DepthFormat> = gfx::preset::depth::LESS_EQUAL_WRITE,
     }
 }
 
 impl Default for Vertex {
     fn default() -> Self {
         Vertex {
-            pos: [0.0, 0.0],
+            pos: [0.0, 0.0, 0.0],
             col: [0.0, 0.0, 0.0, 0.0],
             uv: [0.0, 0.0],
         }
@@ -113,6 +114,7 @@ pub struct Renderer {
 
     /// The colour view to render to
     color_view: RenderTargetView<Resources, ColorFormat>,
+    depth_view: gfx::handle::DepthStencilView<Resources, DepthFormat>,
 
     /// Pipeline data
     data: pipe::Data<Resources>,
@@ -126,6 +128,7 @@ pub struct Renderer {
 impl Renderer {
     pub fn new(factory: &mut Factory,
                color_view: RenderTargetView<Resources, ColorFormat>,
+               depth_view: gfx::handle::DepthStencilView<Resources, DepthFormat>,
                w: u32, h: u32,
                settings: RendererSettings) -> (Renderer, TextureAtlas<TextureKey>) {
         use gfx::{Factory, traits::FactoryExt};
@@ -150,6 +153,7 @@ impl Renderer {
                       .into_iter(),
                       32.0).unwrap()
             .add_tex(TextureKey::White, "res/white.png").unwrap()
+            .add_tex(TextureKey::GreenTree00, "res/sprites/green-tree-00.png").unwrap()
             .add_tileset(TextureKey::TilesetGrass, "res/tileset-grass.png", 8, 8).unwrap()
             .add_anim_sprite("res/sprites/human-00.png", human_frame_map.clone(), 8, 8).unwrap()
             .build(factory);
@@ -167,7 +171,7 @@ impl Renderer {
         let vertex_buffer = factory.create_buffer::<Vertex>(V_BUF_SIZE, Role::Vertex, Usage::Dynamic, Bind::SHADER_RESOURCE).unwrap();
 
         let transform = Transform {
-            proj: gen_ortho_mat(0.0, 800.0, 0.0, 600.0, -1.0, 1.0),
+            proj: [[0.0; 4]; 4], // Filled in by camera later
             view: [[1.0, 0.0, 0.0, 0.0], [0.0, 1.0, 0.0, 0.0], [0.0, 0.0, 1.0, 0.0], [0.0, 0.0, 0.0, 1.0]],
         };
 
@@ -177,6 +181,7 @@ impl Renderer {
             transform: transform_buffer,
             tex: (tex_view, sampler),
             out_col: color_view.clone(),
+            out_depth: depth_view.clone(),
         };
 
         // Setup shaders
@@ -194,19 +199,21 @@ impl Renderer {
             pso: pso,
             transform: transform,
             color_view: color_view,
+            depth_view: depth_view,
         }, atlas)
     }
 
     /// Helper function for buffering a rect to a vec
     /// # Panics
     /// If v_buf is not at least 6 vertexes long
-    fn rect(v_buf: &mut [Vertex], tex: &UvRect, x: f32, y: f32, w: f32, h: f32, col: [f32; 4]) {
-        v_buf[0] = Vertex {pos: [x, y], col: col, uv: [tex.left, tex.top]};
-        v_buf[1] = Vertex {pos: [x+w, y], col: col, uv: [tex.right, tex.top]};
-        v_buf[2] = Vertex {pos: [x+w, y+h], col: col, uv: [tex.right, tex.bottom]};
-        v_buf[3] = Vertex {pos: [x, y], col: col, uv: [tex.left, tex.top]};
-        v_buf[4] = Vertex {pos: [x, y+h], col: col, uv: [tex.left, tex.bottom]};
-        v_buf[5] = Vertex {pos: [x+w, y+h], col: col, uv: [tex.right, tex.bottom]};
+    fn rect(v_buf: &mut [Vertex], tex: &UvRect, x: f32, y: f32, z: f32, w: f32, h: f32, col: [f32; 4]) {
+        debug_assert!(v_buf.len() >= 6, "Drawing rect but v_buf < 6 in len");
+        v_buf[0] = Vertex {pos: [x, y, z], col: col, uv: [tex.left, tex.top]};
+        v_buf[1] = Vertex {pos: [x+w, y, z], col: col, uv: [tex.right, tex.top]};
+        v_buf[2] = Vertex {pos: [x+w, y+h, z], col: col, uv: [tex.right, tex.bottom]};
+        v_buf[3] = Vertex {pos: [x, y, z], col: col, uv: [tex.left, tex.top]};
+        v_buf[4] = Vertex {pos: [x, y+h, z], col: col, uv: [tex.left, tex.bottom]};
+        v_buf[5] = Vertex {pos: [x+w, y+h, z], col: col, uv: [tex.right, tex.bottom]};
     }
 
     /// Actually issue the draw commands to the GPU. This should be called after
@@ -233,6 +240,7 @@ impl Renderer {
         self.transform.proj = camera.gen_ortho_mat();
         self.encoder.update_buffer(&self.data.transform, &[self.transform], 0).unwrap();
         self.encoder.clear(&self.color_view, BLACK);
+        self.encoder.clear_depth(&self.depth_view, 1.0);
         self.encoder.draw(&slice, &self.pso, &self.data);
         self.encoder.flush(device); // execute draw commands
     }

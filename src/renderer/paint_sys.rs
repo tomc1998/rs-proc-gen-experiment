@@ -10,6 +10,35 @@ pub struct VertexBuffer {
 }
 
 /// Paints components with AnimSprite and Pos.
+pub struct StaticSpritePainter;
+impl<'a> System<'a> for StaticSpritePainter {
+    type SystemData = (
+        WriteExpect<'a, VertexBuffer>,
+        ReadExpect<'a, TextureAtlas<TextureKey>>,
+        ReadStorage<'a, Pos>,
+        ReadStorage<'a, comp::StaticSprite>);
+
+    fn run(&mut self, (mut vertex_buffer, atlas, pos_s, sprite_s): Self::SystemData) {
+        use specs::Join;
+
+        let mut ix = vertex_buffer.size as usize;
+        for (pos, sprite) in (&pos_s, &sprite_s).join() {
+            let tex = atlas.rect_for_tex(sprite.sprite.clone()).unwrap();
+            Renderer::rect(&mut vertex_buffer.v_buf[ix .. ix+6],
+                           &tex,                  // UV
+                           pos.x - sprite.w/2.0,  // X
+                           pos.y - sprite.h,      // Y
+                           pos.y,                 // Z
+                           sprite.w, sprite.h,    // W, H
+                           [1.0, 1.0, 1.0, 1.0]); // Col
+            ix += 6;
+        }
+        vertex_buffer.size = ix as u32;
+
+    }
+}
+
+/// Paints components with AnimSprite and Pos.
 pub struct AnimSpritePainter;
 impl<'a> System<'a> for AnimSpritePainter {
     type SystemData = (
@@ -24,33 +53,13 @@ impl<'a> System<'a> for AnimSpritePainter {
         let mut ix = vertex_buffer.size as usize;
         for (pos, anim) in (&pos_s, &anim_s).join() {
             let tex = atlas.rect_for_anim_sprite(anim.anim.clone()).unwrap().frame(anim.curr_frame);
-            Renderer::rect(&mut vertex_buffer.v_buf[ix .. ix+6], &tex,
-                           pos.x - anim.w/2.0, pos.y - anim.h/2.0,
-                           anim.w, anim.h, [1.0, 1.0, 1.0, 1.0]);
-            ix += 6;
-        }
-        vertex_buffer.size = ix as u32;
-
-    }
-}
-/// Paints components with Pos and DebugRender.
-pub struct DebugPainter;
-impl<'a> System<'a> for DebugPainter {
-    type SystemData = (
-        WriteExpect<'a, VertexBuffer>,
-        ReadExpect<'a, TextureAtlas<TextureKey>>,
-        ReadStorage<'a, Pos>,
-        ReadStorage<'a, DebugRender>);
-
-    fn run(&mut self, (mut vertex_buffer, atlas, pos_s, dr_s): Self::SystemData) {
-        use specs::Join;
-
-        let white = atlas.rect_for_key(TextureKey::White).unwrap();
-        let mut ix = vertex_buffer.size as usize;
-        for (pos, dr) in (&pos_s, &dr_s).join() {
-            Renderer::rect(&mut vertex_buffer.v_buf[ix .. ix+6], &white,
-                           pos.x - dr.w/2.0, pos.y - dr.h/2.0,
-                           dr.w, dr.h, dr.col);
+            Renderer::rect(&mut vertex_buffer.v_buf[ix .. ix+6],
+                           &tex,                  // UV
+                           pos.x - anim.w/2.0,    // X
+                           pos.y - anim.h,        // Y
+                           pos.y,                 // Z
+                           anim.w, anim.h,        // W, H
+                           [1.0, 1.0, 1.0, 1.0]); // Col
             ix += 6;
         }
         vertex_buffer.size = ix as u32;
@@ -97,9 +106,11 @@ impl<'a> System<'a> for TilemapPainter {
                             t => panic!("Tile {} not found", t)
                         }
                     };
-                    Renderer::rect(&mut vertex_buffer.v_buf[ix .. ix+6], &tileset.tile(tx, ty),
-                                   x_pos, y_pos, 32.0, 32.0,
-                                   [1.0, 1.0, 1.0, 1.0]);
+                    Renderer::rect(&mut vertex_buffer.v_buf[ix .. ix+6],
+                                   &tileset.tile(tx, ty), // UV
+                                   x_pos, y_pos, -2000.0,   // X, Y, Z
+                                   32.0, 32.0,            // W, H
+                                   [1.0, 1.0, 1.0, 1.0]); // Col
                     ix += 6;
                 }
             }

@@ -41,9 +41,9 @@ fn create_world() -> specs::World {
     world.register::<comp::Pos>();
     world.register::<comp::Vel>();
     world.register::<comp::PlayerControlled>();
-    world.register::<comp::DebugRender>();
     world.register::<comp::Tilemap>();
     world.register::<comp::AnimSprite>();
+    world.register::<comp::StaticSprite>();
     world
 }
 
@@ -55,25 +55,31 @@ fn main() {
         .with_dimensions(512, 512);
     let contextbuilder = glutin::ContextBuilder::new()
         .with_gl(GlRequest::Specific(OpenGl,(3, 3)));
-    let (window, mut device, mut factory, color_view, _depth_view) =
+    let (window, mut device, mut factory, color_view, depth_view) =
         gfx_glutin::init::<renderer::ColorFormat, renderer::DepthFormat>(
             windowbuilder, contextbuilder, &events_loop);
 
     let (w, h) = window.get_inner_size().unwrap();
-    let (mut renderer, atlas) = renderer::Renderer::new(&mut factory, color_view, w, h, Default::default());
+    let (mut renderer, atlas) = renderer::Renderer::new(
+        &mut factory, color_view, depth_view, w, h, Default::default());
     let camera = renderer::Camera::new(w as f32, h as f32);
 
-    // Create the ECS world, and a test entity
+    // Create the ECS world, and a test entity, plus trees
     let mut world = create_world();
     use specs::Builder;
     world.create_entity()
-        .with(comp::Pos { x: 100.0, y: 100.0 })
+        .with(comp::Pos { x: 32.0, y: 32.0 })
         .with(comp::Vel { x: 0.0, y: 0.0 })
         .with(comp::PlayerControlled { move_speed: 100.0 })
-        .with(comp::AnimSprite { w: 128.0, h: 128.0,
+        .with(comp::AnimSprite { w: 32.0, h: 32.0,
                                  curr_frame: 0, frame_time: 100.0, curr_frame_time: 0.0,
                                  num_frames: 4,
                                  anim: renderer::TextureKey::Human00WalkLeft});
+    world.create_entity()
+        .with(comp::Pos { x: 100.0, y: 100.0 })
+        .with(comp::StaticSprite { w: 64.0, h: 128.0,
+                                 sprite: renderer::TextureKey::GreenTree00});
+
     // Create tilemaps
     for x in 0..10 {
         for y in 0..10 {
@@ -105,7 +111,7 @@ fn main() {
         .with(MarkerSys, "update", &["phys", "player_controller"])
         .with(renderer::TilemapPainter, "tilemap_paint", &["update"])
         .with(renderer::AnimSpritePainter, "anim_sprite_paint", &["update"])
-        .with(renderer::DebugPainter, "debug_paint", &["update"])
+        .with(renderer::StaticSpritePainter, "static_sprite_paint", &["update"])
         .build();
 
     let mut should_close = false;

@@ -22,9 +22,15 @@ pub struct PlayerControlled {
     pub move_speed: f32,
 }
 
-/// Temporary component for quick rendering system testing. Will probably be
-/// removed, but tells the renderer to draw a coloured rect at the Pos of this
-/// entity. Centred.
+/// Draw a static sprite, using the Pos component as the bottom centre
+#[derive(Component)]
+pub struct StaticSprite {
+    pub w: f32,
+    pub h: f32,
+    pub sprite: TextureKey,
+}
+
+/// Draw an animated sprite, using the Pos component as the bottom centre
 #[derive(Component)]
 pub struct AnimSprite {
     pub w: f32,
@@ -51,16 +57,6 @@ impl AnimSprite {
         self.num_frames = num_frames;
         self.frame_time = frame_time;
     }
-}
-
-/// Temporary component for quick rendering system testing. Will probably be
-/// removed, but tells the renderer to draw a coloured rect at the Pos of this
-/// entity. Centred.
-#[derive(Component)]
-pub struct DebugRender {
-    pub col: [f32; 4],
-    pub w: f32,
-    pub h: f32,
 }
 
 /// An anum of tilesets. Named this way to avoid collisions with

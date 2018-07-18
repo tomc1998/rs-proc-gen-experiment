@@ -8,6 +8,11 @@ in vec2 v_uv;
 out vec4 col;
 
 void main() {
-  //col = v_col * texture(tex, v_uv + (vec2(0.5, 0.5) / textureSize(tex, 0)));
-  col = v_col * texture(tex, v_uv);
+  // Don't render if we're totally transparent, this means we avoid the funny
+  // depth buffer squares and we don't have to z-sort
+  vec4 tinted_tex_col = v_col * texture(tex, v_uv);
+  if (tinted_tex_col.a <= 0.0) {
+    discard;
+  }
+  col = tinted_tex_col;
 }
