@@ -648,6 +648,7 @@ dependencies = [
  "gfx_window_glutin 0.24.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "glutin 0.16.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "image 0.19.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "num-integer 0.1.39 (registry+https://github.com/rust-lang/crates.io-index)",
  "rand 0.5.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "rayon 1.0.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "rusttype 0.6.2 (registry+https://github.com/rust-lang/crates.io-index)",

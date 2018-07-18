@@ -14,6 +14,7 @@ use gfx_device_gl::Factory;
 use gfx::memory::{Usage, Bind};
 use gfx_device_gl::{Resources, CommandBuffer, Device};
 use std::collections::BTreeMap;
+use fpa::*;
 
 pub const V_BUF_SIZE: usize = 262144;
 const BLACK: [f32; 4] = [0.0, 0.0, 0.0, 1.0];
@@ -22,18 +23,20 @@ pub type ColorFormat = gfx::format::Srgba8;
 pub type DepthFormat = gfx::format::DepthStencil;
 
 pub struct Camera {
-    x: f32,
-    y: f32,
-    w: f32,
-    h: f32,
+    x: Fx32,
+    y: Fx32,
+    w: Fx32,
+    h: Fx32,
 }
 
 impl Camera {
     pub fn new(w: f32, h: f32) -> Camera {
-        Camera { x: 0.0, y: 0.0, w: w, h: h }
+        Camera { x: Fx32::new(0.0), y: Fx32::new(0.0), w: Fx32::new(w), h: Fx32::new(h) }
     }
     pub fn gen_ortho_mat(&self) -> [[f32; 4]; 4] {
-        gen_ortho_mat(self.x, self.x + self.w, self.y, self.y + self.h, -10000.0, 10000.0)
+        gen_ortho_mat(self.x.to_f32(), (self.x + self.w).to_f32(),
+                      self.y.to_f32(), (self.y + self.h).to_f32(),
+                      -10000.0, 10000.0)
     }
 }
 

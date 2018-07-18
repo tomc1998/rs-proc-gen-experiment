@@ -4,6 +4,7 @@ use input;
 use specs::*;
 use comp::{PlayerControlled, Vel, AnimSprite};
 use renderer::TextureKey;
+use fpa::*;
 
 pub struct PlayerControllerSys;
 
@@ -27,7 +28,7 @@ impl<'a> System<'a> for PlayerControllerSys {
                 anim_change = Some(TextureKey::Human00WalkDown);
             }
             else {
-                vel.y = 0.0;
+                vel.y = Fx16::new(0.0);
             }
             if *input_state.down.get(&input::Command::MoveLeft).unwrap() {
                 vel.x = -pc.move_speed;
@@ -38,20 +39,20 @@ impl<'a> System<'a> for PlayerControllerSys {
                 anim_change = Some(TextureKey::Human00WalkRight);
             }
             else {
-                vel.x = 0.0;
+                vel.x = Fx16::new(0.0);
             }
             if let Some(anim_change) = anim_change {
-                anim.set_anim(anim_change, 4, 150.0);
-            } else if vel.x == 0.0 && vel.y == 0.0 {
+                anim.set_anim(anim_change, 4, Fx32::new(150.0));
+            } else if vel.x == Fx16::new(0.0) && vel.y == Fx16::new(0.0) {
                 match anim.anim {
                     TextureKey::Human00WalkLeft =>
-                        anim.set_anim(TextureKey::Human00IdleLeft, 1, 1000.0),
+                        anim.set_anim(TextureKey::Human00IdleLeft, 1, Fx32::new(1000.0)),
                     TextureKey::Human00WalkRight =>
-                        anim.set_anim(TextureKey::Human00IdleRight, 1, 1000.0),
+                        anim.set_anim(TextureKey::Human00IdleRight, 1, Fx32::new(1000.0)),
                     TextureKey::Human00WalkUp =>
-                        anim.set_anim(TextureKey::Human00IdleUp, 1, 1000.0),
+                        anim.set_anim(TextureKey::Human00IdleUp, 1, Fx32::new(1000.0)),
                     TextureKey::Human00WalkDown =>
-                        anim.set_anim(TextureKey::Human00IdleDown, 1, 1000.0),
+                        anim.set_anim(TextureKey::Human00IdleDown, 1, Fx32::new(1000.0)),
                     _ => ()
                 }
             }

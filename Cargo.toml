@@ -16,3 +16,8 @@ failure_derive = "0.1"
 rand = "0.5"
 rusttype = "0.6"
 rayon = "*"
+num-integer = "*"
+
+[features]
+bench = []
+

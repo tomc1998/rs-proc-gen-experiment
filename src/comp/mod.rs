@@ -1,25 +1,39 @@
 //! Components for the ECS
 
+mod coll;
+
+pub use self::coll::*;
+use fpa::*;
+use fpavec::*;
 use specs::{DenseVecStorage, HashMapStorage};
 use renderer::{TextureKey, self};
 
 #[derive(Component)]
 pub struct Pos {
-    pub x: f32,
-    pub y: f32,
+    pub x: Fx32,
+    pub y: Fx32,
+}
+
+impl Pos {
+    pub fn to_vec(&self) -> Vec32 { Vec32::new(self.x, self.y) }
 }
 
 #[derive(Component)]
 pub struct Vel {
-    pub x: f32,
-    pub y: f32,
+    pub x: Fx16,
+    pub y: Fx16,
+}
+
+impl Vel {
+    #[allow(dead_code)]
+    pub fn to_vec(&self) -> Vec16 { Vec16::new(self.x, self.y) }
 }
 
 /// Any entity with this component will be controlled as if it was a player
 /// entity.
 #[derive(Component)]
 pub struct PlayerControlled {
-    pub move_speed: f32,
+    pub move_speed: Fx16,
 }
 
 /// Draw a static sprite, using the Pos component as the bottom centre
@@ -37,9 +51,9 @@ pub struct AnimSprite {
     pub h: f32,
     pub curr_frame: usize,
     /// Frame time in millis
-    pub frame_time: f32,
+    pub frame_time: Fx32,
     /// Frame time counter
-    pub curr_frame_time: f32,
+    pub curr_frame_time: Fx32,
     /// When curr_frame == num_frames, curr_frame will be set to 0.
     pub num_frames: usize,
     /// The key of the animation
@@ -48,9 +62,9 @@ pub struct AnimSprite {
 
 impl AnimSprite {
     /// Change the current anim, resetting all counters
-    pub fn set_anim(&mut self, anim: TextureKey, num_frames: usize, frame_time: f32) {
+    pub fn set_anim(&mut self, anim: TextureKey, num_frames: usize, frame_time: Fx32) {
         if self.anim != anim {
-            self.curr_frame_time = 0.0;
+            self.curr_frame_time = Fx32::new(0.0);
             self.curr_frame = 0;
         }
         self.anim = anim.clone();

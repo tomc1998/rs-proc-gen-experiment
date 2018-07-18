@@ -1,3 +1,5 @@
+#![feature(test)]
+
 #[macro_use] extern crate gfx;
 extern crate gfx_window_glutin;
 extern crate gfx_device_gl;
@@ -10,6 +12,10 @@ extern crate rusttype;
 extern crate specs;
 extern crate rayon;
 #[macro_use] extern crate specs_derive;
+extern crate num_integer;
+
+#[cfg(test)]
+extern crate test;
 
 mod renderer;
 mod comp;
@@ -18,7 +24,11 @@ mod sys_control;
 mod sys_phys;
 mod sys_anim;
 mod fpa;
+mod fpavec;
 
+use comp::*;
+use fpa::*;
+use fpavec::*;
 use specs::*;
 use gfx::Device;
 use gfx_window_glutin as gfx_glutin;
@@ -39,12 +49,13 @@ impl<'a> System<'a> for MarkerSys {
 /// Create the world and register all the components
 fn create_world() -> specs::World {
     let mut world = specs::World::new();
-    world.register::<comp::Pos>();
-    world.register::<comp::Vel>();
-    world.register::<comp::PlayerControlled>();
-    world.register::<comp::Tilemap>();
-    world.register::<comp::AnimSprite>();
-    world.register::<comp::StaticSprite>();
+    world.register::<Pos>();
+    world.register::<Vel>();
+    world.register::<PlayerControlled>();
+    world.register::<Tilemap>();
+    world.register::<AnimSprite>();
+    world.register::<StaticSprite>();
+    world.register::<CollCircle>();
     world
 }
 
@@ -68,26 +79,35 @@ fn main() {
     // Create the ECS world, and a test entity, plus trees
     let mut world = create_world();
     use specs::Builder;
+    // Player
     world.create_entity()
-        .with(comp::Pos { x: 32.0, y: 32.0 })
-        .with(comp::Vel { x: 0.0, y: 0.0 })
-        .with(comp::PlayerControlled { move_speed: 100.0 })
-        .with(comp::AnimSprite { w: 32.0, h: 32.0,
-                                 curr_frame: 0, frame_time: 100.0, curr_frame_time: 0.0,
-                                 num_frames: 4,
-                                 anim: renderer::TextureKey::Human00WalkLeft});
+        .with(Pos { x: Fx32::new(32.0), y: Fx32::new(32.0) })
+        .with(Vel { x: Fx16::new(0.0), y: Fx16::new(0.0) })
+        .with(PlayerControlled { move_speed: Fx16::new(100.0) })
+        .with(CollCircle { r: Fx16::new(16.0),
+                           off: Vec16::new(Fx16::new(0.0), Fx16::new(0.0)),
+                           flags: CollFlags(COLL_SOLID)})
+        .with(AnimSprite { w: 32.0, h: 32.0,
+                           curr_frame: 0, frame_time: Fx32::new(100.0),
+                           curr_frame_time: Fx32::new(0.0),
+                           num_frames: 4,
+                           anim: renderer::TextureKey::Human00WalkLeft});
+    // Tree
     world.create_entity()
-        .with(comp::Pos { x: 100.0, y: 100.0 })
-        .with(comp::StaticSprite { w: 64.0, h: 128.0,
+        .with(Pos { x: Fx32::new(100.0), y: Fx32::new(100.0) })
+        .with(CollCircle { r: Fx16::new(16.0),
+                           off: Vec16::new(Fx16::new(0.0), Fx16::new(0.0)),
+                           flags: CollFlags(COLL_SOLID | COLL_STATIC)})
+        .with(StaticSprite { w: 64.0, h: 128.0,
                                  sprite: renderer::TextureKey::GreenTree00});
 
     // Create tilemaps
     for x in 0..10 {
         for y in 0..10 {
             world.create_entity()
-                .with(comp::Pos { x: x as f32 , y: y as f32 })
-                .with(comp::Tilemap { tileset: comp::TilesetEnum::Grass,
-                                      data: [1u8; comp::TILEMAP_SIZE * comp::TILEMAP_SIZE] });
+                .with(Pos { x: Fx32::new(x as f32), y: Fx32::new(y as f32) })
+                .with(Tilemap { tileset: TilesetEnum::Grass,
+                                      data: [1u8; TILEMAP_SIZE * TILEMAP_SIZE] });
         }
     }
 
@@ -107,9 +127,9 @@ fn main() {
     // Build dispatcher
     let mut dispatcher = specs::DispatcherBuilder::new()
         .with(sys_control::PlayerControllerSys, "player_controller", &[])
-        .with(sys_phys::PhysSys, "phys", &["player_controller"])
+        .with(sys_phys::PhysSys::<CollCircle, CollCircle>::new(), "phys_circ_circ", &["player_controller"])
         .with(sys_anim::AnimSpriteSys, "anim_sprite", &["player_controller"])
-        .with(MarkerSys, "update", &["phys", "player_controller"])
+        .with(MarkerSys, "update", &["phys_circ_circ", "player_controller"])
         .with(renderer::TilemapPainter, "tilemap_paint", &["update"])
         .with(renderer::AnimSpritePainter, "anim_sprite_paint", &["update"])
         .with(renderer::StaticSpritePainter, "static_sprite_paint", &["update"])

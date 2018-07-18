@@ -26,9 +26,9 @@ impl<'a> System<'a> for StaticSpritePainter {
             let tex = atlas.rect_for_tex(sprite.sprite.clone()).unwrap();
             Renderer::rect(&mut vertex_buffer.v_buf[ix .. ix+6],
                            &tex,                  // UV
-                           pos.x - sprite.w/2.0,  // X
-                           pos.y - sprite.h,      // Y
-                           pos.y,                 // Z
+                           (pos.x - sprite.w/2.0).to_f32(),  // X
+                           (pos.y - sprite.h).to_f32(),      // Y
+                           (pos.y).to_f32(),                 // Z
                            sprite.w, sprite.h,    // W, H
                            [1.0, 1.0, 1.0, 1.0]); // Col
             ix += 6;
@@ -55,9 +55,9 @@ impl<'a> System<'a> for AnimSpritePainter {
             let tex = atlas.rect_for_anim_sprite(anim.anim.clone()).unwrap().frame(anim.curr_frame);
             Renderer::rect(&mut vertex_buffer.v_buf[ix .. ix+6],
                            &tex,                  // UV
-                           pos.x - anim.w/2.0,    // X
-                           pos.y - anim.h,        // Y
-                           pos.y,                 // Z
+                           (pos.x - anim.w/2.0).to_f32(),    // X
+                           (pos.y - anim.h).to_f32(),        // Y
+                           (pos.y).to_f32(),                 // Z
                            anim.w, anim.h,        // W, H
                            [1.0, 1.0, 1.0, 1.0]); // Col
             ix += 6;
@@ -108,7 +108,7 @@ impl<'a> System<'a> for TilemapPainter {
                     };
                     Renderer::rect(&mut vertex_buffer.v_buf[ix .. ix+6],
                                    &tileset.tile(tx, ty), // UV
-                                   x_pos, y_pos, -2000.0,   // X, Y, Z
+                                   x_pos.to_f32(), y_pos.to_f32(), -2000.0, // X, Y, Z
                                    32.0, 32.0,            // W, H
                                    [1.0, 1.0, 1.0, 1.0]); // Col
                     ix += 6;
@@ -116,7 +116,5 @@ impl<'a> System<'a> for TilemapPainter {
             }
         }
         vertex_buffer.size = ix as u32;
-
-
     }
 }
