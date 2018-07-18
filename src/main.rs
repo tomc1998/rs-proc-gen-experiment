@@ -17,6 +17,7 @@ mod input;
 mod sys_control;
 mod sys_phys;
 mod sys_anim;
+mod fpa;
 
 use specs::*;
 use gfx::Device;
