@@ -84,9 +84,12 @@ impl TilesetEnum {
 /// The width / height of tilemaps.
 pub const TILEMAP_SIZE : usize = 16;
 
-/// A tilemap component. Coupled with a Pos component (for offset), this will
-/// render a tilemap at a given position with the given tileset.
+/// A tilemap component. Coupled with a Pos component (for tilemap-wise offset,
+/// see below), this will render a tilemap at a given position with the given
+/// tileset.
 /// Width is defined by TILEMAP_SIZE.
+/// The pos is multiplied by the chunk size, so a tilemap with pos (1, 0) and
+/// one with (2, 0) will be adjacent to one another.
 #[derive(Component)]
 #[storage(HashMapStorage)]
 pub struct Tilemap {

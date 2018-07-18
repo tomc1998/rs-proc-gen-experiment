@@ -78,7 +78,7 @@ fn main() {
     for x in 0..10 {
         for y in 0..10 {
             world.create_entity()
-                .with(comp::Pos { x: x as f32 * (32.0 * 16.0), y: y as f32 * (32.0 * 16.0) })
+                .with(comp::Pos { x: x as f32 , y: y as f32 })
                 .with(comp::Tilemap { tileset: comp::TilesetEnum::Grass,
                                       data: [1u8; comp::TILEMAP_SIZE * comp::TILEMAP_SIZE] });
         }
