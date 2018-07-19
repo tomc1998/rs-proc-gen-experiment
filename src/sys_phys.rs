@@ -34,31 +34,33 @@ impl<'a, C0: Coll<C1> + Component, C1: Coll<C0> + Component> System<'a> for Phys
         use specs::Join;
 
         for (vel, pos) in (&vel_s, &mut pos_s).join() {
-            pos.x += vel.x * delta.0;
-            pos.y += vel.y * delta.0;
+            pos.pos.x += vel.vel.x * delta.0;
+            pos.pos.y += vel.vel.y * delta.0;
         }
 
         // Update entities that collide
-        for (e0, coll0) in (&*entities_s, &coll0_s).join() {
+       for (e0, coll0) in (&*entities_s, &coll0_s).join() {
             let flags = coll0.flags();
-            if flags.0 & COLL_STATIC > 0 || flags.0 & COLL_SOLID == 0 { continue }
+            if flags & COLL_STATIC > 0 || flags & COLL_SOLID == 0 { continue }
             // No broad phase, just brute force
             // TODO: Implement broad-phase collision
             let mut res = Vec16::zero();
             if let Some(pos0) = pos_s.get(e0) {
                 for (e1, pos1, coll1) in (&*entities_s, &pos_s, &coll1_s).join() {
                     if e1 == e0 { continue; }
-                    if coll1.flags().0 & COLL_STATIC > 0 {
-                        res += coll0.resolve(coll1, pos0.to_vec(), pos1.to_vec());
+                    let flags = coll1.flags();
+                    if flags & COLL_SOLID == 0 { continue }
+                    if flags & COLL_STATIC > 0 {
+                        res += coll0.resolve(coll1, pos0.pos, pos1.pos);
                     } else {
-                        res += coll0.resolve(coll1, pos0.to_vec(), pos1.to_vec()) / Fx16::new(2.0);
+                        res += coll0.resolve(coll1, pos0.pos, pos1.pos) / Fx16::new(2.0);
                     }
                 }
             } else { continue }
             // Now add this res to e0's pos component
             let pos = pos_s.get_mut(e0).unwrap();
-            pos.x += res.x;
-            pos.y += res.y;
+            pos.pos.x += res.x;
+            pos.pos.y += res.y;
         };
     }
 }

@@ -34,6 +34,7 @@ impl Fx32 {
     pub fn new(val: f32) -> Fx32 { Fx32((val * FPA_MUL) as i32) }
     pub fn to_f32(&self) -> f32 { self.0 as f32 / FPA_MUL }
     pub fn to_fx16(&self) -> Fx16 { Fx16(self.0 as i16) }
+    pub fn abs(self) -> Fx32 { Fx32(self.0.abs()) }
     pub fn powi(mut self, exp: usize) -> Fx32 {
         for _ in 1..exp {
             self.0 = (self.0 as i64 * self.0 as i64 / FPA_MUL as i64) as i32;
@@ -82,6 +83,7 @@ impl Fx16 {
     pub fn new(val: f32) -> Fx16 { Fx16((val * FPA_MUL) as i16) }
     pub fn to_f32(&self) -> f32 { self.0 as f32 / FPA_MUL }
     pub fn to_fx32(&self) -> Fx32 { Fx32(self.0 as i32) }
+    pub fn abs(self) -> Fx16 { Fx16(self.0.abs()) }
     pub fn powi(mut self, exp: usize) -> Fx16 {
         for _ in 1..exp {
             self.0 = (self.0 as i32 * self.0 as i32 / FPA_MUL as i32) as i16;

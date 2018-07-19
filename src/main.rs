@@ -23,6 +23,7 @@ mod input;
 mod sys_control;
 mod sys_phys;
 mod sys_anim;
+mod sys_lifetime;
 mod fpa;
 mod fpavec;
 
@@ -57,6 +58,9 @@ fn create_world() -> specs::World {
     world.register::<StaticSprite>();
     world.register::<CollCircle>();
     world.register::<AISlime>();
+    world.register::<Hurt>();
+    world.register::<Health>();
+    world.register::<Lifetime>();
     world
 }
 
@@ -82,47 +86,47 @@ fn main() {
     use specs::Builder;
     // Player
     world.create_entity()
-        .with(Pos { x: Fx32::new(32.0), y: Fx32::new(32.0) })
-        .with(Vel { x: Fx16::new(0.0), y: Fx16::new(0.0) })
-        .with(PlayerControlled { move_speed: Fx16::new(100.0) })
+        .with(Pos { pos: Vec32::new(Fx32::new(32.0), Fx32::new(32.0)) })
+        .with(Vel { vel: Vec16::zero() })
+        .with(PlayerControlled::new())
+        .with(Health::new(8, Hitmask(HITMASK_PLAYER)))
         .with(CollCircle { r: Fx16::new(8.0),
                            off: Vec16::new(Fx16::new(0.0), Fx16::new(0.0)),
-                           flags: CollFlags(COLL_SOLID)})
-        .with(AnimSprite { w: 32.0, h: 32.0,
-                           curr_frame: 0, frame_time: Fx32::new(100.0),
-                           curr_frame_time: Fx32::new(0.0),
-                           num_frames: 4,
-                           anim: renderer::TextureKey::Human00WalkLeft});
+                           flags: COLL_SOLID})
+        .with(AnimSprite::new(32.0, 32.0, Fx32::new(100.0),
+                              4, renderer::TextureKey::Human00WalkDown))
+        .build();
     // Tree
     world.create_entity()
-        .with(Pos { x: Fx32::new(100.0), y: Fx32::new(100.0) })
+        .with(Pos { pos: Vec32::new(Fx32::new(100.0), Fx32::new(100.0)) })
         .with(CollCircle { r: Fx16::new(12.0),
                            off: Vec16::new(Fx16::new(0.0), Fx16::new(0.0)),
-                           flags: CollFlags(COLL_SOLID | COLL_STATIC)})
+                           flags: COLL_SOLID | COLL_STATIC})
         .with(StaticSprite { w: 64.0, h: 128.0,
-                                 sprite: renderer::TextureKey::GreenTree00});
+                             sprite: renderer::TextureKey::GreenTree00})
+        .build();
     // Slime
     world.create_entity()
-        .with(Pos { x: Fx32::new(400.0), y: Fx32::new(400.0) })
+        .with(Pos { pos: Vec32::new(Fx32::new(400.0), Fx32::new(400.0)) })
+        .with(Health::new(4, Hitmask(HITMASK_ENEMY)))
         .with(AISlime { move_target: Vec32::new(Fx32::new(400.0), Fx32::new(400.0)),
                         charge_time: Fx16::new(0.0),
                         state: SlimeState::Idle })
         .with(CollCircle { r: Fx16::new(8.0),
                            off: Vec16::new(Fx16::new(0.0), Fx16::new(0.0)),
-                           flags: CollFlags(COLL_SOLID)})
-        .with(AnimSprite { w: 32.0, h: 32.0,
-                           curr_frame: 0, frame_time: Fx32::new(100000.0),
-                           curr_frame_time: Fx32::new(0.0),
-                           num_frames: 1,
-                           anim: renderer::TextureKey::Slime00Idle});
+                           flags: COLL_SOLID})
+        .with(AnimSprite::new(32.0, 32.0, Fx32::new(100000.0),
+                              1, renderer::TextureKey::Slime00Idle))
+        .build();
 
     // Create tilemaps
     for x in 0..10 {
         for y in 0..10 {
             world.create_entity()
-                .with(Pos { x: Fx32::new(x as f32), y: Fx32::new(y as f32) })
+                .with(Pos { pos: Vec32::new(Fx32::new(x as f32), Fx32::new(y as f32)) })
                 .with(Tilemap { tileset: TilesetEnum::Grass,
-                                      data: [1u8; TILEMAP_SIZE * TILEMAP_SIZE] });
+                                data: [1u8; TILEMAP_SIZE * TILEMAP_SIZE] })
+                .build();
         }
     }
 
@@ -142,6 +146,7 @@ fn main() {
     // Build dispatcher
     let mut dispatcher = specs::DispatcherBuilder::new()
         .with(sys_control::PlayerControllerSys, "player_controller", &[])
+        .with(sys_lifetime::LifetimeSys, "lifetime", &[])
         .with(sys_phys::PhysSys::<CollCircle, CollCircle>::new(), "phys_circ_circ", &["player_controller"])
         .with(sys_anim::AnimSpriteSys, "anim_sprite", &["player_controller"])
         .with(MarkerSys, "update", &["phys_circ_circ", "player_controller"])
@@ -163,12 +168,18 @@ fn main() {
         // Add input
         world.add_resource(input_state.clone());
         dispatcher.dispatch(&mut world.res);
-        let mut v_buf = world.write_resource::<renderer::VertexBuffer>();
-        renderer.flush_render(&mut device, &v_buf, &world.read_resource::<renderer::Camera>());
-        v_buf.size = 0; // After painting, we need to clear the v_buf
+        {
+            let mut v_buf = world.write_resource::<renderer::VertexBuffer>();
+            renderer.flush_render(&mut device, &v_buf, &world.read_resource::<renderer::Camera>());
+            v_buf.size = 0; // After painting, we need to clear the v_buf
+        }
 
         window.swap_buffers().unwrap();
         device.cleanup();
+
+        // Actually delete all entities
+        world.maintain();
+
         let elapsed = start.elapsed();
         if fps_count_timer <= 0 {
             println!("Time taken (millis): {:?}",

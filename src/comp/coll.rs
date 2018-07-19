@@ -12,7 +12,7 @@ pub trait Coll<C> {
     fn aabb(&self, pos: Vec32) -> [Vec32; 2];
 
     /// Return this collision object's flags
-    fn flags(&self) -> CollFlags;
+    fn flags(&self) -> u8;
 }
 
 /// Does this collision body affect the physics of entities?
@@ -20,14 +20,11 @@ pub const COLL_SOLID : u8 = 1;
 /// Is this body moved by other solid bodies? (assumes COLL_SOLID = 1)
 pub const COLL_STATIC : u8 = 2;
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub struct CollFlags(pub u8);
-
 #[derive(Component)]
 pub struct CollCircle {
     pub r: Fx16,
     pub off: Vec16,
-    pub flags: CollFlags,
+    pub flags: u8,
 }
 
 impl Coll<CollCircle> for CollCircle {
@@ -35,7 +32,12 @@ impl Coll<CollCircle> for CollCircle {
         let dis = ((other_pos + other.off) - (self_pos + self.off)).len();
         let combined_r = self.r + other.r;
         if dis < combined_r.to_fx32() {
-            (((self_pos + self.off) - (other_pos + other.off)).nor() * (combined_r - dis)).to_16()
+            let vec = (self_pos + self.off) - (other_pos + other.off);
+            if vec.x.0 == 0 && vec.y.0 == 0 {
+                Vec16::new(combined_r, Fx16::new(0.0))
+            } else {
+                (vec.nor() * (combined_r - dis)).to_16()
+            }
         } else {
             Vec16::new(Fx16::new(0.0), Fx16::new(0.0))
         }
@@ -46,5 +48,5 @@ impl Coll<CollCircle> for CollCircle {
          Vec32::new(pos.x + self.off.x, pos.y + self.off.y)]
     }
 
-    fn flags(&self) -> CollFlags { self.flags }
+    fn flags(&self) -> u8 { self.flags }
 }

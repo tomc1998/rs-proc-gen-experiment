@@ -2,6 +2,8 @@
 
 use std::collections::HashMap;
 use glutin;
+use fpa::*;
+use fpavec::*;
 
 /// Some input from the player, used for mapping inputs to commands
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
@@ -17,6 +19,8 @@ pub enum Command {
     MoveRight,
     MoveDown,
     MoveUp,
+    /// Used to attack, but also to navigate through dialogues
+    Primary,
 }
 
 /// A mapping of inputs to commands
@@ -32,6 +36,7 @@ impl InputMap {
         map.insert(Input::Key(glutin::VirtualKeyCode::A), Command::MoveLeft);
         map.insert(Input::Key(glutin::VirtualKeyCode::S), Command::MoveDown);
         map.insert(Input::Key(glutin::VirtualKeyCode::D), Command::MoveRight);
+        map.insert(Input::Mouse(glutin::MouseButton::Left), Command::Primary);
         InputMap {
             map: map,
         }
@@ -54,6 +59,8 @@ impl InputMap {
 pub struct InputState {
     /// Is <command> down?
     pub down: HashMap<Command, bool>,
+    /// Mouse in world coordinates
+    pub mouse: Vec32,
     /// Was a close requested?
     pub should_close: bool,
     /// The size of the window
@@ -67,10 +74,12 @@ impl Default for InputState {
         down.insert(Command::MoveRight, false);
         down.insert(Command::MoveDown, false);
         down.insert(Command::MoveUp, false);
+        down.insert(Command::Primary, false);
         InputState {
             down: down,
             should_close: false,
             window_size: (0, 0),
+            mouse: Vec32::zero(),
         }
     }
 }
@@ -119,6 +128,14 @@ impl InputState {
                             }).unwrap();
                         }
                         _ => ()
+                    }
+                    // Update mouse pos
+                    glutin::WindowEvent::CursorMoved {
+                        position: (x, y), ..
+                    } => {
+                        // TODO: Scale to world pos with camera
+                        self.mouse.x = Fx32::new(x as f32);
+                        self.mouse.y = Fx32::new(y as f32);
                     }
                     _ => {},
                 }

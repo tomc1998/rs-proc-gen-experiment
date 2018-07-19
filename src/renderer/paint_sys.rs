@@ -26,9 +26,9 @@ impl<'a> System<'a> for StaticSpritePainter {
             let tex = atlas.rect_for_tex(sprite.sprite.clone()).unwrap();
             Renderer::rect(&mut vertex_buffer.v_buf[ix .. ix+6],
                            &tex,                  // UV
-                           (pos.x - sprite.w/2.0).to_f32(),  // X
-                           (pos.y - sprite.h).to_f32(),      // Y
-                           (pos.y).to_f32(),                 // Z
+                           (pos.pos.x - sprite.w/2.0).to_f32(),  // X
+                           (pos.pos.y - sprite.h).to_f32(),      // Y
+                           (pos.pos.y).to_f32(),                 // Z
                            sprite.w, sprite.h,    // W, H
                            [1.0, 1.0, 1.0, 1.0]); // Col
             ix += 6;
@@ -55,9 +55,9 @@ impl<'a> System<'a> for AnimSpritePainter {
             let tex = atlas.rect_for_anim_sprite(anim.anim.clone()).unwrap().frame(anim.curr_frame);
             Renderer::rect(&mut vertex_buffer.v_buf[ix .. ix+6],
                            &tex,                  // UV
-                           (pos.x - anim.w/2.0).to_f32(),    // X
-                           (pos.y - anim.h).to_f32(),        // Y
-                           (pos.y).to_f32(),                 // Z
+                           (pos.pos.x - anim.w/2.0).to_f32(),    // X
+                           (pos.pos.y - anim.h).to_f32(),        // Y
+                           (pos.pos.y).to_f32(),                 // Z
                            anim.w, anim.h,        // W, H
                            [1.0, 1.0, 1.0, 1.0]); // Col
             ix += 6;
@@ -91,8 +91,8 @@ impl<'a> System<'a> for TilemapPainter {
                     // prediction for something like this should be pretty fast
                     // - we should just loop over the tiles that we need to
                     // draw.
-                    let x_pos = pos.x * 32.0 * TILEMAP_SIZE as f32 + x as f32 * 32.0;
-                    let y_pos = pos.y * 32.0 * TILEMAP_SIZE as f32 + y as f32 * 32.0;
+                    let x_pos = pos.pos.x * 32.0 * TILEMAP_SIZE as f32 + x as f32 * 32.0;
+                    let y_pos = pos.pos.y * 32.0 * TILEMAP_SIZE as f32 + y as f32 * 32.0;
                     if x_pos + 32.0 < camera.x || x_pos > camera.x + camera.w ||
                         y_pos + 32.0 < camera.y || y_pos > camera.y + camera.h {
                             continue;

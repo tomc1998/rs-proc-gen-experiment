@@ -5,7 +5,7 @@ use std::ops::{Add, AddAssign, Sub, SubAssign, Mul, MulAssign, Div, DivAssign};
 
 use fpa::*;
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Vec16 {
     pub x: Fx16,
     pub y: Fx16
@@ -68,7 +68,7 @@ impl DivAssign<Fx32> for Vec16 {
     fn div_assign(&mut self, rhs: Fx32) {self.x /= rhs; self.y /= rhs;}
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Vec32 {
     pub x: Fx32,
     pub y: Fx32
