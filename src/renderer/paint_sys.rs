@@ -13,24 +13,31 @@ pub struct VertexBuffer {
 pub struct StaticSpritePainter;
 impl<'a> System<'a> for StaticSpritePainter {
     type SystemData = (
+        Entities<'a>,
         WriteExpect<'a, VertexBuffer>,
         ReadExpect<'a, TextureAtlas<TextureKey>>,
         ReadStorage<'a, Pos>,
+        ReadStorage<'a, Tint>,
         ReadStorage<'a, comp::StaticSprite>);
 
-    fn run(&mut self, (mut vertex_buffer, atlas, pos_s, sprite_s): Self::SystemData) {
+    fn run(&mut self, (entities_s, mut vertex_buffer, atlas, pos_s, tint_s, sprite_s): Self::SystemData) {
         use specs::Join;
 
         let mut ix = vertex_buffer.size as usize;
-        for (pos, sprite) in (&pos_s, &sprite_s).join() {
+        for (e, pos, sprite) in (&*entities_s, &pos_s, &sprite_s).join() {
             let tex = atlas.rect_for_tex(sprite.sprite.clone()).unwrap();
+            let col = if let Some(tint) = tint_s.get(e) {
+                tint.col.clone()
+            } else {
+                [1.0, 1.0, 1.0, 1.0]
+            };
             Renderer::rect(&mut vertex_buffer.v_buf[ix .. ix+6],
                            &tex,                  // UV
                            (pos.pos.x - sprite.w/2.0).to_f32(),  // X
                            (pos.pos.y - sprite.h).to_f32(),      // Y
                            (pos.pos.y).to_f32(),                 // Z
                            sprite.w, sprite.h,    // W, H
-                           [1.0, 1.0, 1.0, 1.0]); // Col
+                           col); // Col
             ix += 6;
         }
         vertex_buffer.size = ix as u32;
@@ -42,24 +49,31 @@ impl<'a> System<'a> for StaticSpritePainter {
 pub struct AnimSpritePainter;
 impl<'a> System<'a> for AnimSpritePainter {
     type SystemData = (
+        Entities<'a>,
         WriteExpect<'a, VertexBuffer>,
         ReadExpect<'a, TextureAtlas<TextureKey>>,
         ReadStorage<'a, Pos>,
+        ReadStorage<'a, Tint>,
         ReadStorage<'a, comp::AnimSprite>);
 
-    fn run(&mut self, (mut vertex_buffer, atlas, pos_s, anim_s): Self::SystemData) {
+    fn run(&mut self, (entities_s, mut vertex_buffer, atlas, pos_s, tint_s, anim_s): Self::SystemData) {
         use specs::Join;
 
         let mut ix = vertex_buffer.size as usize;
-        for (pos, anim) in (&pos_s, &anim_s).join() {
+        for (e, pos, anim) in (&*entities_s, &pos_s, &anim_s).join() {
             let tex = atlas.rect_for_anim_sprite(anim.anim.clone()).unwrap().frame(anim.curr_frame);
+            let col = if let Some(tint) = tint_s.get(e) {
+                tint.col.clone()
+            } else {
+                [1.0, 1.0, 1.0, 1.0]
+            };
             Renderer::rect(&mut vertex_buffer.v_buf[ix .. ix+6],
                            &tex,                  // UV
                            (pos.pos.x - anim.w/2.0).to_f32(),    // X
                            (pos.pos.y - anim.h).to_f32(),        // Y
                            (pos.pos.y).to_f32(),                 // Z
                            anim.w, anim.h,        // W, H
-                           [1.0, 1.0, 1.0, 1.0]); // Col
+                           col); // Col
             ix += 6;
         }
         vertex_buffer.size = ix as u32;

@@ -13,16 +13,18 @@ impl<'a> System<'a> for HealthSys {
         ReadStorage<'a, Hurt>,
         ReadStorage<'a, HurtKnockbackDir>,
         WriteStorage<'a, Health>,
+        WriteStorage<'a, Tint>,
         WriteStorage<'a, Knockback>);
 
     fn run(&mut self, (entities_s, delta, collisions, hurt_s, hurt_knockback_dir_s,
-                       mut health_s, mut on_hit_s): Self::SystemData) {
+                       mut health_s, mut tint_s, mut on_hit_s): Self::SystemData) {
 
-        for mut health in (&mut health_s).join() {
+        for (e, mut health) in (&*entities_s, &mut health_s).join() {
             if health.inv_time.0 > 0 {
                 health.inv_time -= delta.0 * 1000.0;
                 if health.inv_time.0 < 0 {
                     health.inv_time.0 = 0;
+                    tint_s.remove(e);
                 }
             }
         }
@@ -37,6 +39,10 @@ impl<'a> System<'a> for HealthSys {
                         entities_s.delete(*e0).unwrap();
                     }
                     health.inv_time = health.max_inv_time;
+                    // Apply tint to e0
+                    tint_s.insert(*e0, Tint {
+                        col: [1.0, 0.1, 0.1, 1.0],
+                    }).unwrap();
                     if let Some(kb) = hurt_knockback_dir_s.get(*e1) {
                         // Apply knockback to e0
                         on_hit_s.insert(*e0, Knockback {

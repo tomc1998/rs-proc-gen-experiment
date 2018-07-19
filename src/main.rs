@@ -76,6 +76,7 @@ fn create_world() -> specs::World {
     world.register::<Lifetime>();
     world.register::<Knockback>();
     world.register::<HurtKnockbackDir>();
+    world.register::<Tint>();
     world
 }
 
