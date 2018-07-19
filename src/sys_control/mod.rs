@@ -58,7 +58,7 @@ impl<'a> System<'a> for PlayerControllerSys {
                     vel.vel.x = Fx32::new(0.0);
                 }
                 // Attack
-                if *input_state.down.get(&input::Command::Primary).unwrap() {
+                if *input_state.pressed.get(&input::Command::Primary).unwrap() {
                     vel.vel.x = Fx32::new(0.0);
                     vel.vel.y = Fx32::new(0.0);
                     pc.state = PlayerState::Attacking;

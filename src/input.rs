@@ -59,6 +59,8 @@ impl InputMap {
 pub struct InputState {
     /// Is <command> down?
     pub down: HashMap<Command, bool>,
+    /// Has <command> just been pressed?
+    pub pressed: HashMap<Command, bool>,
     /// Mouse in world coordinates
     pub mouse: Vec32,
     /// Was a close requested?
@@ -75,8 +77,15 @@ impl Default for InputState {
         down.insert(Command::MoveDown, false);
         down.insert(Command::MoveUp, false);
         down.insert(Command::Primary, false);
+        let mut pressed = HashMap::new();
+        pressed.insert(Command::MoveLeft, false);
+        pressed.insert(Command::MoveRight, false);
+        pressed.insert(Command::MoveDown, false);
+        pressed.insert(Command::MoveUp, false);
+        pressed.insert(Command::Primary, false);
         InputState {
             down: down,
+            pressed: pressed,
             should_close: false,
             window_size: (0, 0),
             mouse: Vec32::zero(),
@@ -90,6 +99,9 @@ impl InputState {
     }
 
     pub fn process_input(&mut self, map: &InputMap, events_loop: &mut glutin::EventsLoop) {
+        for (_, v) in self.pressed.iter_mut() {
+            *v = false;
+        }
         events_loop.poll_events(|event| {
             if let glutin::Event::WindowEvent { event, .. } = event {
                 match event {
@@ -109,10 +121,14 @@ impl InputState {
                         }, ..
                     } => match map.get(&Input::Key(k)) {
                         Some(c) => {
-                            self.down.insert(c.clone(), match e {
-                                glutin::ElementState::Pressed => true,
-                                glutin::ElementState::Released => false,
-                            }).unwrap();
+                            if e == glutin::ElementState::Pressed {
+                                if !self.down.get(&c).unwrap() {
+                                    self.pressed.insert(c.clone(), true);
+                                }
+                                self.down.insert(c.clone(), true);
+                            } else {
+                                self.down.insert(c.clone(), false);
+                            }
                         }
                         _ => ()
                     }
@@ -122,10 +138,14 @@ impl InputState {
                         button: b, ..
                     } => match map.get(&Input::Mouse(b)) {
                         Some(c) => {
-                            self.down.insert(c.clone(), match e {
-                                glutin::ElementState::Pressed => true,
-                                glutin::ElementState::Released => false,
-                            }).unwrap();
+                            if e == glutin::ElementState::Pressed {
+                                if !self.down.get(&c).unwrap() {
+                                    self.pressed.insert(c.clone(), true);
+                                }
+                                self.down.insert(c.clone(), true);
+                            } else {
+                                self.down.insert(c.clone(), false);
+                            }
                         }
                         _ => ()
                     }
