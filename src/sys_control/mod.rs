@@ -1,5 +1,9 @@
 //! Module for controller systems - either AI or input controlled
 
+mod slime_ai;
+
+pub use self::slime_ai::SlimeAISys;
+
 use DeltaTime;
 use input;
 use specs::*;
@@ -32,31 +36,31 @@ impl<'a> System<'a> for PlayerControllerSys {
             if pc.state == PlayerState::Default {
                 let mut anim_change = None;
                 if *input_state.down.get(&input::Command::MoveUp).unwrap() {
-                    vel.vel.y = -pc.move_speed;
+                    vel.vel.y = -pc.move_speed.to_fx32();
                     anim_change = Some(TextureKey::Human00WalkUp);
                 }
                 else if *input_state.down.get(&input::Command::MoveDown).unwrap() {
-                    vel.vel.y = pc.move_speed;
+                    vel.vel.y = pc.move_speed.to_fx32();
                     anim_change = Some(TextureKey::Human00WalkDown);
                 }
                 else {
-                    vel.vel.y = Fx16::new(0.0);
+                    vel.vel.y = Fx32::new(0.0);
                 }
                 if *input_state.down.get(&input::Command::MoveLeft).unwrap() {
-                    vel.vel.x = -pc.move_speed;
+                    vel.vel.x = -pc.move_speed.to_fx32();
                     anim_change = Some(TextureKey::Human00WalkLeft);
                 }
                 else if *input_state.down.get(&input::Command::MoveRight).unwrap() {
-                    vel.vel.x = pc.move_speed;
+                    vel.vel.x = pc.move_speed.to_fx32();
                     anim_change = Some(TextureKey::Human00WalkRight);
                 }
                 else {
-                    vel.vel.x = Fx16::new(0.0);
+                    vel.vel.x = Fx32::new(0.0);
                 }
                 // Attack
                 if *input_state.down.get(&input::Command::Primary).unwrap() {
-                    vel.vel.x = Fx16::new(0.0);
-                    vel.vel.y = Fx16::new(0.0);
+                    vel.vel.x = Fx32::new(0.0);
+                    vel.vel.y = Fx32::new(0.0);
                     pc.state = PlayerState::Attacking;
                     pc.attack_time = Fx16::new(125.0);
                     // Figure out attack dir
@@ -128,7 +132,7 @@ impl<'a> System<'a> for PlayerControllerSys {
                 }
                 if let Some(anim_change) = anim_change {
                     anim.set_anim(anim_change, 4, Fx32::new(150.0));
-                } else if vel.vel.x == Fx16::new(0.0) && vel.vel.y == Fx16::new(0.0)
+                } else if vel.vel.x == Fx32::new(0.0) && vel.vel.y == Fx32::new(0.0)
                     && pc.state == PlayerState::Default {
                     match anim.anim {
                         TextureKey::Human00WalkLeft | TextureKey::Human00AttackLeft =>

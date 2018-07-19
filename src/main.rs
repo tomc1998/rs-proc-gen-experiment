@@ -77,6 +77,7 @@ fn create_world() -> specs::World {
     world.register::<Knockback>();
     world.register::<HurtKnockbackDir>();
     world.register::<Tint>();
+    world.register::<Alliance>();
     world
 }
 
@@ -103,7 +104,8 @@ fn main() {
     // Player
     world.create_entity()
         .with(Pos { pos: Vec32::new(Fx32::new(32.0), Fx32::new(32.0)) })
-        .with(Vel { vel: Vec16::zero() })
+        .with(Vel { vel: Vec32::zero() })
+        .with(Alliance::good())
         .with(PlayerControlled::new())
         .with(Health::new(8, Hitmask(HITMASK_PLAYER)))
         .with(CollCircle { r: Fx16::new(8.0),
@@ -124,9 +126,15 @@ fn main() {
     // Slime
     world.create_entity()
         .with(Pos { pos: Vec32::new(Fx32::new(200.0), Fx32::new(200.0)) })
+        .with(Vel { vel: Vec32::zero() })
         .with(Health::new(4, Hitmask(HITMASK_ENEMY)))
-        .with(AISlime { move_target: Vec32::new(Fx32::new(400.0), Fx32::new(400.0)),
-                        charge_time: Fx16::new(0.0),
+        .with(Hurt { damage: 2,
+                     mask: Hitmask::default_enemy_attack(),
+                     flags: 0 })
+        .with(Alliance::evil())
+        .with(AISlime { move_target: Vec32::new(Fx32::new(200.0), Fx32::new(200.0)),
+                        attack_target: None,
+                        charge_time: Fx32::new(0.0),
                         state: SlimeState::Idle })
         .with(CollCircle { r: Fx16::new(8.0),
                            off: Vec16::new(Fx16::new(0.0), Fx16::new(0.0)),
@@ -162,14 +170,26 @@ fn main() {
 
     // Build dispatcher
     let mut dispatcher = specs::DispatcherBuilder::new()
-        .with(sys_control::PlayerControllerSys, "player_controller", &[])
-        .with(sys_anim::AnimSpriteSys, "anim_sprite", &["player_controller"])
         .with(sys_lifetime::LifetimeSys, "lifetime", &[])
+        // Control
+        .with(sys_control::PlayerControllerSys, "player_controller", &[])
+        .with(sys_control::SlimeAISys, "slime_ai", &[])
+        .with(MarkerSys, "control", &["player_controller", "slime_ai"])
+
+        // Animation
+        .with(sys_anim::AnimSpriteSys, "anim_sprite", &["control"])
+
+        // Physics
         .with(sys_phys::PhysSys::<CollCircle, CollCircle>::new(), "phys_circ_circ", &["player_controller"])
         .with(MarkerSys, "phys", &["phys_circ_circ"])
+
+        // Combat
         .with(sys_health::HealthSys, "health", &["phys"])
         .with(sys_on_hit::KnockbackSys, "oh_knockback", &["health"])
+
         .with(MarkerSys, "update", &["phys", "anim_sprite"])
+
+        // Paint
         .with(renderer::TilemapPainter, "tilemap_paint", &["update"])
         .with(renderer::AnimSpritePainter, "anim_sprite_paint", &["update"])
         .with(renderer::StaticSpritePainter, "static_sprite_paint", &["update"])
@@ -192,6 +212,9 @@ fn main() {
             let mut v_buf = world.write_resource::<renderer::VertexBuffer>();
             renderer.flush_render(&mut device, &v_buf, &world.read_resource::<renderer::Camera>());
             v_buf.size = 0; // After painting, we need to clear the v_buf
+            // Clear collision list
+            let mut collisions = world.write_resource::<Collisions>();
+            (*collisions).0.clear();
         }
 
         window.swap_buffers().unwrap();

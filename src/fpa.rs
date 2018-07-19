@@ -35,11 +35,13 @@ impl Fx32 {
     pub fn to_f32(&self) -> f32 { self.0 as f32 / FPA_MUL }
     pub fn to_fx16(&self) -> Fx16 { Fx16(self.0 as i16) }
     pub fn abs(self) -> Fx32 { Fx32(self.0.abs()) }
-    pub fn powi(mut self, exp: usize) -> Fx32 {
+    pub fn powi(self, exp: usize) -> Fx32 {
+        let mut total = self.0 as i64;
         for _ in 1..exp {
-            self.0 = (self.0 as i64 * self.0 as i64 / FPA_MUL as i64) as i32;
+            total *= self.0 as i64;
+            total /= FPA_MUL as i64;
         }
-        self
+        Fx32(total as i32)
     }
     pub fn sqrt(self) -> Fx32 {
         Fx32((FPA_MUL as i64 * self.0 as i64).sqrt() as i32)
@@ -48,7 +50,7 @@ impl Fx32 {
 
 impl Add<Fx32> for Fx32 { type Output = Fx32;  fn add(self, rhs: Self) -> Self::Output { Fx32(self.0 + rhs.0) } }
 impl Sub<Fx32> for Fx32 { type Output = Fx32;  fn sub(self, rhs: Self) -> Self::Output { Fx32(self.0 - rhs.0) } }
-impl Div<Fx32> for Fx32 { type Output = Fx32;  fn div(self, rhs: Self) -> Self::Output { Fx32((self.0 as i64 * FPA_MUL as i64) as i32 / rhs.0 as i32) } }
+impl Div<Fx32> for Fx32 { type Output = Fx32;  fn div(self, rhs: Self) -> Self::Output { Fx32(((self.0 as i64 * FPA_MUL as i64) as i64 / rhs.0 as i64) as i32) } }
 impl Mul<Fx32> for Fx32 { type Output = Fx32;  fn mul(self, rhs: Self) -> Self::Output { Fx32((self.0 as i64 * rhs.0 as i64 / FPA_MUL as i64) as i32) } }
 impl AddAssign<Fx32> for Fx32 { fn add_assign(&mut self, rhs: Self) { self.0 = (*self + rhs).0 } }
 impl SubAssign<Fx32> for Fx32 { fn sub_assign(&mut self, rhs: Self) { self.0 = (*self - rhs).0 } }
@@ -84,11 +86,13 @@ impl Fx16 {
     pub fn to_f32(&self) -> f32 { self.0 as f32 / FPA_MUL }
     pub fn to_fx32(&self) -> Fx32 { Fx32(self.0 as i32) }
     pub fn abs(self) -> Fx16 { Fx16(self.0.abs()) }
-    pub fn powi(mut self, exp: usize) -> Fx16 {
+    pub fn powi(self, exp: usize) -> Fx16 {
+        let mut total = self.0 as i32;
         for _ in 1..exp {
-            self.0 = (self.0 as i32 * self.0 as i32 / FPA_MUL as i32) as i16;
+            total *= self.0 as i32;
+            total /= FPA_MUL as i32;
         }
-        self
+        Fx16(total as i16)
     }
     pub fn sqrt(self) -> Fx16 {
         Fx16((FPA_MUL as i32 * self.0 as i32).sqrt() as i16)
@@ -96,7 +100,7 @@ impl Fx16 {
 }
 impl Add<Fx16> for Fx16 { type Output = Fx16; fn add(self, rhs: Self) -> Self::Output { Fx16(self.0 + rhs.0) } }
 impl Sub<Fx16> for Fx16 { type Output = Fx16; fn sub(self, rhs: Self) -> Self::Output { Fx16(self.0 - rhs.0) } }
-impl Div<Fx16> for Fx16 { type Output = Fx16; fn div(self, rhs: Self) -> Self::Output { Fx16((self.0 as i32 * FPA_MUL as i32) as i16 / rhs.0 as i16) } }
+impl Div<Fx16> for Fx16 { type Output = Fx16; fn div(self, rhs: Self) -> Self::Output { Fx16(((self.0 as i32 * FPA_MUL as i32) as i32 / rhs.0 as i32) as i16) } }
 impl Mul<Fx16> for Fx16 { type Output = Fx16; fn mul(self, rhs: Self) -> Self::Output { Fx16((self.0 as i32 * rhs.0 as i32 / FPA_MUL as i32) as i16) } }
 impl AddAssign<Fx16> for Fx16 { fn add_assign(&mut self, rhs: Self) { self.0 = (*self + rhs).0 } }
 impl SubAssign<Fx16> for Fx16 { fn sub_assign(&mut self, rhs: Self) { self.0 = (*self - rhs).0 } }
@@ -146,6 +150,7 @@ mod tests {
         assert_eq!((-foo).to_f32(), -160.0);
         assert!(foo > bar);
         assert_eq!(Fx32::new(2.0).powi(2).to_f32(), 4.0);
+        assert_eq!(Fx32::new(-2.0).powi(2).to_f32(), 4.0);
         assert_eq!(Fx32::new(4.0).sqrt().to_f32(), 2.0);
         assert_eq!(Fx32::new(2.25).sqrt().to_f32(), 1.5);
     }
@@ -156,9 +161,13 @@ mod tests {
         let mut foo = Fx16::new(64.0);
         let bar = Fx16::new(150.0);
         foo += 32.0;
+        println!("{:?}", foo);
         foo -= 16.0;
+        println!("{:?}", foo);
         foo /= 2.0;
+        println!("{:?}", foo);
         foo *= 4.0;
+        println!("{:?}", foo);
         assert_eq!(foo.to_f32(), 160.0);
         assert_eq!(foo, bar + 10.0);
         assert_eq!((-foo).to_f32(), -160.0);

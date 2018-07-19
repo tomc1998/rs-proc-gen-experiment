@@ -4,11 +4,13 @@ mod coll;
 mod control;
 mod health;
 mod visual;
+mod alliance;
 
 pub use self::coll::*;
 pub use self::control::*;
 pub use self::health::*;
 pub use self::visual::*;
+pub use self::alliance::*;
 use fpa::*;
 use fpavec::*;
 use specs::{DenseVecStorage, VecStorage};
@@ -20,7 +22,7 @@ pub struct Pos {
 
 #[derive(Component)]
 pub struct Vel {
-    pub vel: Vec16,
+    pub vel: Vec32,
 }
 
 /// When this component is attached to an object, it will remove the object once

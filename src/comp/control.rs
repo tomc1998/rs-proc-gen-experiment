@@ -1,4 +1,4 @@
-use specs::{DenseVecStorage};
+use specs::*;
 use fpavec::*;
 use fpa::*;
 
@@ -35,7 +35,6 @@ impl PlayerControlled {
 #[allow(dead_code)]
 pub enum SlimeState {
     Idle,
-    Targeted,
     Charging,
     Jumping
 }
@@ -44,8 +43,12 @@ pub enum SlimeState {
 /// entity.
 #[derive(Component)]
 pub struct AISlime {
+    /// Set when moving towards a place in idle
     pub move_target: Vec32,
-    /// Once this hits 0, the slime jumps
-    pub charge_time: Fx16,
+    /// Set when attacking
+    pub attack_target: Option<Entity>,
+    /// Once this hits 0, the slime changes state. This is used when charging,
+    /// but also when jumping to know when to reset to idle.
+    pub charge_time: Fx32,
     pub state: SlimeState,
 }
