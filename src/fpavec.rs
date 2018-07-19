@@ -12,6 +12,7 @@ pub struct Vec16 {
 }
 impl Vec16 {
     pub fn new(x: Fx16, y: Fx16) -> Vec16 {Vec16 {x, y}}
+    pub fn zero() -> Vec16 { Vec16 { x: Fx16::new(0.0), y: Fx16::new(0.0) } }
     pub fn to_32(&self) -> Vec32 {Vec32::new(self.x.to_fx32(), self.y.to_fx32())}
     pub fn len(&self) -> Fx32 {(self.x.to_fx32().powi(2) + self.y.to_fx32().powi(2)).sqrt()}
     pub fn nor(self) -> Vec16 {self / self.len()}
@@ -74,6 +75,7 @@ pub struct Vec32 {
 }
 impl Vec32 {
     pub fn new(x: Fx32, y: Fx32) -> Vec32 {Vec32 {x, y}}
+    pub fn zero() -> Vec32 { Vec32 { x: Fx32::new(0.0), y: Fx32::new(0.0) } }
     pub fn to_16(&self) -> Vec16 {Vec16::new(self.x.to_fx16(), self.y.to_fx16())}
     pub fn len(&self) -> Fx32 {(self.x.powi(2) + self.y.powi(2)).sqrt()}
     pub fn nor(self) -> Vec32 {self / self.len()}

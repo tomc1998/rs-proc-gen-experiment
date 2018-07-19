@@ -3,8 +3,9 @@
 use std::marker;
 use specs::*;
 use comp::*;
-use std::mem;
 use DeltaTime;
+use fpa::*;
+use fpavec::*;
 
 pub struct PhysSys<C0: Coll<C1>, C1: Coll<C0>> {
     m0: marker::PhantomData<C0>,
@@ -38,26 +39,26 @@ impl<'a, C0: Coll<C1> + Component, C1: Coll<C0> + Component> System<'a> for Phys
         }
 
         // Update entities that collide
-        for (e0, pos0, coll0) in (&*entities_s, &pos_s, &coll0_s).join() {
+        for (e0, coll0) in (&*entities_s, &coll0_s).join() {
             let flags = coll0.flags();
             if flags.0 & COLL_STATIC > 0 || flags.0 & COLL_SOLID == 0 { continue }
             // No broad phase, just brute force
             // TODO: Implement broad-phase collision
-            for (e1, pos1, coll1) in (&*entities_s, &pos_s, &coll1_s).join() {
-                if e1 == e0 { continue; }
-                let res = coll0.resolve(coll1, pos0.to_vec(), pos1.to_vec());
-                // Some bullshit transmuting to mutate pos
-                unsafe {
-                    let pos0_ptr : *mut Pos = mem::transmute(pos0);
+            let mut res = Vec16::zero();
+            if let Some(pos0) = pos_s.get(e0) {
+                for (e1, pos1, coll1) in (&*entities_s, &pos_s, &coll1_s).join() {
+                    if e1 == e0 { continue; }
                     if coll1.flags().0 & COLL_STATIC > 0 {
-                        (*pos0_ptr).x += res.x;
-                        (*pos0_ptr).y += res.y;
+                        res += coll0.resolve(coll1, pos0.to_vec(), pos1.to_vec());
                     } else {
-                        (*pos0_ptr).x += res.x / 2.0;
-                        (*pos0_ptr).y += res.y / 2.0;
+                        res += coll0.resolve(coll1, pos0.to_vec(), pos1.to_vec()) / Fx16::new(2.0);
                     }
                 }
-            }
+            } else { continue }
+            // Now add this res to e0's pos component
+            let pos = pos_s.get_mut(e0).unwrap();
+            pos.x += res.x;
+            pos.y += res.y;
         };
     }
 }
