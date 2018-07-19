@@ -25,6 +25,7 @@ mod sys_health;
 mod sys_phys;
 mod sys_anim;
 mod sys_lifetime;
+mod sys_on_hit;
 mod fpa;
 mod fpavec;
 
@@ -38,8 +39,16 @@ use glutin::{GlRequest, GlContext};
 use glutin::Api::OpenGl;
 use std::time;
 
+pub struct CollisionMeta {
+    /// This normal points outwards from entity B to entity A (and is also used
+    /// to resolve circ - circ collisions)
+    /// Will be normalised.
+    #[allow(dead_code)]
+    normal: Vec16,
+}
+
 /// Lists pairs of collisions.
-pub struct Collisions(Vec<(Entity, Entity)>);
+pub struct Collisions(Vec<(Entity, Entity, CollisionMeta)>);
 
 pub struct DeltaTime(pub f32);
 
@@ -65,6 +74,8 @@ fn create_world() -> specs::World {
     world.register::<Hurt>();
     world.register::<Health>();
     world.register::<Lifetime>();
+    world.register::<Knockback>();
+    world.register::<HurtKnockbackDir>();
     world
 }
 
@@ -111,7 +122,7 @@ fn main() {
         .build();
     // Slime
     world.create_entity()
-        .with(Pos { pos: Vec32::new(Fx32::new(400.0), Fx32::new(400.0)) })
+        .with(Pos { pos: Vec32::new(Fx32::new(200.0), Fx32::new(200.0)) })
         .with(Health::new(4, Hitmask(HITMASK_ENEMY)))
         .with(AISlime { move_target: Vec32::new(Fx32::new(400.0), Fx32::new(400.0)),
                         charge_time: Fx16::new(0.0),
@@ -156,6 +167,7 @@ fn main() {
         .with(sys_phys::PhysSys::<CollCircle, CollCircle>::new(), "phys_circ_circ", &["player_controller"])
         .with(MarkerSys, "phys", &["phys_circ_circ"])
         .with(sys_health::HealthSys, "health", &["phys"])
+        .with(sys_on_hit::KnockbackSys, "oh_knockback", &["health"])
         .with(MarkerSys, "update", &["phys", "anim_sprite"])
         .with(renderer::TilemapPainter, "tilemap_paint", &["update"])
         .with(renderer::AnimSpritePainter, "anim_sprite_paint", &["update"])

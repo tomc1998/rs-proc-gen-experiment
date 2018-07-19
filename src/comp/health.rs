@@ -1,5 +1,6 @@
 use specs::{DenseVecStorage};
 use fpa::*;
+use fpavec::*;
 
 /// A hitmask - only hurtboxes that have an overlap with a health hitmask will
 /// hit (i.e. if we have the hurtbox hitmask as hb_hm, and the health hitmask as
@@ -84,9 +85,6 @@ impl Health {
     /// Hurt this health component with the hurt component. Returns true if this
     /// entity should die now.
     pub fn hurt(&mut self, hurt: &Hurt) -> bool {
-        // Check that we actually collide with this thing
-        if !self.mask.collides(&hurt.mask) { return false; }
-
         if self.health > hurt.damage {
             self.health -= hurt.damage;
             false
@@ -112,4 +110,24 @@ pub struct Hurt {
     pub mask: Hitmask,
     /// Some flags. See the HURT_* consts.
     pub flags: u8,
+}
+
+/// If an entity contains this, this means that if it collides with another
+/// entity that has health, it will knock that entity back in a given direction
+#[derive(Component)]
+pub struct HurtKnockbackDir {
+    pub knockback: Vec16,
+    /// Duration in millis. Counts to 0, when 0, removes this component.
+    pub duration: Fx32,
+}
+
+/// Knockback will apply the given velocity to an object until the duration
+/// wears off. Vel will apply over 1 second - so if this contains (100, 50)
+/// and the OnHit duration is 1000.0, this will knock the entity back
+/// roughly 100, 50 (but this shouldn't be relied on due to rouding errs)
+#[derive(Component)]
+pub struct Knockback {
+    pub knockback: Vec16,
+    /// Duration in millis. Counts to 0, when 0, removes this component.
+    pub duration: Fx32,
 }

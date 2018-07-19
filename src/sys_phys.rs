@@ -5,6 +5,7 @@ use specs::*;
 use comp::*;
 use DeltaTime;
 use Collisions;
+use CollisionMeta;
 use fpa::*;
 use fpavec::*;
 
@@ -52,10 +53,12 @@ impl<'a, C0: Coll<C1> + Component, C1: Coll<C0> + Component> System<'a> for Phys
                 for (e1, pos1, coll1) in (&*entities_s, &pos_s, &coll1_s).join() {
                     if e1 == e0 { continue; }
                     let this_res = coll0.resolve(coll1, pos0.pos, pos1.pos);
-                    if this_res.x.0 == 0 && this_res.y.0 == 0 { continue; }
+                    if this_res.len().0 == 0 { continue; }
 
                     // Insert into collisions
-                    collisions.0.push((e0, e1));
+                    collisions.0.push((e0, e1, CollisionMeta {
+                        normal: this_res.nor()
+                    }));
                     let flags1 = coll1.flags();
 
                     // Process physics (or skip depending on the flags)

@@ -174,7 +174,7 @@ impl Renderer {
             .add_tileset(TextureKey::TilesetGrass, "res/tileset-grass.png", 8, 8).unwrap()
             .add_anim_sprite("res/sprites/human-00.png", human_frame_map.clone(), 8, 8).unwrap()
             .add_anim_sprite("res/sprites/slime-00.png", slime_frame_map.clone(), 8, 8).unwrap()
-            .add_anim_sprite("res/sprites/fx/slice-00.png", slice_frame_map.clone(), 8, 8).unwrap()
+            .add_anim_sprite("res/sprites/fx/slice-00.png", slice_frame_map.clone(), 16, 16).unwrap()
             .build(factory);
         let sampler = factory.create_sampler(
             gfx::texture::SamplerInfo::new(

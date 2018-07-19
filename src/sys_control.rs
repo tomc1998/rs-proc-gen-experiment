@@ -58,7 +58,7 @@ impl<'a> System<'a> for PlayerControllerSys {
                     vel.vel.x = Fx16::new(0.0);
                     vel.vel.y = Fx16::new(0.0);
                     pc.state = PlayerState::Attacking;
-                    pc.attack_time = Fx16::new(250.0);
+                    pc.attack_time = Fx16::new(125.0);
                     // Figure out attack dir
                     let vec = input_state.mouse - pos.pos;
                     let dir = if vec.x.abs() > vec.y.abs() {
@@ -92,22 +92,31 @@ impl<'a> System<'a> for PlayerControllerSys {
                     lazy_update.create_entity(&*entities_s)
                         .with(Pos {
                             pos: pos.pos + match dir {
-                                Direction::Down   => Vec32::new(Fx32::new(0.0),   Fx32::new(16.0)),
-                                Direction::Left   => Vec32::new(Fx32::new(-16.0), Fx32::new(0.0)),
-                                Direction::Up     => Vec32::new(Fx32::new(0.0),   Fx32::new(-16.0)),
-                                Direction::Right  => Vec32::new(Fx32::new(16.0),  Fx32::new(0.0)),
+                                Direction::Down   => Vec32::new(Fx32::new(0.0),   Fx32::new(20.0)),
+                                Direction::Left   => Vec32::new(Fx32::new(-16.0), Fx32::new(8.0)),
+                                Direction::Up     => Vec32::new(Fx32::new(0.0),   Fx32::new(8.0)),
+                                Direction::Right  => Vec32::new(Fx32::new(16.0),  Fx32::new(8.0)),
                             }
                         })
                         .with(Hurt { damage: 2,
                                      mask: Hitmask::default_player_attack(),
                                      flags: 0 })
                         .with(CollCircle {
-                            r: Fx16::new(16.0),
+                            r: Fx16::new(40.0),
                             off: Vec16::zero(),
                             flags: 0,
                         })
-                        .with(Lifetime { lifetime: Fx32::new(250.0) })
-                        .with(AnimSprite::new(32.0, 32.0, Fx32::new(50.0), 5,
+                        .with(HurtKnockbackDir {
+                            knockback: match dir {
+                                Direction::Down   => Vec16::new(Fx16::new(0.0),   Fx16::new(500.0)),
+                                Direction::Left   => Vec16::new(Fx16::new(-500.0), Fx16::new(0.0)),
+                                Direction::Up     => Vec16::new(Fx16::new(0.0),   Fx16::new(-500.0)),
+                                Direction::Right  => Vec16::new(Fx16::new(500.0),  Fx16::new(0.0)),
+                            },
+                            duration: Fx32::new(96.0)
+                        })
+                        .with(Lifetime { lifetime: Fx32::new(125.0) })
+                        .with(AnimSprite::new(64.0, 64.0, Fx32::new(25.0), 5,
                                               match dir {
                                                   Direction::Down  => TextureKey::Slice00Down,
                                                   Direction::Left  => TextureKey::Slice00Left,
