@@ -21,6 +21,7 @@ mod renderer;
 mod comp;
 mod input;
 mod sys_control;
+mod sys_health;
 mod sys_phys;
 mod sys_anim;
 mod sys_lifetime;
@@ -36,6 +37,9 @@ use gfx_window_glutin as gfx_glutin;
 use glutin::{GlRequest, GlContext};
 use glutin::Api::OpenGl;
 use std::time;
+
+/// Lists pairs of collisions.
+pub struct Collisions(Vec<(Entity, Entity)>);
 
 pub struct DeltaTime(pub f32);
 
@@ -139,6 +143,7 @@ fn main() {
     world.add_resource(camera);
     world.add_resource(input_state.clone());
     world.add_resource(DeltaTime(0.016));
+    world.add_resource(Collisions(Vec::with_capacity(128)));
     world.add_resource(renderer::VertexBuffer {
         v_buf: v_buf, size: 0,
     });
@@ -146,10 +151,12 @@ fn main() {
     // Build dispatcher
     let mut dispatcher = specs::DispatcherBuilder::new()
         .with(sys_control::PlayerControllerSys, "player_controller", &[])
+        .with(sys_anim::AnimSpriteSys, "anim_sprite", &["player_controller"])
         .with(sys_lifetime::LifetimeSys, "lifetime", &[])
         .with(sys_phys::PhysSys::<CollCircle, CollCircle>::new(), "phys_circ_circ", &["player_controller"])
-        .with(sys_anim::AnimSpriteSys, "anim_sprite", &["player_controller"])
-        .with(MarkerSys, "update", &["phys_circ_circ", "player_controller"])
+        .with(MarkerSys, "phys", &["phys_circ_circ"])
+        .with(sys_health::HealthSys, "health", &["phys"])
+        .with(MarkerSys, "update", &["phys", "anim_sprite"])
         .with(renderer::TilemapPainter, "tilemap_paint", &["update"])
         .with(renderer::AnimSpritePainter, "anim_sprite_paint", &["update"])
         .with(renderer::StaticSpritePainter, "static_sprite_paint", &["update"])

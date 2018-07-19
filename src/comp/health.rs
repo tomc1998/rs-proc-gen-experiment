@@ -1,4 +1,5 @@
 use specs::{DenseVecStorage};
+use fpa::*;
 
 /// A hitmask - only hurtboxes that have an overlap with a health hitmask will
 /// hit (i.e. if we have the hurtbox hitmask as hb_hm, and the health hitmask as
@@ -57,6 +58,10 @@ impl Hitmask {
 pub struct Health {
     pub max_health: u8,
     pub health: u8,
+    /// Maximum invuln time after being hit (in millis)
+    pub max_inv_time: Fx16,
+    /// Counts to 0
+    pub inv_time: Fx16,
     /// What is this?
     /// If this is the component for an ally, for example, this should have a
     /// value of HITMASK_ALLY.
@@ -71,12 +76,30 @@ impl Health {
             max_health: max_health,
             health: max_health,
             mask: mask,
+            max_inv_time: Fx16::new(300.0),
+            inv_time: Fx16::new(0.0),
+        }
+    }
+
+    /// Hurt this health component with the hurt component. Returns true if this
+    /// entity should die now.
+    pub fn hurt(&mut self, hurt: &Hurt) -> bool {
+        // Check that we actually collide with this thing
+        if !self.mask.collides(&hurt.mask) { return false; }
+
+        if self.health > hurt.damage {
+            self.health -= hurt.damage;
+            false
+        } else {
+            self.health = 0;
+            true
         }
     }
 }
 
 /// If this is set, the hurt component will be removed once it hurts one thing.
 /// This is useful for projectile attacks.
+#[allow(dead_code)]
 pub const HURT_DIES : u8 = 1;
 
 /// If an entity contains this, this means that if it collides with another
