@@ -28,6 +28,8 @@ mod sys_lifetime;
 mod sys_on_hit;
 mod fpa;
 mod fpavec;
+mod ui;
+mod camera;
 
 use comp::*;
 use fpa::*;
@@ -78,6 +80,7 @@ fn create_world() -> specs::World {
     world.register::<HurtKnockbackDir>();
     world.register::<Tint>();
     world.register::<Alliance>();
+    world.register::<FollowCamera>();
     world
 }
 
@@ -96,7 +99,7 @@ fn main() {
     let (w, h) = window.get_inner_size().unwrap();
     let (mut renderer, atlas) = renderer::Renderer::new(
         &mut factory, color_view, depth_view, w, h, Default::default());
-    let camera = renderer::Camera::new(w as f32, h as f32);
+    let camera = camera::Camera::new(w as f32, h as f32);
 
     // Create the ECS world, and a test entity, plus trees
     let mut world = create_world();
@@ -107,6 +110,7 @@ fn main() {
         .with(Vel { vel: Vec32::zero() })
         .with(Alliance::good())
         .with(PlayerControlled::new())
+        .with(FollowCamera)
         .with(Health::new(8, Hitmask(HITMASK_PLAYER)))
         .with(CollCircle { r: Fx16::new(8.0),
                            off: Vec16::new(Fx16::new(0.0), Fx16::new(0.0)),
@@ -164,6 +168,7 @@ fn main() {
     world.add_resource(input_state.clone());
     world.add_resource(DeltaTime(0.016));
     world.add_resource(Collisions(Vec::with_capacity(128)));
+    world.add_resource::<ui::UIState>(Default::default());
     world.add_resource(renderer::VertexBuffer {
         v_buf: v_buf, size: 0,
     });
@@ -172,16 +177,21 @@ fn main() {
     let mut dispatcher = specs::DispatcherBuilder::new()
         .with(sys_lifetime::LifetimeSys, "lifetime", &[])
         // Control
+        .with(ui::UIInputSystem, "ui_input", &[])
         .with(sys_control::PlayerControllerSys, "player_controller", &[])
         .with(sys_control::SlimeAISys, "slime_ai", &[])
-        .with(MarkerSys, "control", &["player_controller", "slime_ai"])
+        .with(MarkerSys, "control", &["player_controller", "slime_ai", "ui_input"])
 
         // Animation
         .with(sys_anim::AnimSpriteSys, "anim_sprite", &["control"])
 
+
         // Physics
         .with(sys_phys::PhysSys::<CollCircle, CollCircle>::new(), "phys_circ_circ", &["player_controller"])
         .with(MarkerSys, "phys", &["phys_circ_circ"])
+
+        // Camera control
+        .with(camera::FollowCameraSys, "follow_camera", &["phys"])
 
         // Combat
         .with(sys_health::HealthSys, "health", &["phys"])
@@ -193,6 +203,7 @@ fn main() {
         .with(renderer::TilemapPainter, "tilemap_paint", &["update"])
         .with(renderer::AnimSpritePainter, "anim_sprite_paint", &["update"])
         .with(renderer::StaticSpritePainter, "static_sprite_paint", &["update"])
+        .with(renderer::InventoryPainter, "ui_inventory_paint", &["update"])
         .build();
 
     let mut should_close = false;
@@ -201,16 +212,19 @@ fn main() {
     let mut fps_count_timer = 60;
     while !should_close {
         let start = time::Instant::now();
-        input_state.process_input(&input_map, &mut events_loop);
+        input_state.process_input(&input_map, &mut events_loop, &world.read_resource::<camera::Camera>());
         should_close = input_state.should_close;
         if should_close { break; } // Early return for speedy exit
 
         // Add input
         world.add_resource(input_state.clone());
+
+        // Paint the world
         dispatcher.dispatch(&mut world.res);
         {
             let mut v_buf = world.write_resource::<renderer::VertexBuffer>();
-            renderer.flush_render(&mut device, &v_buf, &world.read_resource::<renderer::Camera>());
+            renderer.clear();
+            renderer.flush_render(&mut device, &v_buf, &world.read_resource::<camera::Camera>());
             v_buf.size = 0; // After painting, we need to clear the v_buf
             // Clear collision list
             let mut collisions = world.write_resource::<Collisions>();

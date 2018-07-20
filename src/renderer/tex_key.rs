@@ -1,8 +1,13 @@
 /// Textures available in the atlas
 #[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Debug)]
 pub enum TextureKey {
+    // White texture for drawing just colour
     White,
+
+    // Tilesets
     TilesetGrass,
+
+    // Sprites
     Human00IdleDown,
     Human00IdleUp,
     Human00IdleLeft,
@@ -22,4 +27,7 @@ pub enum TextureKey {
     Slice00Right,
     Slice00Up,
     Slice00Down,
+
+    // UI
+    InventoryMockup,
 }

@@ -144,7 +144,7 @@ impl<K : Ord> AtlasBuilder<K> {
     /// Blit the buf into a given uv rect. Panics if the rect is oob. Rect is X
     /// Y W H - what is returned from pack_rect.
     fn blit(&mut self, buf: &[u8], rect: &[u16; 4]) {
-        debug_assert!(rect[0] + rect[2] <= self.width);
+
         debug_assert!(rect[1] + rect[3] <= self.height);
         for y in rect[1]..(rect[1] + rect[3]) {
             let y = y as usize;

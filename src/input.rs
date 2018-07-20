@@ -2,6 +2,7 @@
 
 use std::collections::HashMap;
 use glutin;
+use camera::Camera;
 use fpa::*;
 use fpavec::*;
 
@@ -21,6 +22,7 @@ pub enum Command {
     MoveUp,
     /// Used to attack, but also to navigate through dialogues
     Primary,
+    ToggleInventory,
 }
 
 /// A mapping of inputs to commands
@@ -36,6 +38,7 @@ impl InputMap {
         map.insert(Input::Key(glutin::VirtualKeyCode::A), Command::MoveLeft);
         map.insert(Input::Key(glutin::VirtualKeyCode::S), Command::MoveDown);
         map.insert(Input::Key(glutin::VirtualKeyCode::D), Command::MoveRight);
+        map.insert(Input::Key(glutin::VirtualKeyCode::Escape), Command::ToggleInventory);
         map.insert(Input::Mouse(glutin::MouseButton::Left), Command::Primary);
         InputMap {
             map: map,
@@ -77,12 +80,14 @@ impl Default for InputState {
         down.insert(Command::MoveDown, false);
         down.insert(Command::MoveUp, false);
         down.insert(Command::Primary, false);
+        down.insert(Command::ToggleInventory, false);
         let mut pressed = HashMap::new();
         pressed.insert(Command::MoveLeft, false);
         pressed.insert(Command::MoveRight, false);
         pressed.insert(Command::MoveDown, false);
         pressed.insert(Command::MoveUp, false);
         pressed.insert(Command::Primary, false);
+        pressed.insert(Command::ToggleInventory, false);
         InputState {
             down: down,
             pressed: pressed,
@@ -98,21 +103,17 @@ impl InputState {
         Default::default()
     }
 
-    pub fn process_input(&mut self, map: &InputMap, events_loop: &mut glutin::EventsLoop) {
+    pub fn process_input(&mut self, map: &InputMap,
+                         events_loop: &mut glutin::EventsLoop,
+                         camera: &Camera) {
         for (_, v) in self.pressed.iter_mut() {
             *v = false;
         }
         events_loop.poll_events(|event| {
             if let glutin::Event::WindowEvent { event, .. } = event {
                 match event {
-                    glutin::WindowEvent::Resized(w, h) =>
-                        self.window_size = (w, h),
-                    glutin::WindowEvent::CloseRequested |
-                    glutin::WindowEvent::KeyboardInput {
-                        input: glutin::KeyboardInput {
-                            virtual_keycode: Some(glutin::VirtualKeyCode::Escape), ..
-                        }, ..
-                    } => self.should_close = true,
+                    glutin::WindowEvent::Resized(w, h) => self.window_size = (w, h),
+                    glutin::WindowEvent::CloseRequested => self.should_close = true,
                     // Check for keyboard commands
                     glutin::WindowEvent::KeyboardInput {
                         input: glutin::KeyboardInput {
@@ -153,9 +154,8 @@ impl InputState {
                     glutin::WindowEvent::CursorMoved {
                         position: (x, y), ..
                     } => {
-                        // TODO: Scale to world pos with camera
-                        self.mouse.x = Fx32::new(x as f32);
-                        self.mouse.y = Fx32::new(y as f32);
+                        self.mouse.x = Fx32::new(x as f32) + camera.pos.x;
+                        self.mouse.y = Fx32::new(y as f32) + camera.pos.y;
                     }
                     _ => {},
                 }

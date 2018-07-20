@@ -5,48 +5,22 @@ mod paint_sys;
 pub use self::tex_key::TextureKey;
 pub use self::paint_sys::*;
 
+use camera::Camera;
 use self::atlas::*;
 use std::default::Default;
 use gfx::{IndexBuffer, Slice, self};
-use gfx::handle::RenderTargetView;
+use gfx::handle::{ShaderResourceView, RenderTargetView};
 use gfx::buffer::Role;
 use gfx_device_gl::Factory;
 use gfx::memory::{Usage, Bind};
 use gfx_device_gl::{Resources, CommandBuffer, Device};
 use std::collections::BTreeMap;
-use fpa::*;
 
 pub const V_BUF_SIZE: usize = 262144;
 const BLACK: [f32; 4] = [0.0, 0.0, 0.0, 1.0];
 
 pub type ColorFormat = gfx::format::Srgba8;
 pub type DepthFormat = gfx::format::DepthStencil;
-
-pub struct Camera {
-    x: Fx32,
-    y: Fx32,
-    w: Fx32,
-    h: Fx32,
-}
-
-impl Camera {
-    pub fn new(w: f32, h: f32) -> Camera {
-        Camera { x: Fx32::new(0.0), y: Fx32::new(0.0), w: Fx32::new(w), h: Fx32::new(h) }
-    }
-    pub fn gen_ortho_mat(&self) -> [[f32; 4]; 4] {
-        gen_ortho_mat(self.x.to_f32(), (self.x + self.w).to_f32(),
-                      self.y.to_f32(), (self.y + self.h).to_f32(),
-                      -10000.0, 10000.0)
-    }
-}
-
-/// State for rendering. Passed to the render function.
-fn gen_ortho_mat(l: f32, r: f32, t: f32, b: f32, n: f32, f: f32) -> [[f32; 4]; 4] {
-    [[2.0/(r-l),       0.0,        0.0, -(r+l)/(r-l)],
-     [0.0,       2.0/(t-b),        0.0, -(t+b)/(t-b)],
-     [0.0,             0.0, -2.0/(f-n), -(f+n)/(f-n)],
-     [0.0,             0.0,        0.0,          1.0]]
-}
 
 /// Mask preset for alpha blending
 fn mask() -> gfx::state::ColorMask {
@@ -129,14 +103,9 @@ pub struct Renderer {
 }
 
 impl Renderer {
-    pub fn new(factory: &mut Factory,
-               color_view: RenderTargetView<Resources, ColorFormat>,
-               depth_view: gfx::handle::DepthStencilView<Resources, DepthFormat>,
-               w: u32, h: u32,
-               settings: RendererSettings) -> (Renderer, TextureAtlas<TextureKey>) {
-        use gfx::{Factory, traits::FactoryExt};
-        // Load the texture atlas
-
+    fn load_assets(factory: &mut Factory)
+                   -> (TextureAtlas<TextureKey>,
+                       ShaderResourceView<Resources, [f32; 4]>) {
         // Initialise common frame maps
         let mut human_frame_map = BTreeMap::new();
         human_frame_map.insert(TextureKey::Human00IdleDown,  &[(0, 0)][..]);
@@ -162,7 +131,7 @@ impl Renderer {
         slice_frame_map.insert(TextureKey::Slice00Up,   &[(0, 2), (1, 2), (2, 2), (3, 2), (4, 2)][..]);
         slice_frame_map.insert(TextureKey::Slice00Right,&[(0, 3), (1, 3), (2, 3), (3, 3), (4, 3)][..]);
 
-        let (atlas, tex_view) = AtlasBuilder::<TextureKey>::new(512, 512)
+        AtlasBuilder::<TextureKey>::new(512, 512)
             .set_font("res/open-sans.ttf",
                       Charset::alpha()
                       .and(Charset::number())
@@ -171,11 +140,23 @@ impl Renderer {
                       32.0).unwrap()
             .add_tex(TextureKey::White, "res/white.png").unwrap()
             .add_tex(TextureKey::GreenTree00, "res/sprites/green-tree-00.png").unwrap()
+            .add_tex(TextureKey::InventoryMockup, "res/sprites/ui/inventory-mockup.png").unwrap()
             .add_tileset(TextureKey::TilesetGrass, "res/tileset-grass.png", 8, 8).unwrap()
             .add_anim_sprite("res/sprites/human-00.png", human_frame_map.clone(), 8, 8).unwrap()
             .add_anim_sprite("res/sprites/slime-00.png", slime_frame_map.clone(), 8, 8).unwrap()
             .add_anim_sprite("res/sprites/fx/slice-00.png", slice_frame_map.clone(), 16, 16).unwrap()
-            .build(factory);
+            .build(factory)
+    }
+
+    pub fn new(factory: &mut Factory,
+               color_view: RenderTargetView<Resources, ColorFormat>,
+               depth_view: gfx::handle::DepthStencilView<Resources, DepthFormat>,
+               w: u32, h: u32,
+               settings: RendererSettings) -> (Renderer, TextureAtlas<TextureKey>) {
+        use gfx::{Factory, traits::FactoryExt};
+
+        // Load the texture atlas
+        let (atlas, tex_view) = Renderer::load_assets(factory);
         let sampler = factory.create_sampler(
             gfx::texture::SamplerInfo::new(
                 gfx::texture::FilterMethod::Scale,
@@ -187,11 +168,15 @@ impl Renderer {
         // Allocate buffers
         let transform_buffer = factory.create_constant_buffer(1);
 
-        let vertex_buffer = factory.create_buffer::<Vertex>(V_BUF_SIZE, Role::Vertex, Usage::Dynamic, Bind::SHADER_RESOURCE).unwrap();
+        let vertex_buffer = factory.create_buffer::<Vertex>(
+            V_BUF_SIZE, Role::Vertex, Usage::Dynamic, Bind::SHADER_RESOURCE).unwrap();
 
         let transform = Transform {
             proj: [[0.0; 4]; 4], // Filled in by camera later
-            view: [[1.0, 0.0, 0.0, 0.0], [0.0, 1.0, 0.0, 0.0], [0.0, 0.0, 1.0, 0.0], [0.0, 0.0, 0.0, 1.0]],
+            view: [[1.0, 0.0, 0.0, 0.0],
+                   [0.0, 1.0, 0.0, 0.0],
+                   [0.0, 0.0, 1.0, 0.0],
+                   [0.0, 0.0, 0.0, 1.0]],
         };
 
         // Create the pipeline data
@@ -235,6 +220,12 @@ impl Renderer {
         v_buf[5] = Vertex {pos: [x+w, y+h, z], col: col, uv: [tex.right, tex.bottom]};
     }
 
+    /// Clear the screen.
+    pub fn clear(&mut self) {
+        self.encoder.clear(&self.color_view, BLACK);
+        self.encoder.clear_depth(&self.depth_view, 1.0);
+    }
+
     /// Actually issue the draw commands to the GPU. This should be called after
     /// the ECS has run. Device can't be sent over threads, so this is the
     /// simplest way to call draw.
@@ -258,8 +249,6 @@ impl Renderer {
 
         self.transform.proj = camera.gen_ortho_mat();
         self.encoder.update_buffer(&self.data.transform, &[self.transform], 0).unwrap();
-        self.encoder.clear(&self.color_view, BLACK);
-        self.encoder.clear_depth(&self.depth_view, 1.0);
         self.encoder.draw(&slice, &self.pso, &self.data);
         self.encoder.flush(device); // execute draw commands
     }

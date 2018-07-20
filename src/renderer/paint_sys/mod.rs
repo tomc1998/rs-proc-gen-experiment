@@ -1,7 +1,12 @@
 use super::*;
+use renderer::Camera;
 use specs::*;
 use comp::*;
 use comp;
+
+mod ui_inventory;
+
+pub use self::ui_inventory::InventoryPainter;
 
 #[derive(Clone, Debug)]
 pub struct VertexBuffer {
@@ -97,7 +102,6 @@ impl<'a> System<'a> for TilemapPainter {
         let mut ix = vertex_buffer.size as usize;
         for (pos, tm) in (&pos_s, &tm_s).join() {
             let tileset = atlas.rect_for_tileset(tm.tileset.convert_to_tex_key()).unwrap();
-            ix += 6;
             for x in 0..TILEMAP_SIZE {
                 for y in 0..TILEMAP_SIZE {
                     // Camera frustum cull.
@@ -107,8 +111,8 @@ impl<'a> System<'a> for TilemapPainter {
                     // draw.
                     let x_pos = pos.pos.x * 32.0 * TILEMAP_SIZE as f32 + x as f32 * 32.0;
                     let y_pos = pos.pos.y * 32.0 * TILEMAP_SIZE as f32 + y as f32 * 32.0;
-                    if x_pos + 32.0 < camera.x || x_pos > camera.x + camera.w ||
-                        y_pos + 32.0 < camera.y || y_pos > camera.y + camera.h {
+                    if x_pos + 32.0 < camera.pos.x || x_pos > camera.pos.x + camera.w ||
+                        y_pos + 32.0 < camera.pos.y || y_pos > camera.pos.y + camera.h {
                             continue;
                         }
                     // Figure out the tile ix

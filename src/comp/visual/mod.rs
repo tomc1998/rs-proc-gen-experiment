@@ -3,8 +3,10 @@ use specs::{DenseVecStorage, HashMapStorage};
 use renderer::{TextureKey, self};
 
 mod fx;
+mod camera;
 
 pub use self::fx::*;
+pub use self::camera::*;
 
 /// Draw a static sprite, using the Pos component as the bottom centre
 #[derive(Component)]
