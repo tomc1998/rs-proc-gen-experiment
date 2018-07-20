@@ -40,9 +40,14 @@ impl<'a> System<'a> for FollowCameraSys {
 
     fn run(&mut self, (mut camera, mut input_state, pos_s, follow_camera_s): Self::SystemData) {
         if let Some((pos, _)) = (&pos_s, &follow_camera_s).join().next() {
-            // un-translate input
+            // Update the camera size depending on view size
+            camera.w = Fx32::new(input_state.window_size.0 as f32);
+            camera.h = Fx32::new(input_state.window_size.1 as f32);
+
+            // Update camera pos
             camera.pos = pos.pos - Vec32::new(camera.w/2.0, camera.h/2.0);
-            // re-translate input
+
+            // Set world mouse position
             input_state.world_mouse = input_state.screen_mouse + camera.pos;
 
             // Additional translation for mouse pos. Also update mouse pos in input.

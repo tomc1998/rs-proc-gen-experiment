@@ -5,6 +5,8 @@ mod paint_sys;
 pub use self::tex_key::TextureKey;
 pub use self::paint_sys::*;
 
+use glutin::GlWindow;
+use gfx_window_glutin;
 use camera::Camera;
 use self::atlas::*;
 use std::default::Default;
@@ -81,17 +83,11 @@ impl Default for RendererSettings {
 }
 
 pub struct Renderer {
-    pub window_size: (u32, u32),
-
     #[allow(dead_code)]
     settings: RendererSettings,
 
     /// Gfx encoder for drawing & updating buffers
     encoder: gfx::Encoder<Resources, CommandBuffer>,
-
-    /// The colour view to render to
-    color_view: RenderTargetView<Resources, ColorFormat>,
-    depth_view: gfx::handle::DepthStencilView<Resources, DepthFormat>,
 
     /// Pipeline data
     data: pipe::Data<Resources>,
@@ -151,7 +147,6 @@ impl Renderer {
     pub fn new(factory: &mut Factory,
                color_view: RenderTargetView<Resources, ColorFormat>,
                depth_view: gfx::handle::DepthStencilView<Resources, DepthFormat>,
-               w: u32, h: u32,
                settings: RendererSettings) -> (Renderer, TextureAtlas<TextureKey>) {
         use gfx::{Factory, traits::FactoryExt};
 
@@ -196,14 +191,11 @@ impl Renderer {
         ).unwrap();
 
         (Renderer {
-            window_size: (w, h),
             settings: settings,
             encoder: encoder,
             data: data,
             pso: pso,
             transform: transform,
-            color_view: color_view,
-            depth_view: depth_view,
         }, atlas)
     }
 
@@ -220,10 +212,15 @@ impl Renderer {
         v_buf[5] = Vertex {pos: [x+w, y+h, z], col: col, uv: [tex.right, tex.bottom]};
     }
 
+    pub fn update_window_size(&mut self, window: &GlWindow) {
+        // Update the render target size
+        gfx_window_glutin::update_views(window, &mut self.data.out_col, &mut self.data.out_depth);
+    }
+
     /// Clear the screen.
     pub fn clear(&mut self) {
-        self.encoder.clear(&self.color_view, BLACK);
-        self.encoder.clear_depth(&self.depth_view, 1.0);
+        self.encoder.clear(&self.data.out_col, BLACK);
+        self.encoder.clear_depth(&self.data.out_depth, 1.0);
     }
 
     /// Actually issue the draw commands to the GPU. This should be called after

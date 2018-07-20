@@ -69,6 +69,10 @@ pub struct InputState {
     pub screen_mouse: Vec32,
     /// Was a close requested?
     pub should_close: bool,
+    /// Will be set to true after processing input if the window size changed
+    /// since last processing input. Processing input twice will lose this data,
+    /// as it will be set back to false.
+    pub window_dimensions_need_update: bool,
     /// The size of the window
     pub window_size: (u32, u32),
 }
@@ -96,6 +100,7 @@ impl Default for InputState {
             window_size: (0, 0),
             world_mouse: Vec32::zero(),
             screen_mouse: Vec32::zero(),
+            window_dimensions_need_update: false,
         }
     }
 }
@@ -105,15 +110,23 @@ impl InputState {
         Default::default()
     }
 
-    pub fn process_input(&mut self, map: &InputMap,
-                         events_loop: &mut glutin::EventsLoop) {
+    fn reset_state(&mut self) {
         for (_, v) in self.pressed.iter_mut() {
             *v = false;
         }
+        self.window_dimensions_need_update = false;
+    }
+
+    pub fn process_input(&mut self, map: &InputMap,
+                         events_loop: &mut glutin::EventsLoop) {
+        self.reset_state();
         events_loop.poll_events(|event| {
             if let glutin::Event::WindowEvent { event, .. } = event {
                 match event {
-                    glutin::WindowEvent::Resized(w, h) => self.window_size = (w, h),
+                    glutin::WindowEvent::Resized(w, h) => {
+                        self.window_size = (w, h);
+                        self.window_dimensions_need_update = true;
+                    }
                     glutin::WindowEvent::CloseRequested => self.should_close = true,
                     // Check for keyboard commands
                     glutin::WindowEvent::KeyboardInput {

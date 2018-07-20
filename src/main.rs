@@ -99,7 +99,7 @@ fn main() {
 
     let (w, h) = window.get_inner_size().unwrap();
     let (mut renderer, atlas) = renderer::Renderer::new(
-        &mut factory, color_view, depth_view, w, h, Default::default());
+        &mut factory, color_view, depth_view, Default::default());
     let camera = camera::Camera::new(w as f32, h as f32);
 
     // Create the ECS world, and a test entity, plus trees
@@ -205,39 +205,44 @@ fn main() {
         .with(renderer::InventoryPainter, "ui_inventory_paint", &["update"])
         .build();
 
-    let mut should_close = false;
-
     // Number of frames until we print another frame time
     let mut fps_count_timer = 60;
-    while !should_close {
+    loop {
         let start = time::Instant::now();
 
         // update input
         {
             let mut input_state = world.write_resource::<input::InputState>();
             input_state.process_input(&input_map, &mut events_loop);
-            should_close = input_state.should_close;
-            if should_close { break; } // Early return for speedy exit
+            if input_state.should_close { break; } // Early return for speedy exit
+            // Update window size if needed
+            if input_state.window_dimensions_need_update {
+                println!("Resizing window viewport");
+                renderer.update_window_size(&window);
+            }
         }
 
-        // Paint the world
-        dispatcher.dispatch(&mut world.res);
+        // Update & paint the world
         {
+            dispatcher.dispatch(&mut world.res);
             let mut v_buf = world.write_resource::<renderer::VertexBuffer>();
             renderer.clear();
             renderer.flush_render(&mut device, &v_buf, &world.read_resource::<camera::Camera>());
-            v_buf.size = 0; // After painting, we need to clear the v_buf
-            // Clear collision list
+            window.swap_buffers().unwrap();
+            device.cleanup();
+
+            // Reset ECS state after rendering
+            // After painting, we need to clear the v_buf
+            v_buf.size = 0; 
+            // Clear collision list for next frame
             let mut collisions = world.write_resource::<Collisions>();
             (*collisions).0.clear();
         }
 
-        window.swap_buffers().unwrap();
-        device.cleanup();
-
-        // Actually delete all entities
+        // Actually delete all entities that need to be deleted
         world.maintain();
 
+        // Calculate frame time
         let elapsed = start.elapsed();
         if fps_count_timer <= 0 {
             println!("Time taken (millis): {:?}",
@@ -250,5 +255,6 @@ fn main() {
         if elapsed.subsec_millis() < 17 && elapsed.as_secs() == 0 {
             thread::sleep(time::Duration::from_millis(17) - elapsed);
         }
+
     }
 }

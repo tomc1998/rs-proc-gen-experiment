@@ -645,6 +645,7 @@ dependencies = [
  "failure_derive 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "gfx 0.17.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "gfx_device_gl 0.15.3 (registry+https://github.com/rust-lang/crates.io-index)",
+ "gfx_gl 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "gfx_window_glutin 0.24.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "glutin 0.16.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "image 0.19.0 (registry+https://github.com/rust-lang/crates.io-index)",
