@@ -16,8 +16,6 @@ impl<'a> System<'a> for InventoryPainter {
     fn run(&mut self, (mut vertex_buffer, ui_state, camera, atlas): Self::SystemData) {
         if !ui_state.inventory_open { return }
 
-        println!("Hello");
-
         let mut ix = vertex_buffer.size as usize;
 
         let tex = atlas.rect_for_tex(TextureKey::InventoryMockup).unwrap();

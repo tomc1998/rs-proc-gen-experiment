@@ -5,6 +5,7 @@ mod paint_sys;
 pub use self::tex_key::TextureKey;
 pub use self::paint_sys::*;
 
+use math_util;
 use glutin::GlWindow;
 use gfx_window_glutin;
 use camera::Camera;
@@ -122,10 +123,7 @@ impl Renderer {
         slime_frame_map.insert(TextureKey::Slime00Charge,  &[(1, 0)][..]);
 
         let mut slice_frame_map = BTreeMap::new();
-        slice_frame_map.insert(TextureKey::Slice00Down, &[(0, 0), (1, 0), (2, 0), (3, 0), (4, 0)][..]);
-        slice_frame_map.insert(TextureKey::Slice00Left, &[(0, 1), (1, 1), (2, 1), (3, 1), (4, 1)][..]);
-        slice_frame_map.insert(TextureKey::Slice00Up,   &[(0, 2), (1, 2), (2, 2), (3, 2), (4, 2)][..]);
-        slice_frame_map.insert(TextureKey::Slice00Right,&[(0, 3), (1, 3), (2, 3), (3, 3), (4, 3)][..]);
+        slice_frame_map.insert(TextureKey::Slice00, &[(0, 0), (1, 0), (2, 0), (3, 0), (4, 0)][..]);
 
         AtlasBuilder::<TextureKey>::new(512, 512)
             .set_font("res/open-sans.ttf",
@@ -199,10 +197,10 @@ impl Renderer {
         }, atlas)
     }
 
-    /// Helper function for buffering a rect to a vec
-    /// # Panics
-    /// If v_buf is not at least 6 vertexes long
-    fn rect(v_buf: &mut [Vertex], tex: &UvRect, x: f32, y: f32, z: f32, w: f32, h: f32, col: [f32; 4]) {
+    fn rect(v_buf: &mut [Vertex], tex: &UvRect,
+            x: f32, y: f32, z: f32,
+            w: f32, h: f32,
+            col: [f32; 4]) {
         debug_assert!(v_buf.len() >= 6, "Drawing rect but v_buf < 6 in len");
         v_buf[0] = Vertex {pos: [x, y, z], col: col, uv: [tex.left, tex.top]};
         v_buf[1] = Vertex {pos: [x+w, y, z], col: col, uv: [tex.right, tex.top]};
@@ -210,6 +208,31 @@ impl Renderer {
         v_buf[3] = Vertex {pos: [x, y, z], col: col, uv: [tex.left, tex.top]};
         v_buf[4] = Vertex {pos: [x, y+h, z], col: col, uv: [tex.left, tex.bottom]};
         v_buf[5] = Vertex {pos: [x+w, y+h, z], col: col, uv: [tex.right, tex.bottom]};
+    }
+
+    /// Helper function for buffering a rect to a vec
+    /// # Params
+    /// * `rot` - The rotation for this rect, origin is center of the rect,
+    /// anticlockwise radians
+    /// # Panics
+    /// If v_buf is not at least 6 vertexes long
+    fn rect_rot(v_buf: &mut [Vertex], tex: &UvRect,
+                x: f32, y: f32, z: f32,
+                w: f32, h: f32,
+                col: [f32; 4], rot: f32) {
+        debug_assert!(v_buf.len() >= 6, "Drawing rect but v_buf < 6 in len");
+        // Rotate all the points around the origin.
+        let origin = [x + w / 2.0, y + h / 2.0];
+        let p0 = math_util::rotate_point([x, y], &origin, rot);
+        let p1 = math_util::rotate_point([x+w, y], &origin, rot);
+        let p2 = math_util::rotate_point([x+w, y+h], &origin, rot);
+        let p3 = math_util::rotate_point([x, y+h], &origin, rot);
+        v_buf[0] = Vertex {pos: [p0[0], p0[1], z], col: col, uv: [tex.left, tex.top]};
+        v_buf[1] = Vertex {pos: [p1[0], p1[1], z], col: col, uv: [tex.right, tex.top]};
+        v_buf[2] = Vertex {pos: [p2[0], p2[1], z], col: col, uv: [tex.right, tex.bottom]};
+        v_buf[3] = Vertex {pos: [p0[0], p0[1], z], col: col, uv: [tex.left, tex.top]};
+        v_buf[4] = Vertex {pos: [p3[0], p3[1], z], col: col, uv: [tex.left, tex.bottom]};
+        v_buf[5] = Vertex {pos: [p2[0], p2[1], z], col: col, uv: [tex.right, tex.bottom]};
     }
 
     pub fn update_window_size(&mut self, window: &GlWindow) {

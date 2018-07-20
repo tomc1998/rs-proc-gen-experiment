@@ -20,6 +20,8 @@ impl Vec16 {
               self.y.0 as i32 * self.y.0 as i32).sqrt() as i16)
     }
     pub fn nor(self) -> Vec16 {self / self.len()}
+    /// WARNING: This is not a fixed point operation.
+    pub fn angle(self) -> f32 { self.y.to_f32().atan2(self.x.to_f32()) }
 }
 impl Add<Vec16> for Vec16 {
     type Output = Vec16;
@@ -86,6 +88,7 @@ impl Vec32 {
               self.y.0 as i64 * self.y.0 as i64).sqrt() as i32)
     }
     pub fn nor(self) -> Vec32 {self / self.len()}
+    pub fn angle(self) -> f32 { self.y.to_f32().atan2(self.x.to_f32()) }
 }
 impl Add<Vec32> for Vec32 {
     type Output = Vec32;

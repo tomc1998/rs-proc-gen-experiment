@@ -30,6 +30,7 @@ mod fpa;
 mod fpavec;
 mod ui;
 mod camera;
+mod math_util;
 
 use comp::*;
 use fpa::*;
@@ -80,6 +81,7 @@ fn create_world() -> specs::World {
     world.register::<Knockback>();
     world.register::<HurtKnockbackDir>();
     world.register::<Tint>();
+    world.register::<Rot>();
     world.register::<Alliance>();
     world.register::<FollowCamera>();
     world
@@ -200,8 +202,7 @@ fn main() {
 
         // Paint
         .with(renderer::TilemapPainter, "tilemap_paint", &["update"])
-        .with(renderer::AnimSpritePainter, "anim_sprite_paint", &["update"])
-        .with(renderer::StaticSpritePainter, "static_sprite_paint", &["update"])
+        .with(renderer::SpritePainter, "sprite_paint", &["update"])
         .with(renderer::InventoryPainter, "ui_inventory_paint", &["update"])
         .build();
 

@@ -23,10 +23,7 @@ pub enum TextureKey {
     GreenTree00,
     Slime00Idle,
     Slime00Charge,
-    Slice00Left,
-    Slice00Right,
-    Slice00Up,
-    Slice00Down,
+    Slice00,
 
     // UI
     InventoryMockup,

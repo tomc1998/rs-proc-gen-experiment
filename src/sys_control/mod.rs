@@ -11,6 +11,7 @@ use comp::*;
 use renderer::TextureKey;
 use fpa::*;
 use fpavec::*;
+use std::f32::consts::PI;
 
 pub struct PlayerControllerSys;
 
@@ -95,12 +96,9 @@ impl<'a> System<'a> for PlayerControllerSys {
                     // Spawn attack
                     lazy_update.create_entity(&*entities_s)
                         .with(Pos {
-                            pos: pos.pos + match dir {
-                                Direction::Down   => Vec32::new(Fx32::new(0.0),   Fx32::new(20.0)),
-                                Direction::Left   => Vec32::new(Fx32::new(-16.0), Fx32::new(8.0)),
-                                Direction::Up     => Vec32::new(Fx32::new(0.0),   Fx32::new(8.0)),
-                                Direction::Right  => Vec32::new(Fx32::new(16.0),  Fx32::new(8.0)),
-                            }
+                            pos: pos.pos + (vec.nor() * Fx32::new(16.0))
+                                // Add a constant offset
+                                + Vec32::new(Fx32::new(0.0), Fx32::new(16.0))
                         })
                         .with(Hurt { damage: 2,
                                      mask: Hitmask::default_player_attack(),
@@ -121,13 +119,9 @@ impl<'a> System<'a> for PlayerControllerSys {
                         })
                         .with(Lifetime { lifetime: Fx32::new(125.0) })
                         .with(AnimSprite::new(64.0, 64.0, Fx32::new(25.0), 5,
-                                              match dir {
-                                                  Direction::Down  => TextureKey::Slice00Down,
-                                                  Direction::Left  => TextureKey::Slice00Left,
-                                                  Direction::Up    => TextureKey::Slice00Up,
-                                                  Direction::Right => TextureKey::Slice00Right,
-                                              })
+                                              TextureKey::Slice00)
                               .with_flags(ANIM_SPRITE_NO_LOOP))
+                        .with(Rot { angle: vec.angle() - PI / 2.0 })
                         .build();
                 }
                 if let Some(anim_change) = anim_change {
