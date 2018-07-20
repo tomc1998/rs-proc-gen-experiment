@@ -64,7 +64,7 @@ impl<'a> System<'a> for PlayerControllerSys {
                     pc.state = PlayerState::Attacking;
                     pc.attack_time = Fx16::new(125.0);
                     // Figure out attack dir
-                    let vec = input_state.mouse - pos.pos;
+                    let vec = input_state.world_mouse - pos.pos;
                     let dir = if vec.x.abs() > vec.y.abs() {
                         if vec.x.0 > 0 {
                             Direction::Right

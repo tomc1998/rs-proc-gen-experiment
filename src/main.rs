@@ -159,16 +159,14 @@ fn main() {
     }
 
     let input_map = input::InputMap::new();
-    let mut input_state = input::InputState::new();
-
     // Allocate cpu side v_buf
     let v_buf = vec![Default::default(); renderer::V_BUF_SIZE];
     world.add_resource(atlas);
     world.add_resource(camera);
-    world.add_resource(input_state.clone());
     world.add_resource(DeltaTime(0.016));
     world.add_resource(Collisions(Vec::with_capacity(128)));
     world.add_resource::<ui::UIState>(Default::default());
+    world.add_resource(input::InputState::new());
     world.add_resource(renderer::VertexBuffer {
         v_buf: v_buf, size: 0,
     });
@@ -212,12 +210,14 @@ fn main() {
     let mut fps_count_timer = 60;
     while !should_close {
         let start = time::Instant::now();
-        input_state.process_input(&input_map, &mut events_loop, &world.read_resource::<camera::Camera>());
-        should_close = input_state.should_close;
-        if should_close { break; } // Early return for speedy exit
 
-        // Add input
-        world.add_resource(input_state.clone());
+        // update input
+        {
+            let mut input_state = world.write_resource::<input::InputState>();
+            input_state.process_input(&input_map, &mut events_loop);
+            should_close = input_state.should_close;
+            if should_close { break; } // Early return for speedy exit
+        }
 
         // Paint the world
         dispatcher.dispatch(&mut world.res);

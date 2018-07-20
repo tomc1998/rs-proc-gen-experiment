@@ -1,5 +1,6 @@
 use fpa::*;
 use comp::*;
+use input::*;
 use specs::*;
 use fpavec::*;
 
@@ -33,12 +34,23 @@ pub struct FollowCameraSys;
 
 impl<'a> System<'a> for FollowCameraSys {
     type SystemData = (WriteExpect<'a, Camera>,
+                       WriteExpect<'a, InputState>,
                        ReadStorage<'a, Pos>,
                        ReadStorage<'a, FollowCamera>);
 
-    fn run(&mut self, (mut camera, pos_s, follow_camera_s): Self::SystemData) {
+    fn run(&mut self, (mut camera, mut input_state, pos_s, follow_camera_s): Self::SystemData) {
         if let Some((pos, _)) = (&pos_s, &follow_camera_s).join().next() {
+            // un-translate input
             camera.pos = pos.pos - Vec32::new(camera.w/2.0, camera.h/2.0);
+            // re-translate input
+            input_state.world_mouse = input_state.screen_mouse + camera.pos;
+
+            // Additional translation for mouse pos. Also update mouse pos in input.
+            // First, find the offset from the screen mouse-pos and the centre of the screen.
+            let screen_m = input_state.screen_mouse - Vec32::new(camera.w/2.0, camera.h/2.0);
+
+            // Apply additional translation
+            camera.pos += screen_m * Fx32::new(0.25);
         }
     }
 }

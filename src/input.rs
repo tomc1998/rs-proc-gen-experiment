@@ -2,7 +2,6 @@
 
 use std::collections::HashMap;
 use glutin;
-use camera::Camera;
 use fpa::*;
 use fpavec::*;
 
@@ -64,8 +63,10 @@ pub struct InputState {
     pub down: HashMap<Command, bool>,
     /// Has <command> just been pressed?
     pub pressed: HashMap<Command, bool>,
-    /// Mouse in world coordinates
-    pub mouse: Vec32,
+    /// Mouse in world coordinates. Updated by the FollowCameraSys in the ECS.
+    pub world_mouse: Vec32,
+    /// Mouse in screen coordinates
+    pub screen_mouse: Vec32,
     /// Was a close requested?
     pub should_close: bool,
     /// The size of the window
@@ -93,7 +94,8 @@ impl Default for InputState {
             pressed: pressed,
             should_close: false,
             window_size: (0, 0),
-            mouse: Vec32::zero(),
+            world_mouse: Vec32::zero(),
+            screen_mouse: Vec32::zero(),
         }
     }
 }
@@ -104,8 +106,7 @@ impl InputState {
     }
 
     pub fn process_input(&mut self, map: &InputMap,
-                         events_loop: &mut glutin::EventsLoop,
-                         camera: &Camera) {
+                         events_loop: &mut glutin::EventsLoop) {
         for (_, v) in self.pressed.iter_mut() {
             *v = false;
         }
@@ -154,8 +155,8 @@ impl InputState {
                     glutin::WindowEvent::CursorMoved {
                         position: (x, y), ..
                     } => {
-                        self.mouse.x = Fx32::new(x as f32) + camera.pos.x;
-                        self.mouse.y = Fx32::new(y as f32) + camera.pos.y;
+                        self.screen_mouse.x = Fx32::new(x as f32);
+                        self.screen_mouse.y = Fx32::new(y as f32);
                     }
                     _ => {},
                 }
