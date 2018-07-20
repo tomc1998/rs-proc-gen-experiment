@@ -40,6 +40,7 @@ use gfx_window_glutin as gfx_glutin;
 use glutin::{GlRequest, GlContext};
 use glutin::Api::OpenGl;
 use std::time;
+use std::thread;
 
 pub struct CollisionMeta {
     /// This normal points outwards from entity B to entity A (and is also used
@@ -244,5 +245,10 @@ fn main() {
             fps_count_timer = 60;
         }
         fps_count_timer -= 1;
+        // Sleep until we hit 60fps. Vsync works until the window isn't being
+        // rendered, then we just consume CPU!
+        if elapsed.subsec_millis() < 17 && elapsed.as_secs() == 0 {
+            thread::sleep(time::Duration::from_millis(17) - elapsed);
+        }
     }
 }
