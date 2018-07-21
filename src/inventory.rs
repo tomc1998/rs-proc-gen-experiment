@@ -36,4 +36,29 @@ impl Inventory {
             items: Box::new([None; INVENTORY_SIZE])
         }
     }
+
+    /// Add an item to the inventory, stacking if possible, returning false if
+    /// the inventory is full.
+    pub fn add_item(&mut self, item: InventoryItem) -> bool {
+        // First check for places to stack
+        for i_slot in self.items.iter_mut() {
+            match i_slot {
+                Some(i) if i.item_type == item.item_type && i.num + item.num < 100 => {
+                    i.num += item.num;
+                    return true;
+                }
+                _ => (),
+            }
+        }
+
+        // Then just check for open slots
+        for i_slot in self.items.iter_mut() {
+            if i_slot.is_none() {
+                *i_slot = Some(item);
+                return true;
+            }
+        }
+
+        return false;
+    }
 }

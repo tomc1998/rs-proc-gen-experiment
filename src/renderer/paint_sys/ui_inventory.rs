@@ -63,8 +63,8 @@ impl<'a> System<'a> for InventoryPainter {
             ix += 6;
 
             // Draw numbers
-            let num0 = item.num % 10;
-            let num1 = item.num / 10;
+            let num0 = item.num / 10;
+            let num1 = item.num % 10;
             let tex0 = font.rect_for_char(num0.to_string().chars().next().unwrap()).unwrap();
             let tex1 = font.rect_for_char(num1.to_string().chars().next().unwrap()).unwrap();
             Renderer::rect(&mut vertex_buffer.v_buf[ix .. ix+6],

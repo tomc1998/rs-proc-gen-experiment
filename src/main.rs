@@ -26,6 +26,7 @@ mod sys_phys;
 mod sys_anim;
 mod sys_lifetime;
 mod sys_on_hit;
+mod sys_pickup;
 mod fpa;
 mod fpavec;
 mod ui;
@@ -86,6 +87,8 @@ fn create_world() -> specs::World {
     world.register::<Rot>();
     world.register::<Alliance>();
     world.register::<FollowCamera>();
+    world.register::<Pickup>();
+    world.register::<Collector>();
     world
 }
 
@@ -117,17 +120,24 @@ fn main() {
         .with(PlayerControlled::new())
         .with(FollowCamera)
         .with(Health::new(8, Hitmask(HITMASK_PLAYER)))
-        .with(CollCircle { r: Fx16::new(8.0),
-                           off: Vec16::new(Fx16::new(0.0), Fx16::new(0.0)),
+        .with(Collector { magnet_radius: Fx16::new(64.0) })
+        .with(CollCircle { r: Fx16::new(8.0), off: Vec16::zero(),
                            flags: COLL_SOLID})
         .with(AnimSprite::new(32.0, 32.0, Fx32::new(100.0),
                               4, renderer::TextureKey::Human00WalkDown))
         .build();
+    // Test Coin
+    world.create_entity()
+        .with(Pos { pos: Vec32::new(Fx32::new(100.0), Fx32::new(200.0)) })
+        .with(Vel { vel: Vec32::zero() })
+        .with(Pickup { item: inventory::InventoryItem::new(item::ItemType::Money, 5) })
+        .with(CollCircle { r: Fx16::new(8.0), off: Vec16::zero(), flags: 0})
+        .with(AnimSprite::new(16.0, 16.0, Fx32::new(40.0), 6, renderer::TextureKey::Coin))
+        .build();
     // Tree
     world.create_entity()
         .with(Pos { pos: Vec32::new(Fx32::new(100.0), Fx32::new(100.0)) })
-        .with(CollCircle { r: Fx16::new(12.0),
-                           off: Vec16::new(Fx16::new(0.0), Fx16::new(0.0)),
+        .with(CollCircle { r: Fx16::new(12.0), off: Vec16::zero(),
                            flags: COLL_SOLID | COLL_STATIC})
         .with(StaticSprite { w: 64.0, h: 128.0,
                              sprite: renderer::TextureKey::GreenTree00})
@@ -145,9 +155,7 @@ fn main() {
                         attack_target: None,
                         charge_time: Fx32::new(0.0),
                         state: SlimeState::Idle })
-        .with(CollCircle { r: Fx16::new(8.0),
-                           off: Vec16::new(Fx16::new(0.0), Fx16::new(0.0)),
-                           flags: COLL_SOLID})
+        .with(CollCircle { r: Fx16::new(8.0), off: Vec16::zero(), flags: COLL_SOLID})
         .with(AnimSprite::new(32.0, 32.0, Fx32::new(100000.0),
                               1, renderer::TextureKey::Slime00Idle))
         .build();
@@ -200,6 +208,9 @@ fn main() {
 
         // Camera control
         .with(camera::FollowCameraSys, "follow_camera", &["phys"])
+
+        // Pickups
+        .with(sys_pickup::PickupSys, "pickup", &["phys"])
 
         // Combat
         .with(sys_health::HealthSys, "health", &["phys"])

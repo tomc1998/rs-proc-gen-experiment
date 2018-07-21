@@ -123,6 +123,9 @@ impl Renderer {
         let mut slice_frame_map = BTreeMap::new();
         slice_frame_map.insert(TextureKey::Slice00, &[(0, 0), (1, 0), (2, 0), (3, 0), (4, 0)][..]);
 
+        let mut coin_frame_map = BTreeMap::new();
+        coin_frame_map.insert(TextureKey::Coin, &[(0, 0), (1, 0), (2, 0), (0, 1), (1, 1), (2, 1)][..]);
+
         AtlasBuilder::<TextureKey>::new(512, 512)
             .set_font("res/open-sans.ttf",
                       Charset::alpha()
@@ -136,6 +139,7 @@ impl Renderer {
             .add_tex(TextureKey::IconMoney, "res/sprites/icon/money.png").unwrap()
             .add_tileset(TextureKey::TilesetGrass, "res/tileset-grass.png", 8, 8).unwrap()
             .add_anim_sprite("res/sprites/human-00.png", human_frame_map.clone(), 8, 8).unwrap()
+            .add_anim_sprite("res/sprites/pickup/gold-coin.png", coin_frame_map.clone(), 8, 8).unwrap()
             .add_anim_sprite("res/sprites/slime-00.png", slime_frame_map.clone(), 8, 8).unwrap()
             .add_anim_sprite("res/sprites/fx/slice-00.png", slice_frame_map.clone(), 16, 16).unwrap()
             .add_bitmap_font(TextureKey::FontTinyNumbers, "res/sprites/ui/tiny-numbers.png",

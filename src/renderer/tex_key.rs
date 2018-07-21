@@ -24,6 +24,7 @@ pub enum TextureKey {
     Slime00Idle,
     Slime00Charge,
     Slice00,
+    Coin,
 
     // UI
     InventoryMockup,

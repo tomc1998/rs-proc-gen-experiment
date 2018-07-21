@@ -2,7 +2,7 @@
 //! Fixed point vectors
 
 use num_integer::Roots;
-use std::ops::{Add, AddAssign, Sub, SubAssign, Mul, MulAssign, Div, DivAssign};
+use std::ops::{Add, AddAssign, Sub, SubAssign, Mul, MulAssign, Div, DivAssign, Neg};
 
 use fpa::*;
 
@@ -23,6 +23,7 @@ impl Vec16 {
     /// WARNING: This is not a fixed point operation.
     pub fn angle(self) -> f32 { self.y.to_f32().atan2(self.x.to_f32()) }
 }
+impl Neg for Vec16 { type Output = Self; fn neg(self) -> Self { Vec16::new(-self.x, -self.y) } }
 impl Add<Vec16> for Vec16 {
     type Output = Vec16;
     fn add(self, rhs: Self) -> Self::Output { Vec16 { x: self.x + rhs.x, y: self.y + rhs.y } }
@@ -90,6 +91,7 @@ impl Vec32 {
     pub fn nor(self) -> Vec32 {self / self.len()}
     pub fn angle(self) -> f32 { self.y.to_f32().atan2(self.x.to_f32()) }
 }
+impl Neg for Vec32 { type Output = Self; fn neg(self) -> Self { Vec32::new(-self.x, -self.y) } }
 impl Add<Vec32> for Vec32 {
     type Output = Vec32;
     fn add(self, rhs: Self) -> Self::Output { Vec32 { x: self.x + rhs.x, y: self.y + rhs.y } }
