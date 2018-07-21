@@ -7,6 +7,9 @@ use super::*;
 pub struct InventoryPainter;
 
 const NUM_COLUMNS : usize = 6;
+const NUMBER_COLOR : [f32; 4] = [143.0 / 255.0,
+                                 126.0 / 255.0,
+                                 110.0 / 255.0, 1.0];
 
 impl<'a> System<'a> for InventoryPainter {
     type SystemData = (
@@ -37,6 +40,11 @@ impl<'a> System<'a> for InventoryPainter {
         // First, offset inv_x and inv_y so they're positioned at the first item position
         let inv_x = inv_x + 9.0 * 4.0;
         let inv_y = inv_y + 13.0 * 4.0;
+        // Also find the offset for the numbers at the bottom
+        let num_off_x = 3.0 * 4.0;
+        let num_off_y = 17.0 * 4.0;
+        // Get the number font
+        let font = atlas.bitmap_font(TextureKey::FontTinyNumbers).unwrap();
         // Draw items
         for (inv_ix, item) in inventory.items.iter().enumerate() {
             if item.is_none() { continue }
@@ -52,6 +60,20 @@ impl<'a> System<'a> for InventoryPainter {
                            x, y, 1000.0, // X, Y, Z
                            56.0, 56.0, // W, H
                            [1.0, 1.0, 1.0, 1.0]); // Col
+            ix += 6;
+
+            // Draw numbers
+            let num0 = item.num % 10;
+            let num1 = item.num / 10;
+            let tex0 = font.rect_for_char(num0.to_string().chars().next().unwrap()).unwrap();
+            let tex1 = font.rect_for_char(num1.to_string().chars().next().unwrap()).unwrap();
+            Renderer::rect(&mut vertex_buffer.v_buf[ix .. ix+6],
+                           &tex0, x + num_off_x + 2.0, y + num_off_y, 1000.0,
+                           12.0, 20.0, NUMBER_COLOR);
+            ix += 6;
+            Renderer::rect(&mut vertex_buffer.v_buf[ix .. ix+6],
+                           &tex1, x + num_off_x + 20.0 - 2.0, y + num_off_y, 1000.0,
+                           12.0, 20.0, NUMBER_COLOR);
             ix += 6;
         }
 

@@ -30,4 +30,7 @@ pub enum TextureKey {
 
     // Icons (for stuff like inventory)
     IconMoney,
+
+    // Fonts
+    FontTinyNumbers
 }

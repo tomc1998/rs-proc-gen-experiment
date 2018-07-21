@@ -106,6 +106,17 @@ impl Tileset {
     }
 }
 
+/// A simple bitmap font.
+pub struct BitmapFont {
+    glyphs: BTreeMap<char, UvRect>,
+}
+
+impl BitmapFont {
+    pub fn rect_for_char(&self, c: char) -> Option<&UvRect> {
+        self.glyphs.get(&c)
+    }
+}
+
 /// An animated sprite.
 pub struct AnimSprite {
     /// TODO: Make this a more efficient storage of data, this is pretty bad for
@@ -247,6 +258,39 @@ impl<K : Ord> AtlasBuilder<K> {
         Ok(self)
     }
 
+    /// Add a bitmap which can be divided into uniform regions (like a tilemap),
+    /// and each region can be assigned a char. This is useful for drawing stuff
+    /// like the numbers in the inventory screen.
+    /// * `chars` - a map of chars to corresponding glyph positions in the grid
+    /// * `frame_w` - The width of a glyph
+    /// * `frame_h` - The height of a glyph
+    pub fn add_bitmap_font<P: AsRef<Path>>(mut self, key: K,
+                                           img_path: P,
+                                           chars: &[(char, (u16, u16))],
+                                           frame_w: u16, frame_h: u16) -> Result<Self, AtlasPackErr> {
+        let img = image::open(img_path)?.to_rgba();
+        let (img_w, img_h) = img.dimensions();
+        let img_buf = img.into_raw();
+        let pixel_rect = self.bin_pack_tree.pack_rect(img_w as u16 + SPACING*2, img_h as u16 + SPACING*2)?;
+        let pixel_rect_unpadded = [
+            pixel_rect[0]+SPACING,
+            pixel_rect[1]+SPACING,
+            pixel_rect[2]-SPACING*2,
+            pixel_rect[3]-SPACING*2];
+        self.blit(&img_buf[..], &pixel_rect_unpadded);
+        // Loop over and assign glyphs
+        let mut glyphs = BTreeMap::new();
+        for (c, (x, y)) in chars.iter() {
+            glyphs.insert(*c, UvRect::from_pixel_rect(&[
+                pixel_rect_unpadded[0] + x * frame_w,
+                pixel_rect_unpadded[1] + y * frame_h,
+                frame_w,
+                frame_h], self.width, self.height));
+        }
+        self.atlas.bitmap_fonts.insert(key, BitmapFont { glyphs });
+        Ok(self)
+    }
+
     /// Set the font to use, with the given charset. Duplicate chars will
     /// probably fuck shit up here.
     ///
@@ -330,6 +374,7 @@ pub struct TextureAtlas<K : Ord> {
     glyphs: BTreeMap<char, (UvRect, PositionedGlyph<'static>)>,
     tilesets: BTreeMap<K, Tileset>,
     anim_sprites: BTreeMap<K, AnimSprite>,
+    bitmap_fonts: BTreeMap<K, BitmapFont>,
 }
 
 impl<K : Ord> TextureAtlas<K> {
@@ -339,6 +384,7 @@ impl<K : Ord> TextureAtlas<K> {
             glyphs: BTreeMap::new(),
             tilesets: BTreeMap::new(),
             anim_sprites: BTreeMap::new(),
+            bitmap_fonts: BTreeMap::new(),
         }
     }
 
@@ -356,5 +402,9 @@ impl<K : Ord> TextureAtlas<K> {
 
     pub fn rect_for_tileset(&self, k: K) -> Option<&Tileset> {
         self.tilesets.get(&k)
+    }
+
+    pub fn bitmap_font(&self, k: K) -> Option<&BitmapFont> {
+        self.bitmap_fonts.get(&k)
     }
 }

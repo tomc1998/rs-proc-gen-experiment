@@ -100,9 +100,7 @@ pub struct Renderer {
 }
 
 impl Renderer {
-    fn load_assets(factory: &mut Factory)
-                   -> (TextureAtlas<TextureKey>,
-                       ShaderResourceView<Resources, [f32; 4]>) {
+    fn load_assets(factory: &mut Factory) -> (TextureAtlas<TextureKey>, ShaderResourceView<Resources, [f32; 4]>) {
         // Initialise common frame maps
         let mut human_frame_map = BTreeMap::new();
         human_frame_map.insert(TextureKey::Human00IdleDown,  &[(0, 0)][..]);
@@ -140,6 +138,10 @@ impl Renderer {
             .add_anim_sprite("res/sprites/human-00.png", human_frame_map.clone(), 8, 8).unwrap()
             .add_anim_sprite("res/sprites/slime-00.png", slime_frame_map.clone(), 8, 8).unwrap()
             .add_anim_sprite("res/sprites/fx/slice-00.png", slice_frame_map.clone(), 16, 16).unwrap()
+            .add_bitmap_font(TextureKey::FontTinyNumbers, "res/sprites/ui/tiny-numbers.png",
+                             &[('1', (0, 0)), ('2', (1, 0)), ('3', (2, 0)), ('4', (3, 0)), ('5', (4, 0)),
+                               ('6', (0, 1)), ('7', (1, 1)), ('8', (2, 1)), ('9', (3, 1)), ('0', (4, 1))][..],
+                             3, 5).unwrap()
             .build(factory)
     }
 
