@@ -135,6 +135,7 @@ impl Renderer {
             .add_tex(TextureKey::White, "res/white.png").unwrap()
             .add_tex(TextureKey::GreenTree00, "res/sprites/green-tree-00.png").unwrap()
             .add_tex(TextureKey::InventoryMockup, "res/sprites/ui/inventory-mockup.png").unwrap()
+            .add_tex(TextureKey::IconMoney, "res/sprites/icon/money.png").unwrap()
             .add_tileset(TextureKey::TilesetGrass, "res/tileset-grass.png", 8, 8).unwrap()
             .add_anim_sprite("res/sprites/human-00.png", human_frame_map.clone(), 8, 8).unwrap()
             .add_anim_sprite("res/sprites/slime-00.png", slime_frame_map.clone(), 8, 8).unwrap()

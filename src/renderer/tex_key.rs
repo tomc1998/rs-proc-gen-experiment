@@ -27,4 +27,7 @@ pub enum TextureKey {
 
     // UI
     InventoryMockup,
+
+    // Icons (for stuff like inventory)
+    IconMoney,
 }

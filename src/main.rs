@@ -31,6 +31,8 @@ mod fpavec;
 mod ui;
 mod camera;
 mod math_util;
+mod item;
+mod inventory;
 
 use comp::*;
 use fpa::*;
@@ -161,6 +163,10 @@ fn main() {
         }
     }
 
+    // Create test inventory
+    let mut inventory = inventory::Inventory::new();
+    inventory.items[0] = Some(inventory::InventoryItem::new(item::ItemType::Money, 10));
+
     let input_map = input::InputMap::new();
     // Allocate cpu side v_buf
     let v_buf = vec![Default::default(); renderer::V_BUF_SIZE];
@@ -170,6 +176,7 @@ fn main() {
     world.add_resource(Collisions(Vec::with_capacity(128)));
     world.add_resource::<ui::UIState>(Default::default());
     world.add_resource(input::InputState::new());
+    world.add_resource(inventory);
     world.add_resource(renderer::VertexBuffer {
         v_buf: v_buf, size: 0,
     });
