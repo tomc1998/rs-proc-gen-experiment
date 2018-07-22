@@ -1,5 +1,7 @@
 //! System for dealing with picking up items
 
+const MAGNETISM_SPEED : Fx32 = Fx32(300 * FPA_MUL as i32);
+
 use inventory::Inventory;
 use Collisions;
 use specs::*;
@@ -9,7 +11,6 @@ use fpavec::*;
 
 pub struct PickupSys;
 
-const MAGNETISM_SPEED : Fx32 = Fx32(300 * FPA_MUL as i32);
 
 impl<'a> System<'a> for PickupSys {
     type SystemData = (

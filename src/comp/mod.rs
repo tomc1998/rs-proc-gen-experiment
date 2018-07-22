@@ -5,12 +5,14 @@ mod control;
 mod health;
 mod visual;
 mod alliance;
+mod death;
 
 pub use self::coll::*;
 pub use self::control::*;
 pub use self::health::*;
 pub use self::visual::*;
 pub use self::alliance::*;
+pub use self::death::*;
 use inventory::InventoryItem;
 use fpa::*;
 use fpavec::*;

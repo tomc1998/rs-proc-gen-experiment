@@ -53,7 +53,7 @@ impl<'a> System<'a> for InventoryPainter {
             // times 4.0 because of pixel upscale
             let x = inv_x + (inv_ix % NUM_COLUMNS) as f32 * 24.0 * 4.0;
             let y = inv_y + (inv_ix / NUM_COLUMNS) as f32 * 26.0 * 4.0;
-            let tex = atlas.rect_for_tex(item.item_type.get_tex_key()).unwrap();
+            let tex = atlas.rect_for_tex(item.item_type.get_icon_tex_key()).unwrap();
             // Draw icon
             Renderer::rect(&mut vertex_buffer.v_buf[ix .. ix+6],
                            &tex,                  // UV

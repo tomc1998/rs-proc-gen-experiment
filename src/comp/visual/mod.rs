@@ -8,6 +8,13 @@ mod camera;
 pub use self::fx::*;
 pub use self::camera::*;
 
+/// An enum which represents either an animated sprite or static sprite
+pub enum DrawableComponent {
+    #[allow(dead_code)]
+    Static(StaticSprite),
+    Anim(AnimSprite),
+}
+
 /// Draw a static sprite, using the Pos component as the bottom centre
 #[derive(Component)]
 pub struct StaticSprite {

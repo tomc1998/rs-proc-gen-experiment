@@ -1,5 +1,6 @@
 use Collisions;
 use DeltaTime;
+use KilledEntities;
 use specs::*;
 use comp::*;
 
@@ -8,6 +9,7 @@ pub struct HealthSys;
 impl<'a> System<'a> for HealthSys {
     type SystemData = (
         Entities<'a>,
+        WriteExpect<'a, KilledEntities>,
         ReadExpect<'a, DeltaTime>,
         ReadExpect<'a, Collisions>,
         ReadStorage<'a, Hurt>,
@@ -16,7 +18,7 @@ impl<'a> System<'a> for HealthSys {
         WriteStorage<'a, Tint>,
         WriteStorage<'a, Knockback>);
 
-    fn run(&mut self, (entities_s, delta, collisions, hurt_s, hurt_knockback_dir_s,
+    fn run(&mut self, (entities_s, mut killed, delta, collisions, hurt_s, hurt_knockback_dir_s,
                        mut health_s, mut tint_s, mut on_hit_s): Self::SystemData) {
 
         for (e, mut health) in (&*entities_s, &mut health_s).join() {
@@ -37,6 +39,7 @@ impl<'a> System<'a> for HealthSys {
                     if !health.mask.collides(&hurt.mask) { continue; }
                     if health.hurt(&hurt) {
                         entities_s.delete(*e0).unwrap();
+                        killed.0.push(*e0);
                     }
                     health.inv_time = health.max_inv_time;
                     // Apply tint to e0

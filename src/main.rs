@@ -27,6 +27,7 @@ mod sys_anim;
 mod sys_lifetime;
 mod sys_on_hit;
 mod sys_pickup;
+mod sys_death_drop;
 mod fpa;
 mod fpavec;
 mod ui;
@@ -34,6 +35,7 @@ mod camera;
 mod math_util;
 mod item;
 mod inventory;
+mod drop_tables;
 
 use comp::*;
 use fpa::*;
@@ -45,6 +47,7 @@ use glutin::{GlRequest, GlContext};
 use glutin::Api::OpenGl;
 use std::time;
 use std::thread;
+use rand::SeedableRng;
 
 pub struct CollisionMeta {
     /// This normal points outwards from entity B to entity A (and is also used
@@ -58,6 +61,11 @@ pub struct CollisionMeta {
 pub struct Collisions(Vec<(Entity, Entity, CollisionMeta)>);
 
 pub struct DeltaTime(pub f32);
+
+/// Entities that have been 'killed' and need to produce on-death effects. This
+/// doesn't mean all deleted entities - it means alive characters have been
+/// killed by combat or other effects.
+pub struct KilledEntities(Vec<Entity>);
 
 /// Empty specs::System to use in the dispatcher as a combiner for system
 /// dependencies.
@@ -89,6 +97,7 @@ fn create_world() -> specs::World {
     world.register::<FollowCamera>();
     world.register::<Pickup>();
     world.register::<Collector>();
+    world.register::<OnDeathDrop>();
     world
 }
 
@@ -151,6 +160,11 @@ fn main() {
                      mask: Hitmask::default_enemy_attack(),
                      flags: 0 })
         .with(Alliance::evil())
+        .with(OnDeathDrop {
+            drop_table: drop_tables::DropTableKey::Slime,
+            min_drops: 1,
+            max_drops: 3,
+        })
         .with(AISlime { move_target: Vec32::new(Fx32::new(200.0), Fx32::new(200.0)),
                         attack_target: None,
                         charge_time: Fx32::new(0.0),
@@ -184,7 +198,9 @@ fn main() {
     world.add_resource(Collisions(Vec::with_capacity(128)));
     world.add_resource::<ui::UIState>(Default::default());
     world.add_resource(input::InputState::new());
+    world.add_resource(drop_tables::DropTableMap::new_standard_map());
     world.add_resource(inventory);
+    world.add_resource(KilledEntities(Vec::new()));
     world.add_resource(renderer::VertexBuffer {
         v_buf: v_buf, size: 0,
     });
@@ -216,13 +232,21 @@ fn main() {
         .with(sys_health::HealthSys, "health", &["phys"])
         .with(sys_on_hit::KnockbackSys, "oh_knockback", &["health"])
 
-        .with(MarkerSys, "update", &["phys", "anim_sprite"])
+        .with(MarkerSys, "update", &["phys", "anim_sprite", "health", "oh_knockback"])
+
+        // After-death effects
+        .with(sys_death_drop::OnDeathDropSys::new(
+            rand::rngs::StdRng::from_rng(
+                rand::thread_rng()).unwrap()),
+              "on_death_drop", &["update"])
 
         // Paint
         .with(renderer::TilemapPainter, "tilemap_paint", &["update"])
         .with(renderer::SpritePainter, "sprite_paint", &["update"])
         .with(renderer::InventoryPainter, "ui_inventory_paint", &["update"])
         .build();
+
+    dispatcher.setup(&mut world.res);
 
     // Number of frames until we print another frame time
     let mut fps_count_timer = 60;
@@ -252,10 +276,12 @@ fn main() {
 
             // Reset ECS state after rendering
             // After painting, we need to clear the v_buf
-            v_buf.size = 0; 
+            v_buf.size = 0;
             // Clear collision list for next frame
             let mut collisions = world.write_resource::<Collisions>();
-            (*collisions).0.clear();
+            collisions.0.clear();
+            let mut killed = world.write_resource::<KilledEntities>();
+            killed.0.clear();
         }
 
         // Actually delete all entities that need to be deleted
