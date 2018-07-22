@@ -46,8 +46,7 @@ impl<'a> System<'a> for OnDeathDropSys {
             let drop_table = drop_table_map.get(&dd.drop_table)
                 .expect(&format!("Drop table {:?} not found", dd.drop_table));
             // First, how many things to drop?
-            // let num_drops = self.rng.gen_range(dd.min_drops, dd.max_drops);
-            let num_drops = 1000;
+            let num_drops = self.rng.gen_range(dd.min_drops, dd.max_drops);
             let mut rng0 = self.rng.clone();
             let mut rng1 = self.rng.clone();
             (0..num_drops).filter_map(|_| {
