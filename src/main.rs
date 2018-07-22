@@ -267,7 +267,7 @@ fn main() {
 
         // Update & paint the world
         {
-            dispatcher.dispatch(&mut world.res);
+            dispatcher.dispatch_seq(&mut world.res);
             let mut v_buf = world.write_resource::<renderer::VertexBuffer>();
             renderer.clear();
             renderer.flush_render(&mut device, &v_buf, &world.read_resource::<camera::Camera>());

@@ -47,22 +47,27 @@ impl<'a> System<'a> for OnDeathDropSys {
             let drop_table = drop_table_map.get(&dd.drop_table)
                 .expect(&format!("Drop table {:?} not found", dd.drop_table));
             // First, how many things to drop?
-            let rng = &mut self.rng;
-            let num_drops = rng.gen_range(dd.min_drops, dd.max_drops);
+            let num_drops = self.rng.gen_range(dd.min_drops, dd.max_drops);
+            let mut rng0 = self.rng.clone();
+            let mut rng1 = self.rng.clone();
             (0..num_drops).filter_map(|_| {
-                let mut rng = rng.clone();
                 // Query the drop table
-                let probability = Fx32(rng.gen_range(Fx32::new(0.0).0, Fx32::new(10000.0).0));
+                let probability = Fx32(rng0.gen_range(Fx32::new(0.0).0, Fx32::new(10000.0).0));
                 drop_table.get_drop(probability)
             }).for_each(|d| {
-                let mut rng = rng.clone();
                 // Spawn the drops in-world - first choose the amount to drop
-                let num = rng.gen_range(d.min_num, d.max_num);
+                let num = rng1.gen_range(d.min_num, d.max_num);
+
+                // Now choose a speed to spawn
+                let x_vel = Fx32(rng1.gen_range(Fx32::new(-1.0).0, Fx32::new(1.0).0));
+                let y_vel = Fx32(rng1.gen_range(Fx32::new(-1.0).0, Fx32::new(1.0).0));
+                let speed = Fx32(rng1.gen_range(Fx32::new(400.0).0, Fx32::new(500.0).0));
+                let vel = Vec32::new(x_vel, y_vel).nor() * speed;
 
                 // Spawn
                 let mut builder = lazy_update.create_entity(&*entities)
                     .with(pos.clone())
-                    .with(Vel { vel: Vec32::zero() })
+                    .with(Vel { vel })
                     .with(Pickup { item: inventory::InventoryItem::new(d.item, num) })
                     .with(CollCircle { r: Fx16::new(8.0), off: Vec16::zero(), flags: 0})
                     .with(AnimSprite::new(16.0, 16.0, Fx32::new(40.0), 6, renderer::TextureKey::Coin));

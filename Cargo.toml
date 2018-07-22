@@ -22,3 +22,5 @@ num-integer = "*"
 [features]
 bench = []
 
+[profile.release]
+debug = true
