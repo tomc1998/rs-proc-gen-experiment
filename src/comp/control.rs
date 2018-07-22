@@ -1,9 +1,8 @@
 use specs::*;
-use fpavec::*;
-use fpa::*;
+use vec::*;
 
 #[allow(dead_code)]
-pub const SLIME_MOVE_SPEED : Fx16 = Fx16((100.0 * FPA_MUL) as i16);
+pub const SLIME_MOVE_SPEED : f32 = 100.0;
 
 #[derive(Copy, Clone, Eq, PartialEq)]
 pub enum PlayerState {
@@ -15,19 +14,19 @@ pub enum PlayerState {
 /// entity.
 #[derive(Component)]
 pub struct PlayerControlled {
-    pub move_speed: Fx16,
+    pub move_speed: f32,
     pub state: PlayerState,
     /// Attack time in millis, set to some val which then counts down to 0 when
     /// state is Attacking,, then state is set to Default.
-    pub attack_time: Fx16,
+    pub attack_time: f32,
 }
 
 impl PlayerControlled {
     pub fn new() -> PlayerControlled {
         PlayerControlled {
-            move_speed: Fx16::new(100.0),
+            move_speed: 100.0,
             state: PlayerState::Default,
-            attack_time: Fx16::new(0.0),
+            attack_time: 0.0,
         }
     }
 }
@@ -49,6 +48,6 @@ pub struct AISlime {
     pub attack_target: Option<Entity>,
     /// Once this hits 0, the slime changes state. This is used when charging,
     /// but also when jumping to know when to reset to idle.
-    pub charge_time: Fx32,
+    pub charge_time: f32,
     pub state: SlimeState,
 }

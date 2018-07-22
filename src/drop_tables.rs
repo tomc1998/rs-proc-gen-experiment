@@ -2,7 +2,6 @@
 
 use std::collections::BTreeMap;
 use std::ops::{Deref, DerefMut};
-use fpa::*;
 use item::*;
 
 /// A key for accessing drop tables
@@ -26,7 +25,7 @@ pub struct Drop {
 /// chances that they drop.
 /// # NOTE: Probabilities are from 0 to 10000, to give us more fidelity with
 /// fixed-point arithmetic
-#[derive(PartialEq, Eq)]
+#[derive(PartialEq)]
 pub struct DropTable {
     /// Items are assumed to be ordered by their probability (i.e. the first
     /// item in the tuple, the probability, should only ascend up to the maximum
@@ -35,15 +34,15 @@ pub struct DropTable {
     /// considered no drop.
     /// If the last itme is listed at X probability, anything equal to or above
     /// X is considered this drop.
-    pub items: Vec<(Fx32, Drop)>,
+    pub items: Vec<(f32, Drop)>,
 }
 
 impl DropTable {
     /// Given a number between 0 and 100,
-    pub fn get_drop(&self, probability: Fx32) -> Option<Drop> {
+    pub fn get_drop(&self, probability: f32) -> Option<Drop> {
         let mut curr_drop = None;
         for (p, d) in &self.items {
-            if (probability - *p).0 < 0 {
+            if probability < *p {
                 break;
             } else {
                 curr_drop = Some(*d);
@@ -54,7 +53,7 @@ impl DropTable {
 }
 
 /// Maps droptablekeys to droptables
-#[derive(PartialEq, Eq)]
+#[derive(PartialEq)]
 pub struct DropTableMap(BTreeMap<DropTableKey, DropTable>);
 
 impl Deref for DropTableMap {
@@ -79,9 +78,9 @@ impl DropTableMap {
         let mut map = BTreeMap::new();
         map.insert(DropTableKey::Slime,
                    DropTable {items: vec![
-                       (Fx32::new(2500.0), Drop { item: ItemType::Money, min_num: 1, max_num: 3 }),
-                       (Fx32::new(7500.0), Drop { item: ItemType::Money, min_num: 3, max_num: 9 }),
-                       (Fx32::new(9000.0), Drop { item: ItemType::Money, min_num: 9, max_num: 20 }),
+                       (2500.0, Drop { item: ItemType::Money, min_num: 1, max_num: 3 }),
+                       (7500.0, Drop { item: ItemType::Money, min_num: 3, max_num: 9 }),
+                       (9000.0, Drop { item: ItemType::Money, min_num: 9, max_num: 20 }),
                    ]});
         DropTableMap(map)
     }

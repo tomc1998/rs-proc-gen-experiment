@@ -1,8 +1,7 @@
-use fpa::*;
 use comp::*;
 use input::*;
 use specs::*;
-use fpavec::*;
+use vec::*;
 
 /// State for rendering. Passed to the render function.
 fn gen_ortho_mat(l: f32, r: f32, t: f32, b: f32, n: f32, f: f32) -> [[f32; 4]; 4] {
@@ -14,17 +13,17 @@ fn gen_ortho_mat(l: f32, r: f32, t: f32, b: f32, n: f32, f: f32) -> [[f32; 4]; 4
 
 pub struct Camera {
     pub pos: Vec32,
-    pub w: Fx32,
-    pub h: Fx32,
+    pub w: f32,
+    pub h: f32,
 }
 
 impl Camera {
     pub fn new(w: f32, h: f32) -> Camera {
-        Camera { pos: Vec32::zero(), w: Fx32::new(w), h: Fx32::new(h) }
+        Camera { pos: Vec32::zero(), w: w, h: h }
     }
     pub fn gen_ortho_mat(&self) -> [[f32; 4]; 4] {
-        gen_ortho_mat(self.pos.x.to_f32(), (self.pos.x + self.w).to_f32(),
-                      self.pos.y.to_f32(), (self.pos.y + self.h).to_f32(),
+        gen_ortho_mat(self.pos.x, self.pos.x + self.w,
+                      self.pos.y, self.pos.y + self.h,
                       -10000.0, 10000.0)
     }
 }
@@ -41,8 +40,8 @@ impl<'a> System<'a> for FollowCameraSys {
     fn run(&mut self, (mut camera, mut input_state, pos_s, follow_camera_s): Self::SystemData) {
         if let Some((pos, _)) = (&pos_s, &follow_camera_s).join().next() {
             // Update the camera size depending on view size
-            camera.w = Fx32::new(input_state.window_size.0 as f32);
-            camera.h = Fx32::new(input_state.window_size.1 as f32);
+            camera.w = input_state.window_size.0 as f32;
+            camera.h = input_state.window_size.1 as f32;
 
             // Update camera pos
             camera.pos = pos.pos - Vec32::new(camera.w/2.0, camera.h/2.0);
@@ -55,7 +54,7 @@ impl<'a> System<'a> for FollowCameraSys {
             let screen_m = input_state.screen_mouse - Vec32::new(camera.w/2.0, camera.h/2.0);
 
             // Apply additional translation
-            camera.pos += screen_m * Fx32::new(0.25);
+            camera.pos += screen_m * 0.25;
         }
     }
 }

@@ -1,10 +1,9 @@
 use DeltaTime;
 use specs::*;
 use comp::*;
-use fpa::*;
-use fpavec::*;
+use vec::*;
 
-const JUMP_SPEED : Fx32 = Fx32(900 * FPA_MUL as i32);
+const JUMP_SPEED : f32 = 900.0;
 
 pub struct SlimeAISys;
 
@@ -30,7 +29,7 @@ impl<'a> System<'a> for SlimeAISys {
                     if e == target_e { continue }
                     if alliance.alliance.attacks(&target_alliance.alliance) {
                         // Check if in range (200 units)
-                        if ((target_pos.pos - pos.pos).len() - Fx32::new(200.0)).0 < 0 {
+                        if (target_pos.pos - pos.pos).len() - 200.0 < 0.0 {
                             ai.attack_target = Some(target_e);
                             break;
                         }
@@ -49,7 +48,7 @@ impl<'a> System<'a> for SlimeAISys {
                 }
                 let target_pos = target_pos.unwrap();
                 // Check if the target is gone (over 300 units)
-                if ((target_pos.pos - pos.pos).len() - Fx32::new(300.0)).0 > 0 {
+                if (target_pos.pos - pos.pos).len() - 300.0 > 0.0 {
                     ai.attack_target = None;
                     vel.vel = Vec32::zero();
                     continue;
@@ -57,12 +56,12 @@ impl<'a> System<'a> for SlimeAISys {
                 match ai.state {
                     SlimeState::Idle => {
                         ai.state = SlimeState::Charging;
-                        ai.charge_time = Fx32::new(400.0);
+                        ai.charge_time = 400.0;
                     }
                     SlimeState::Charging => {
                         ai.charge_time -= delta.0 * 1000.0;
-                        if ai.charge_time.0 < 0 {
-                            ai.charge_time = Fx32::new(1200.0);
+                        if ai.charge_time < 0.0 {
+                            ai.charge_time = 1200.0;
                             ai.state = SlimeState::Jumping;
                             // Set the velocity to jump towards the target
                             if target_pos.pos == pos.pos {
@@ -75,11 +74,11 @@ impl<'a> System<'a> for SlimeAISys {
                     }
                     SlimeState::Jumping => {
                         // Damp vel & decrease charge time
-                        vel.vel *= Fx32::new(0.9);
+                        vel.vel *= 0.9;
                         let len = vel.vel.len();
-                        if len.0 != 0 { vel.vel *= (len - Fx32::new(1.0)) / len; }
+                        if len != 0.0 { vel.vel *= (len - 1.0) / len; }
                         ai.charge_time -= delta.0 * 1000.0;
-                        if ai.charge_time.0 < 0 {
+                        if ai.charge_time < 0.0 {
                             vel.vel = Vec32::zero();
                             ai.state = SlimeState::Idle;
                         }

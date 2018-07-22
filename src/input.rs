@@ -2,8 +2,7 @@
 
 use std::collections::HashMap;
 use glutin;
-use fpa::*;
-use fpavec::*;
+use vec::*;
 
 /// Some input from the player, used for mapping inputs to commands
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
@@ -57,7 +56,7 @@ impl InputMap {
 }
 
 /// The current state of input
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct InputState {
     /// Is <command> down?
     pub down: HashMap<Command, bool>,
@@ -168,8 +167,8 @@ impl InputState {
                     glutin::WindowEvent::CursorMoved {
                         position: (x, y), ..
                     } => {
-                        self.screen_mouse.x = Fx32::new(x as f32);
-                        self.screen_mouse.y = Fx32::new(y as f32);
+                        self.screen_mouse.x = x as f32;
+                        self.screen_mouse.y = y as f32;
                     }
                     _ => {},
                 }

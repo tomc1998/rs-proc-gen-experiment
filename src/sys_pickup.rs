@@ -1,14 +1,13 @@
 //! System for dealing with picking up items
 
-const MAGNETISM_SPEED : Fx32 = Fx32(30 * FPA_MUL as i32);
+const MAGNETISM_SPEED : f32 = 30.0;
 /// Damping applied each frame
-const PICKUP_DAMPING : Fx32 = Fx32(10 * FPA_MUL as i32);
+const PICKUP_DAMPING : f32 = 10.0;
 
 use inventory::Inventory;
 use Collisions;
 use specs::*;
 use comp::*;
-use fpa::*;
 
 pub struct PickupSys;
 
@@ -43,7 +42,7 @@ impl<'a> System<'a> for PickupSys {
         // Loop over all pickups and apply vel if possible
         for (_, p_pos, vel) in (&pickup_s, &pos_s, &mut vel_s).join() {
             // apply pickup damping
-            if vel.vel.x.0 != 0 || vel.vel.y.0 != 0 {
+            if vel.vel.x != 0.0 || vel.vel.y != 0.0 {
                 let vel_len = vel.vel.len();
                 vel.vel *= (vel_len - PICKUP_DAMPING) / vel_len;
             }
@@ -52,7 +51,7 @@ impl<'a> System<'a> for PickupSys {
                 // Check if in range
                 let vec = p_pos.pos - c_pos.pos;
                 let dis = vec.len();
-                if (dis - collector.magnet_radius.to_fx32()).0 < 0 {
+                if (dis - collector.magnet_radius) < 0.0 {
                     // Apply vel
                     vel.vel += (-vec / dis) * MAGNETISM_SPEED;
                 }

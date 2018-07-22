@@ -14,8 +14,7 @@ pub use self::visual::*;
 pub use self::alliance::*;
 pub use self::death::*;
 use inventory::InventoryItem;
-use fpa::*;
-use fpavec::*;
+use vec::*;
 use specs::{DenseVecStorage, VecStorage};
 
 #[derive(Clone, Component)]
@@ -34,7 +33,7 @@ pub struct Vel {
 #[storage(VecStorage)]
 pub struct Lifetime {
     /// Lifetime of this in millis. Will count down to 0.
-    pub lifetime: Fx32,
+    pub lifetime: f32,
 }
 
 /// Something that can be picked up and placed in an inventory / bag
@@ -50,5 +49,5 @@ pub struct Pickup {
 #[derive(Component)]
 pub struct Collector {
     /// The range of the magnetism that attracts pickups
-    pub magnet_radius: Fx16,
+    pub magnet_radius: f32,
 }

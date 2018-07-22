@@ -28,8 +28,7 @@ mod sys_lifetime;
 mod sys_on_hit;
 mod sys_pickup;
 mod sys_death_drop;
-mod fpa;
-mod fpavec;
+mod vec;
 mod ui;
 mod camera;
 mod math_util;
@@ -38,8 +37,7 @@ mod inventory;
 mod drop_tables;
 
 use comp::*;
-use fpa::*;
-use fpavec::*;
+use vec::*;
 use specs::*;
 use gfx::Device;
 use gfx_window_glutin as gfx_glutin;
@@ -54,7 +52,7 @@ pub struct CollisionMeta {
     /// to resolve circ - circ collisions)
     /// Will be normalised.
     #[allow(dead_code)]
-    normal: Vec16,
+    normal: Vec32,
 }
 
 /// Lists pairs of collisions.
@@ -123,37 +121,37 @@ fn main() {
     use specs::Builder;
     // Player
     world.create_entity()
-        .with(Pos { pos: Vec32::new(Fx32::new(32.0), Fx32::new(32.0)) })
+        .with(Pos { pos: Vec32::new(32.0, 32.0) })
         .with(Vel { vel: Vec32::zero() })
         .with(Alliance::good())
         .with(PlayerControlled::new())
         .with(FollowCamera)
         .with(Health::new(8, Hitmask(HITMASK_PLAYER)))
-        .with(Collector { magnet_radius: Fx16::new(64.0) })
-        .with(CollCircle { r: Fx16::new(8.0), off: Vec16::zero(),
+        .with(Collector { magnet_radius: 64.0 })
+        .with(CollCircle { r: 8.0, off: Vec32::zero(),
                            flags: COLL_SOLID})
-        .with(AnimSprite::new(32.0, 32.0, Fx32::new(100.0),
+        .with(AnimSprite::new(32.0, 32.0, 100.0,
                               4, renderer::TextureKey::Human00WalkDown))
         .build();
     // Test Coin
     world.create_entity()
-        .with(Pos { pos: Vec32::new(Fx32::new(100.0), Fx32::new(200.0)) })
+        .with(Pos { pos: Vec32::new(100.0, 200.0) })
         .with(Vel { vel: Vec32::zero() })
         .with(Pickup { item: inventory::InventoryItem::new(item::ItemType::Money, 5) })
-        .with(CollCircle { r: Fx16::new(8.0), off: Vec16::zero(), flags: 0})
-        .with(AnimSprite::new(16.0, 16.0, Fx32::new(40.0), 6, renderer::TextureKey::Coin))
+        .with(CollCircle { r: 8.0, off: Vec32::zero(), flags: 0})
+        .with(AnimSprite::new(16.0, 16.0, 40.0, 6, renderer::TextureKey::Coin))
         .build();
     // Tree
     world.create_entity()
-        .with(Pos { pos: Vec32::new(Fx32::new(100.0), Fx32::new(100.0)) })
-        .with(CollCircle { r: Fx16::new(12.0), off: Vec16::zero(),
+        .with(Pos { pos: Vec32::new(100.0, 100.0) })
+        .with(CollCircle { r: 12.0, off: Vec32::zero(),
                            flags: COLL_SOLID | COLL_STATIC})
         .with(StaticSprite { w: 64.0, h: 128.0,
                              sprite: renderer::TextureKey::GreenTree00})
         .build();
     // Slime
     world.create_entity()
-        .with(Pos { pos: Vec32::new(Fx32::new(200.0), Fx32::new(200.0)) })
+        .with(Pos { pos: Vec32::new(200.0, 200.0) })
         .with(Vel { vel: Vec32::zero() })
         .with(Health::new(4, Hitmask(HITMASK_ENEMY)))
         .with(Hurt { damage: 2,
@@ -165,12 +163,12 @@ fn main() {
             min_drops: 1,
             max_drops: 3,
         })
-        .with(AISlime { move_target: Vec32::new(Fx32::new(200.0), Fx32::new(200.0)),
+        .with(AISlime { move_target: Vec32::new(200.0, 200.0),
                         attack_target: None,
-                        charge_time: Fx32::new(0.0),
+                        charge_time: 0.0,
                         state: SlimeState::Idle })
-        .with(CollCircle { r: Fx16::new(8.0), off: Vec16::zero(), flags: COLL_SOLID})
-        .with(AnimSprite::new(32.0, 32.0, Fx32::new(100000.0),
+        .with(CollCircle { r: 8.0, off: Vec32::zero(), flags: COLL_SOLID})
+        .with(AnimSprite::new(32.0, 32.0, 100000.0,
                               1, renderer::TextureKey::Slime00Idle))
         .build();
 
@@ -178,7 +176,7 @@ fn main() {
     for x in 0..10 {
         for y in 0..10 {
             world.create_entity()
-                .with(Pos { pos: Vec32::new(Fx32::new(x as f32), Fx32::new(y as f32)) })
+                .with(Pos { pos: Vec32::new(x as f32, y as f32) })
                 .with(Tilemap { tileset: TilesetEnum::Grass,
                                 data: [1u8; TILEMAP_SIZE * TILEMAP_SIZE] })
                 .build();

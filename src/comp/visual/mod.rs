@@ -1,4 +1,3 @@
-use fpa::*;
 use specs::{DenseVecStorage, HashMapStorage};
 use renderer::{TextureKey, self};
 
@@ -33,9 +32,9 @@ pub struct AnimSprite {
     pub h: f32,
     pub curr_frame: usize,
     /// Frame time in millis
-    pub frame_time: Fx32,
+    pub frame_time: f32,
     /// Frame time counter
-    pub curr_frame_time: Fx32,
+    pub curr_frame_time: f32,
     /// When curr_frame == num_frames, curr_frame will be set to 0.
     pub num_frames: usize,
     /// The key of the animation
@@ -45,13 +44,13 @@ pub struct AnimSprite {
 }
 
 impl AnimSprite {
-    pub fn new(w: f32, h: f32, frame_time: Fx32, num_frames: usize, anim: TextureKey) -> AnimSprite {
+    pub fn new(w: f32, h: f32, frame_time: f32, num_frames: usize, anim: TextureKey) -> AnimSprite {
         AnimSprite {
             w: w,
             h: h,
             curr_frame: 0,
             frame_time: frame_time,
-            curr_frame_time: Fx32::new(0.0),
+            curr_frame_time: 0.0,
             num_frames: num_frames,
             anim: anim,
             flags: 0,
@@ -64,9 +63,9 @@ impl AnimSprite {
     }
 
     /// Change the current anim, resetting all counters
-    pub fn set_anim(&mut self, anim: TextureKey, num_frames: usize, frame_time: Fx32) {
+    pub fn set_anim(&mut self, anim: TextureKey, num_frames: usize, frame_time: f32) {
         if self.anim != anim {
-            self.curr_frame_time = Fx32::new(0.0);
+            self.curr_frame_time = 0.0;
             self.curr_frame = 0;
         }
         self.anim = anim.clone();

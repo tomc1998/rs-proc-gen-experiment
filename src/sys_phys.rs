@@ -6,8 +6,7 @@ use comp::*;
 use DeltaTime;
 use Collisions;
 use CollisionMeta;
-use fpa::*;
-use fpavec::*;
+use vec::*;
 
 pub struct PhysSys<C0: Coll<C1>, C1: Coll<C0>> {
     m0: marker::PhantomData<C0>,
@@ -48,12 +47,12 @@ impl<'a, C0: Coll<C1> + Component, C1: Coll<C0> + Component> System<'a> for Phys
             let flags0 = coll0.flags();
             // No broad phase, just brute force
             // TODO: Implement broad-phase collision
-            let mut res = Vec16::zero();
+            let mut res = Vec32::zero();
             if let Some(pos0) = pos_s.get(e0) {
                 for (e1, pos1, coll1) in (&*entities_s, &pos_s, &coll1_s).join() {
                     if e1 == e0 { continue; }
                     let this_res = coll0.resolve(coll1, pos0.pos, pos1.pos);
-                    if this_res.len().0 == 0 { continue; }
+                    if this_res.len() == 0.0 { continue; }
 
                     // Insert into collisions
                     collisions.0.push((e0, e1, CollisionMeta {
@@ -68,7 +67,7 @@ impl<'a, C0: Coll<C1> + Component, C1: Coll<C0> + Component> System<'a> for Phys
                     if flags1 & COLL_STATIC > 0 {
                         res += this_res;
                     } else {
-                        res += this_res / Fx16::new(2.0);
+                        res += this_res / 2.0;
                     }
                 }
             } else { continue }

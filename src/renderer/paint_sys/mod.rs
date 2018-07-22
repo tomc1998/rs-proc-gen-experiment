@@ -39,16 +39,16 @@ impl SpritePainter {
         if rot != 0.0 {
             Renderer::rect_rot(&mut vertex_buffer.v_buf[*ix .. *ix+6],
                                tex,                          // UV
-                               (pos.pos.x - w/2.0).to_f32(), // X
-                               (pos.pos.y - h).to_f32(),     // Y
-                               (pos.pos.y).to_f32(),         // Z
+                               pos.pos.x - w/2.0, // X
+                               pos.pos.y - h,     // Y
+                               pos.pos.y,         // Z
                                w, h, col, rot);
         } else {
             Renderer::rect(&mut vertex_buffer.v_buf[*ix .. *ix+6],
                            tex,                          // UV
-                           (pos.pos.x - w/2.0).to_f32(), // X
-                           (pos.pos.y - h).to_f32(),     // Y
-                           (pos.pos.y).to_f32(),         // Z
+                           pos.pos.x - w/2.0, // X
+                           pos.pos.y - h,     // Y
+                           pos.pos.y,         // Z
                            w, h, col);
         }
         *ix += 6;
@@ -129,7 +129,7 @@ impl<'a> System<'a> for TilemapPainter {
                     };
                     Renderer::rect(&mut vertex_buffer.v_buf[ix .. ix+6],
                                    &tileset.tile(tx, ty), // UV
-                                   x_pos.to_f32(), y_pos.to_f32(), -2000.0, // X, Y, Z
+                                   x_pos, y_pos, -2000.0, // X, Y, Z
                                    32.0, 32.0,            // W, H
                                    [1.0, 1.0, 1.0, 1.0]); // Col
                     ix += 6;

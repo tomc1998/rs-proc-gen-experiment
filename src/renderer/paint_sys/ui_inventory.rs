@@ -25,8 +25,8 @@ impl<'a> System<'a> for InventoryPainter {
 
         let mut ix = vertex_buffer.size as usize;
 
-        let inv_x = (camera.pos.x + camera.w / 2.0 - 300.0).to_f32();
-        let inv_y = (camera.pos.y + camera.h / 2.0 - 200.0).to_f32();
+        let inv_x = camera.pos.x + camera.w / 2.0 - 300.0;
+        let inv_y = camera.pos.y + camera.h / 2.0 - 200.0;
 
         let tex = atlas.rect_for_tex(TextureKey::InventoryMockup).unwrap();
         // Draw mockup

@@ -15,7 +15,7 @@ impl<'a> System<'a> for LifetimeSys {
 
         for (lifetime, e) in (&mut lifetime_s, &*entities_s).join() {
             lifetime.lifetime -= delta.0 * 1000.0;
-            if lifetime.lifetime.0 <= 0 {
+            if lifetime.lifetime <= 0.0 {
                 entities_s.delete(e).unwrap();
             }
         }

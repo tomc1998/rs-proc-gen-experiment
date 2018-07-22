@@ -1,6 +1,5 @@
 use specs::{DenseVecStorage};
-use fpa::*;
-use fpavec::*;
+use vec::*;
 
 /// A hitmask - only hurtboxes that have an overlap with a health hitmask will
 /// hit (i.e. if we have the hurtbox hitmask as hb_hm, and the health hitmask as
@@ -60,9 +59,9 @@ pub struct Health {
     pub max_health: u8,
     pub health: u8,
     /// Maximum invuln time after being hit (in millis)
-    pub max_inv_time: Fx16,
+    pub max_inv_time: f32,
     /// Counts to 0
-    pub inv_time: Fx16,
+    pub inv_time: f32,
     /// What is this?
     /// If this is the component for an ally, for example, this should have a
     /// value of HITMASK_ALLY.
@@ -77,8 +76,8 @@ impl Health {
             max_health: max_health,
             health: max_health,
             mask: mask,
-            max_inv_time: Fx16::new(300.0),
-            inv_time: Fx16::new(0.0),
+            max_inv_time: 300.0,
+            inv_time: 0.0,
         }
     }
 
@@ -116,9 +115,9 @@ pub struct Hurt {
 /// entity that has health, it will knock that entity back in a given direction
 #[derive(Component)]
 pub struct HurtKnockbackDir {
-    pub knockback: Vec16,
+    pub knockback: Vec32,
     /// Duration in millis. Counts to 0, when 0, removes this component.
-    pub duration: Fx32,
+    pub duration: f32,
 }
 
 /// Knockback will apply the given velocity to an object until the duration
@@ -127,7 +126,7 @@ pub struct HurtKnockbackDir {
 /// roughly 100, 50 (but this shouldn't be relied on due to rouding errs)
 #[derive(Component)]
 pub struct Knockback {
-    pub knockback: Vec16,
+    pub knockback: Vec32,
     /// Duration in millis. Counts to 0, when 0, removes this component.
-    pub duration: Fx32,
+    pub duration: f32,
 }
