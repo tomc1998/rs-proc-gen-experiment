@@ -154,7 +154,7 @@ impl Renderer {
             .add_anim_sprite("res/sprites/slime-00.png", TextureKey::SlimeAnim,
                              slime_frame_set, 8, 8).unwrap()
             .add_anim_sprite("res/sprites/fx/slice-00.png", TextureKey::SliceAnim,
-                             slice_frame_set, 8, 8).unwrap()
+                             slice_frame_set, 16, 16).unwrap()
             .add_bitmap_font(TextureKey::FontTinyNumbers, "res/sprites/ui/tiny-numbers.png",
                              &[('1', (0, 0)), ('2', (1, 0)), ('3', (2, 0)), ('4', (3, 0)), ('5', (4, 0)),
                                ('6', (0, 1)), ('7', (1, 1)), ('8', (2, 1)), ('9', (3, 1)), ('0', (4, 1))][..],
