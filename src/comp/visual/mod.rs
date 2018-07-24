@@ -38,7 +38,9 @@ pub struct AnimSprite {
     /// When curr_frame == num_frames, curr_frame will be set to 0.
     pub num_frames: usize,
     /// The key of the animation
-    pub anim: TextureKey,
+    pub anim_key: TextureKey,
+    /// The number of the animation we're playing from the animsprite resource.
+    pub anim: usize,
     /// See the ANIM_SPRITE_* constants
     pub flags: u8,
 }
@@ -52,7 +54,8 @@ impl AnimSprite {
             frame_time: frame_time,
             curr_frame_time: 0.0,
             num_frames: num_frames,
-            anim: anim,
+            anim_key: anim,
+            anim: 0,
             flags: 0,
         }
     }
@@ -63,12 +66,12 @@ impl AnimSprite {
     }
 
     /// Change the current anim, resetting all counters
-    pub fn set_anim(&mut self, anim: TextureKey, num_frames: usize, frame_time: f32) {
+    pub fn set_anim(&mut self, anim: usize, num_frames: usize, frame_time: f32) {
         if self.anim != anim {
             self.curr_frame_time = 0.0;
             self.curr_frame = 0;
         }
-        self.anim = anim.clone();
+        self.anim = anim;
         self.num_frames = num_frames;
         self.frame_time = frame_time;
     }

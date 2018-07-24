@@ -28,6 +28,7 @@ mod sys_lifetime;
 mod sys_on_hit;
 mod sys_pickup;
 mod sys_death_drop;
+mod sys_track_pos;
 mod vec;
 mod ui;
 mod camera;
@@ -96,6 +97,7 @@ fn create_world() -> specs::World {
     world.register::<Pickup>();
     world.register::<Collector>();
     world.register::<OnDeathDrop>();
+    world.register::<TrackPos>();
     world
 }
 
@@ -120,7 +122,7 @@ fn main() {
     let mut world = create_world();
     use specs::Builder;
     // Player
-    world.create_entity()
+    let player = world.create_entity()
         .with(Pos { pos: Vec32::new(32.0, 32.0) })
         .with(Vel { vel: Vec32::zero() })
         .with(Alliance::good())
@@ -131,15 +133,13 @@ fn main() {
         .with(CollCircle { r: 8.0, off: Vec32::zero(),
                            flags: COLL_SOLID})
         .with(AnimSprite::new(32.0, 32.0, 100.0,
-                              4, renderer::TextureKey::Human00WalkDown))
+                              4, renderer::TextureKey::Human00Anim))
         .build();
-    // Test Coin
+    // Test Helmet
     world.create_entity()
         .with(Pos { pos: Vec32::new(100.0, 200.0) })
-        .with(Vel { vel: Vec32::zero() })
-        .with(Pickup { item: inventory::InventoryItem::new(item::ItemType::Money, 5) })
-        .with(CollCircle { r: 8.0, off: Vec32::zero(), flags: 0})
-        .with(AnimSprite::new(16.0, 16.0, 40.0, 6, renderer::TextureKey::Coin))
+        .with(TrackPos { offset: Vec32::zero(), e: player })
+        .with(AnimSprite::new(16.0, 16.0, 40.0, 6, renderer::TextureKey::GoldCoinAnim))
         .build();
     // Tree
     world.create_entity()
@@ -169,7 +169,7 @@ fn main() {
                         state: SlimeState::Idle })
         .with(CollCircle { r: 8.0, off: Vec32::zero(), flags: COLL_SOLID})
         .with(AnimSprite::new(32.0, 32.0, 100000.0,
-                              1, renderer::TextureKey::Slime00Idle))
+                              1, renderer::TextureKey::SlimeAnim))
         .build();
 
     // Create tilemaps
@@ -220,6 +220,8 @@ fn main() {
         .with(sys_phys::PhysSys::<CollCircle, CollCircle>::new(), "phys_circ_circ", &["player_controller"])
         .with(MarkerSys, "phys", &["phys_circ_circ"])
 
+        .with(sys_track_pos::TrackPosSys, "track_pos", &["phys"])
+
         // Camera control
         .with(camera::FollowCameraSys, "follow_camera", &["phys"])
 
@@ -230,7 +232,7 @@ fn main() {
         .with(sys_health::HealthSys, "health", &["phys"])
         .with(sys_on_hit::KnockbackSys, "oh_knockback", &["health"])
 
-        .with(MarkerSys, "update", &["phys", "anim_sprite", "health", "oh_knockback"])
+        .with(MarkerSys, "update", &["phys", "anim_sprite", "health", "oh_knockback", "track_pos"])
 
         // After-death effects
         .with(sys_death_drop::OnDeathDropSys::new(

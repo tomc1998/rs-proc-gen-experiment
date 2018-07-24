@@ -8,7 +8,7 @@ use DeltaTime;
 use input;
 use specs::*;
 use comp::*;
-use renderer::TextureKey;
+use renderer::{TextureKey, frame_sets::*};
 use vec::*;
 use std::f32::consts::PI;
 
@@ -37,22 +37,22 @@ impl<'a> System<'a> for PlayerControllerSys {
                 let mut anim_change = None;
                 if *input_state.down.get(&input::Command::MoveUp).unwrap() {
                     vel.vel.y = -pc.move_speed;
-                    anim_change = Some(TextureKey::Human00WalkUp);
+                    anim_change = Some(FS_HUMAN_WALK_UP);
                 }
                 else if *input_state.down.get(&input::Command::MoveDown).unwrap() {
                     vel.vel.y = pc.move_speed;
-                    anim_change = Some(TextureKey::Human00WalkDown);
+                    anim_change = Some(FS_HUMAN_WALK_DOWN);
                 }
                 else {
                     vel.vel.y = 0.0;
                 }
                 if *input_state.down.get(&input::Command::MoveLeft).unwrap() {
                     vel.vel.x = -pc.move_speed;
-                    anim_change = Some(TextureKey::Human00WalkLeft);
+                    anim_change = Some(FS_HUMAN_WALK_LEFT);
                 }
                 else if *input_state.down.get(&input::Command::MoveRight).unwrap() {
                     vel.vel.x = pc.move_speed;
-                    anim_change = Some(TextureKey::Human00WalkRight);
+                    anim_change = Some(FS_HUMAN_WALK_RIGHT);
                 }
                 else {
                     vel.vel.x = 0.0;
@@ -82,14 +82,10 @@ impl<'a> System<'a> for PlayerControllerSys {
                     // Change anim
                     anim_change = None;
                     match dir {
-                        Direction::Left => anim.set_anim(TextureKey::Human00AttackLeft,
-                                                         1, 1000.0),
-                        Direction::Right => anim.set_anim(TextureKey::Human00AttackRight,
-                                                         1, 1000.0),
-                        Direction::Up => anim.set_anim(TextureKey::Human00AttackUp,
-                                                         1, 1000.0),
-                        Direction::Down => anim.set_anim(TextureKey::Human00AttackDown,
-                                                         1, 1000.0),
+                        Direction::Left => anim.set_anim(FS_HUMAN_ATTACK_LEFT, 1, 1000.0),
+                        Direction::Right => anim.set_anim(FS_HUMAN_ATTACK_RIGHT, 1, 1000.0),
+                        Direction::Up => anim.set_anim(FS_HUMAN_ATTACK_UP, 1, 1000.0),
+                        Direction::Down => anim.set_anim(FS_HUMAN_ATTACK_DOWN, 1, 1000.0),
                     }
 
                     // Spawn attack
@@ -118,7 +114,7 @@ impl<'a> System<'a> for PlayerControllerSys {
                         })
                         .with(Lifetime { lifetime: 125.0 })
                         .with(AnimSprite::new(64.0, 64.0, 25.0, 5,
-                                              TextureKey::Slice00)
+                                              TextureKey::SliceAnim)
                               .with_flags(ANIM_SPRITE_NO_LOOP))
                         .with(Rot { angle: vec.angle() - PI / 2.0 })
                         .build();
@@ -128,14 +124,14 @@ impl<'a> System<'a> for PlayerControllerSys {
                 } else if vel.vel.x == 0.0 && vel.vel.y == 0.0
                     && pc.state == PlayerState::Default {
                     match anim.anim {
-                        TextureKey::Human00WalkLeft | TextureKey::Human00AttackLeft =>
-                            anim.set_anim(TextureKey::Human00IdleLeft, 1, 1000.0),
-                        TextureKey::Human00WalkRight | TextureKey::Human00AttackRight =>
-                            anim.set_anim(TextureKey::Human00IdleRight, 1, 1000.0),
-                        TextureKey::Human00WalkUp | TextureKey::Human00AttackUp =>
-                            anim.set_anim(TextureKey::Human00IdleUp, 1, 1000.0),
-                        TextureKey::Human00WalkDown | TextureKey::Human00AttackDown =>
-                            anim.set_anim(TextureKey::Human00IdleDown, 1, 1000.0),
+                        FS_HUMAN_WALK_LEFT | FS_HUMAN_ATTACK_LEFT =>
+                            anim.set_anim(FS_HUMAN_IDLE_LEFT, 1, 1000.0),
+                        FS_HUMAN_WALK_RIGHT | FS_HUMAN_ATTACK_RIGHT =>
+                            anim.set_anim(FS_HUMAN_IDLE_RIGHT, 1, 1000.0),
+                        FS_HUMAN_WALK_UP | FS_HUMAN_ATTACK_UP =>
+                            anim.set_anim(FS_HUMAN_IDLE_UP, 1, 1000.0),
+                        FS_HUMAN_WALK_DOWN | FS_HUMAN_ATTACK_DOWN =>
+                            anim.set_anim(FS_HUMAN_IDLE_DOWN, 1, 1000.0),
                         _ => ()
                     }
                 }

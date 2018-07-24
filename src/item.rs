@@ -24,7 +24,7 @@ impl ItemType {
     pub fn get_in_world_drawable(&self) -> Option<DrawableComponent> {
         match self {
             ItemType::Money => Some(DrawableComponent::Anim(
-                AnimSprite::new(16.0, 16.0, 40.0, 6, TextureKey::Coin))),
+                AnimSprite::new(16.0, 16.0, 40.0, 6, TextureKey::GoldCoinAnim))),
         }
     }
 }

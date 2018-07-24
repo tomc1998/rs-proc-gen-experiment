@@ -8,23 +8,12 @@ pub enum TextureKey {
     TilesetGrass,
 
     // Sprites
-    Human00IdleDown,
-    Human00IdleUp,
-    Human00IdleLeft,
-    Human00IdleRight,
-    Human00WalkDown,
-    Human00WalkUp,
-    Human00WalkLeft,
-    Human00WalkRight,
-    Human00AttackDown,
-    Human00AttackUp,
-    Human00AttackLeft,
-    Human00AttackRight,
+    Human00Anim,
+    BronzeHelmetAnim,
+    GoldCoinAnim,
+    SlimeAnim,
+    SliceAnim,
     GreenTree00,
-    Slime00Idle,
-    Slime00Charge,
-    Slice00,
-    Coin,
 
     // UI
     InventoryMockup,

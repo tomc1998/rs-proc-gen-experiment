@@ -15,7 +15,17 @@ pub use self::alliance::*;
 pub use self::death::*;
 use inventory::InventoryItem;
 use vec::*;
-use specs::{DenseVecStorage, VecStorage};
+use specs::*;
+
+/// Track the position of a given entity, as long as that entity is still alive.
+/// This assumes both this entity and the other entity have a position
+/// component. Rendered offsets are from the bottom centre.
+#[derive(Clone, Component)]
+pub struct TrackPos {
+    pub e: Entity,
+    /// The offset of this entity.
+    pub offset: Vec32,
+}
 
 #[derive(Clone, Component)]
 pub struct Pos {

@@ -69,7 +69,7 @@ impl<'a> System<'a> for OnDeathDropSys {
                     .with(Vel { vel })
                     .with(Pickup { item: inventory::InventoryItem::new(d.item, num) })
                     .with(CollCircle { r: 8.0, off: Vec32::zero(), flags: 0})
-                    .with(AnimSprite::new(16.0, 16.0, 40.0, 6, renderer::TextureKey::Coin));
+                    .with(AnimSprite::new(16.0, 16.0, 40.0, 6, renderer::TextureKey::GoldCoinAnim));
                 match d.item.get_in_world_drawable().expect("In-world drawable not found for item") {
                     DrawableComponent::Static(c) => builder = builder.with(c),
                     DrawableComponent::Anim(c) => builder = builder.with(c),

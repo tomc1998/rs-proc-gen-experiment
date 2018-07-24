@@ -2,7 +2,11 @@
 
 mod bin_packer;
 mod charset;
+mod frame_set;
+mod sprite_sheet;
 
+pub use self::frame_set::*;
+pub use self::sprite_sheet::*;
 pub use self::charset::*;
 pub use self::bin_packer::PackRectError;
 
@@ -118,15 +122,33 @@ impl BitmapFont {
 }
 
 /// An animated sprite.
+/// This actually represents a set of sprite animations. This should not be
+/// confused with `comp::AnimSprite`, which is the ECS component that will
+/// actually render an animation (and contains additional details like the
+/// current frame).
+/// The animation can be selected in the `frame` method, with the `anim`
+/// parameter. All animasprites have a list of animations that can be referenced
+/// by number. For example, a human character might have 12 animations - idle in
+/// 4 dir, walk in 4 dir, attack in 4 dir.
 pub struct AnimSprite {
-    /// TODO: Make this a more efficient storage of data, this is pretty bad for
-    /// memory with the indirect access
-    frames: Vec<UvRect>
+    /// Number of columns in the sprite sheet
+    columns: usize,
+    /// A frame set. References a frame set in the FrameSetMap (added as a
+    /// resource to the world, along with the atlas).
+    frame_set: usize,
+    /// The sprite sheet for this animation
+    sprite_sheet: SpriteSheet,
 }
 
 impl AnimSprite {
-    pub fn frame(&self, frame_num: usize) -> &UvRect {
-        &self.frames[frame_num]
+    /// Get a UV rect for a given frame of a given animation in this animation
+    /// set. Panics if frame set not found.
+    pub fn frame(&self, anim: usize, frame_num: usize, frame_set_map: &FrameSetMap) -> UvRect {
+        let frames = &frame_set_map.get(&self.frame_set).unwrap().frames[anim];
+        // Get the spritesheet frame (rather than the anim frame)
+        let frame = frames.get_frame(frame_num);
+        // Get the UV rect
+        self.sprite_sheet.uv_rect(frame)
     }
 }
 
@@ -231,7 +253,8 @@ impl<K : Ord> AtlasBuilder<K> {
     /// atlas.add_anim_sprite("spritesheet.png", frame_map, 8, 8);
     /// ```
     pub fn add_anim_sprite<P: AsRef<Path>>(mut self, img_path: P,
-                                           anim_frames: BTreeMap<K, &[(u16, u16)]>,
+                                           key: K,
+                                           frame_set: usize,
                                            frame_w: u16, frame_h: u16) -> Result<Self, AtlasPackErr> {
         // Load the texture
         let img = image::open(img_path)?.to_rgba();
@@ -244,17 +267,26 @@ impl<K : Ord> AtlasBuilder<K> {
             pixel_rect[2]-SPACING*2,
             pixel_rect[3]-SPACING*2];
         self.blit(&img_buf[..], &pixel_rect_unpadded);
-        // Loop over and assign frames
-        for (k, v) in anim_frames.into_iter() {
-            let anim_uvs = v.iter().map(|(x, y)| {
-                UvRect::from_pixel_rect(&[
-                    pixel_rect_unpadded[0] + x * frame_w,
-                    pixel_rect_unpadded[1] + y * frame_h,
-                    frame_w,
-                    frame_h], self.width, self.height)
-            }).collect();
-            self.atlas.anim_sprites.insert(k, AnimSprite {frames : anim_uvs});
-        }
+
+        // Create an animsprite resource
+        let sprite_sheet_uv_rect = 
+            UvRect::from_pixel_rect(&pixel_rect_unpadded,
+                                    self.width, self.height);
+
+        let uv_w = sprite_sheet_uv_rect.right - sprite_sheet_uv_rect.left;
+        let uv_h = sprite_sheet_uv_rect.bottom - sprite_sheet_uv_rect.top;
+        let columns = img_w / frame_w as u32;
+        let rows = img_h / frame_h as u32;
+        let frame_w = uv_w / columns as f32;
+        let frame_h = uv_h / rows as f32;
+        self.atlas.anim_sprites.insert(
+            key,
+            AnimSprite {
+                columns: columns as usize,
+                frame_set: frame_set,
+                sprite_sheet: SpriteSheet::new(
+                    sprite_sheet_uv_rect, columns as usize, frame_w, frame_h),
+            });
         Ok(self)
     }
 
@@ -349,6 +381,13 @@ impl<K : Ord> AtlasBuilder<K> {
         glyphs.map(|_| self)
     }
 
+    /// Add a frame set, return a usize to reference that frame set with later
+    pub fn add_frame_set(&mut self, f: FrameSet) -> usize {
+        let id = frame_set::gen_new_frame_set_id();
+        self.atlas.frame_set_map.insert(id, f);
+        id
+    }
+
     pub fn build<F>(self, f: &mut F) ->
         (TextureAtlas<K>, ShaderResourceView<Resources, [f32; 4]>)
         where F : Factory<Resources>
@@ -375,6 +414,7 @@ pub struct TextureAtlas<K : Ord> {
     tilesets: BTreeMap<K, Tileset>,
     anim_sprites: BTreeMap<K, AnimSprite>,
     bitmap_fonts: BTreeMap<K, BitmapFont>,
+    pub frame_set_map: FrameSetMap,
 }
 
 impl<K : Ord> TextureAtlas<K> {
@@ -385,6 +425,7 @@ impl<K : Ord> TextureAtlas<K> {
             tilesets: BTreeMap::new(),
             anim_sprites: BTreeMap::new(),
             bitmap_fonts: BTreeMap::new(),
+            frame_set_map: FrameSetMap::new(),
         }
     }
 

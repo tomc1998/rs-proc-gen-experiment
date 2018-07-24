@@ -73,7 +73,8 @@ impl<'a> System<'a> for SpritePainter {
         // Animated
         let mut ix = vertex_buffer.size as usize;
         for (e, pos, anim) in (&*entities_s, &pos_s, &anim_s).join() {
-            let tex = atlas.rect_for_anim_sprite(anim.anim.clone()).unwrap().frame(anim.curr_frame);
+            let tex = atlas.rect_for_anim_sprite(anim.anim_key.clone()).unwrap()
+                .frame(anim.anim, anim.curr_frame, &atlas.frame_set_map);
             SpritePainter::draw_sprite(
                 &mut vertex_buffer, &mut ix, &pos, e, anim.w, anim.h, &tint_s, &rot_s, &tex);
         }

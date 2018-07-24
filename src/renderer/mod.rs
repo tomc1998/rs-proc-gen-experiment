@@ -1,9 +1,11 @@
 mod atlas;
 mod tex_key;
 mod paint_sys;
+pub mod frame_sets;
 
 pub use self::tex_key::TextureKey;
 pub use self::paint_sys::*;
+pub use self::atlas::FrameSetMap;
 
 use math_util;
 use glutin::GlWindow;
@@ -17,7 +19,6 @@ use gfx::buffer::Role;
 use gfx_device_gl::Factory;
 use gfx::memory::{Usage, Bind};
 use gfx_device_gl::{Resources, CommandBuffer, Device};
-use std::collections::BTreeMap;
 
 pub const V_BUF_SIZE: usize = 262144;
 const BLACK: [f32; 4] = [0.0, 0.0, 0.0, 1.0];
@@ -101,32 +102,38 @@ pub struct Renderer {
 
 impl Renderer {
     fn load_assets(factory: &mut Factory) -> (TextureAtlas<TextureKey>, ShaderResourceView<Resources, [f32; 4]>) {
-        // Initialise common frame maps
-        let mut human_frame_map = BTreeMap::new();
-        human_frame_map.insert(TextureKey::Human00IdleDown,  &[(0, 0)][..]);
-        human_frame_map.insert(TextureKey::Human00IdleUp,    &[(0, 1)][..]);
-        human_frame_map.insert(TextureKey::Human00IdleRight, &[(0, 2)][..]);
-        human_frame_map.insert(TextureKey::Human00IdleLeft,  &[(0, 3)][..]);
-        human_frame_map.insert(TextureKey::Human00WalkDown,  &[(0, 0), (1, 0), (2, 0), (3, 0)][..]);
-        human_frame_map.insert(TextureKey::Human00WalkUp,    &[(0, 1), (1, 1), (2, 1), (3, 1)][..]);
-        human_frame_map.insert(TextureKey::Human00WalkRight, &[(0, 2), (1, 2), (2, 2), (3, 2)][..]);
-        human_frame_map.insert(TextureKey::Human00WalkLeft,  &[(0, 3), (1, 3), (2, 3), (3, 3)][..]);
-        human_frame_map.insert(TextureKey::Human00AttackDown,  &[(1, 0)][..]);
-        human_frame_map.insert(TextureKey::Human00AttackUp,    &[(1, 1)][..]);
-        human_frame_map.insert(TextureKey::Human00AttackRight, &[(1, 2)][..]);
-        human_frame_map.insert(TextureKey::Human00AttackLeft,  &[(1, 3)][..]);
+        let mut builder = AtlasBuilder::<TextureKey>::new(512, 512);
 
-        let mut slime_frame_map = BTreeMap::new();
-        slime_frame_map.insert(TextureKey::Slime00Idle,  &[(0, 0)][..]);
-        slime_frame_map.insert(TextureKey::Slime00Charge,  &[(1, 0)][..]);
+        // Create frame sets
+        let human_frame_set = builder.add_frame_set(FrameSet {
+            frames: vec![
+                Frames::Ordered(0,  3),  // Walk down
+                Frames::Ordered(4,  7),  // Walk up
+                Frames::Ordered(8,  11), // Walk right
+                Frames::Ordered(12, 15), // Walk left
+                Frames::Ordered(0,  0),  // Idle down
+                Frames::Ordered(4,  4),  // Idle up
+                Frames::Ordered(8,  8),  // Idle right
+                Frames::Ordered(12, 12), // Idle left
+                Frames::Ordered(1,  1),  // Attack down
+                Frames::Ordered(5,  5),  // Attack up
+                Frames::Ordered(9,  9),  // Attack right
+                Frames::Ordered(13, 13), // Attack left
+                ]
+        });
 
-        let mut slice_frame_map = BTreeMap::new();
-        slice_frame_map.insert(TextureKey::Slice00, &[(0, 0), (1, 0), (2, 0), (3, 0), (4, 0)][..]);
+        let gold_coin_frame_set = builder.add_frame_set(FrameSet {
+            frames: vec![Frames::Ordered(0,  5)]
+        });
+        let slice_frame_set = builder.add_frame_set(FrameSet {
+            frames: vec![Frames::Ordered(0,  4)]
+        });
+        let slime_frame_set = builder.add_frame_set(FrameSet {
+            frames: vec![Frames::Ordered(0,  0)]
+        });
 
-        let mut coin_frame_map = BTreeMap::new();
-        coin_frame_map.insert(TextureKey::Coin, &[(0, 0), (1, 0), (2, 0), (0, 1), (1, 1), (2, 1)][..]);
-
-        AtlasBuilder::<TextureKey>::new(512, 512)
+        // Now build all the rest of the atlas
+        builder
             .set_font("res/open-sans.ttf",
                       Charset::alpha()
                       .and(Charset::number())
@@ -138,10 +145,16 @@ impl Renderer {
             .add_tex(TextureKey::InventoryMockup, "res/sprites/ui/inventory-mockup.png").unwrap()
             .add_tex(TextureKey::IconMoney, "res/sprites/icon/money.png").unwrap()
             .add_tileset(TextureKey::TilesetGrass, "res/tileset-grass.png", 8, 8).unwrap()
-            .add_anim_sprite("res/sprites/human-00.png", human_frame_map.clone(), 8, 8).unwrap()
-            .add_anim_sprite("res/sprites/pickup/gold-coin.png", coin_frame_map.clone(), 8, 8).unwrap()
-            .add_anim_sprite("res/sprites/slime-00.png", slime_frame_map.clone(), 8, 8).unwrap()
-            .add_anim_sprite("res/sprites/fx/slice-00.png", slice_frame_map.clone(), 16, 16).unwrap()
+            .add_anim_sprite("res/sprites/human-00.png", TextureKey::Human00Anim,
+                             human_frame_set, 8, 8).unwrap()
+            .add_anim_sprite("res/sprites/equipment/bronze/helmet.png", TextureKey::BronzeHelmetAnim,
+                             human_frame_set, 8, 8).unwrap()
+            .add_anim_sprite("res/sprites/pickup/gold-coin.png", TextureKey::GoldCoinAnim,
+                             gold_coin_frame_set, 8, 8).unwrap()
+            .add_anim_sprite("res/sprites/slime-00.png", TextureKey::SlimeAnim,
+                             slime_frame_set, 8, 8).unwrap()
+            .add_anim_sprite("res/sprites/fx/slice-00.png", TextureKey::SliceAnim,
+                             slice_frame_set, 8, 8).unwrap()
             .add_bitmap_font(TextureKey::FontTinyNumbers, "res/sprites/ui/tiny-numbers.png",
                              &[('1', (0, 0)), ('2', (1, 0)), ('3', (2, 0)), ('4', (3, 0)), ('5', (4, 0)),
                                ('6', (0, 1)), ('7', (1, 1)), ('8', (2, 1)), ('9', (3, 1)), ('0', (4, 1))][..],
