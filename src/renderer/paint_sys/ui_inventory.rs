@@ -26,20 +26,20 @@ impl<'a> System<'a> for InventoryPainter {
         let mut ix = vertex_buffer.size as usize;
 
         let inv_x = camera.pos.x + camera.w / 2.0 - 300.0;
-        let inv_y = camera.pos.y + camera.h / 2.0 - 200.0;
+        let inv_y = camera.pos.y + camera.h / 2.0 - 300.0;
 
         let tex = atlas.rect_for_tex(TextureKey::InventoryMockup).unwrap();
         // Draw mockup
         Renderer::rect(&mut vertex_buffer.v_buf[ix .. ix+6],
                        &tex,                  // UV
                        inv_x, inv_y, 1000.0, // X, Y, Z
-                       600.0, 400.0, // W, H
+                       600.0, 600.0, // W, H
                        [1.0, 1.0, 1.0, 1.0]); // Col
         ix += 6;
 
         // First, offset inv_x and inv_y so they're positioned at the first item position
         let inv_x = inv_x + 9.0 * 4.0;
-        let inv_y = inv_y + 13.0 * 4.0;
+        let inv_y = inv_y + 23.0 * 4.0;
         // Also find the offset for the numbers at the bottom
         let num_off_x = 3.0 * 4.0;
         let num_off_y = 17.0 * 4.0;
