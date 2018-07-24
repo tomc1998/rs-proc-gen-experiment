@@ -2,6 +2,7 @@ use ui::UIState;
 use inventory::*;
 use camera::Camera;
 use specs::*;
+use input::*;
 use super::*;
 
 pub struct InventoryPainter;
@@ -14,17 +15,22 @@ const NUMBER_COLOR : [f32; 4] = [143.0 / 255.0,
 impl<'a> System<'a> for InventoryPainter {
     type SystemData = (
         WriteExpect<'a, VertexBuffer>,
+        Read<'a, InputState>,
         Read<'a, UIState>,
         ReadExpect<'a, Inventory>,
         ReadExpect<'a, Camera>,
         ReadExpect<'a, TextureAtlas<TextureKey>>
     );
 
-    fn run(&mut self, (mut vertex_buffer, ui_state, inventory, camera, atlas): Self::SystemData) {
+    fn run(&mut self, (mut vertex_buffer, input_state, ui_state, inventory,
+                       camera, atlas): Self::SystemData) {
         if !ui_state.inventory_open { return }
 
         let mut ix = vertex_buffer.size as usize;
 
+        // Get the inventory pos. We draw at world pos rather than
+        // re-translating to 'screen pos', so that we can just add to the same
+        // VBO as the rest of the drawing and batch everything into 1 draw call.
         let inv_x = camera.pos.x + camera.w / 2.0 - 300.0;
         let inv_y = camera.pos.y + camera.h / 2.0 - 300.0;
 
@@ -45,14 +51,28 @@ impl<'a> System<'a> for InventoryPainter {
         let num_off_y = 17.0 * 4.0;
         // Get the number font
         let font = atlas.bitmap_font(TextureKey::FontTinyNumbers).unwrap();
+        let white = atlas.rect_for_tex(TextureKey::White).unwrap();
         // Draw items
         for (inv_ix, item) in inventory.items.iter().enumerate() {
-            if item.is_none() { continue }
-            let item = item.unwrap();
             // Figure out the position to draw this icon at
             // times 4.0 because of pixel upscale
             let x = inv_x + (inv_ix % NUM_COLUMNS) as f32 * 24.0 * 4.0;
             let y = inv_y + (inv_ix / NUM_COLUMNS) as f32 * 26.0 * 4.0;
+
+            // Before drawing the icon, if the mouse is over, draw a highlight
+            // square
+            if input_state.is_world_mouse_in_rect(x, y, 56.0, 56.0) {
+                Renderer::rect(&mut vertex_buffer.v_buf[ix .. ix+6],
+                               &white,                  // UV
+                               x, y, 1000.0, // X, Y, Z
+                               56.0, 56.0, // W, H
+                               [1.0, 1.0, 1.0, 0.5]); // Col
+                ix += 6;
+            }
+
+            if item.is_none() { continue }
+            let item = item.unwrap();
+
             let tex = atlas.rect_for_tex(item.item_type.get_icon_tex_key()).unwrap();
             // Draw icon
             Renderer::rect(&mut vertex_buffer.v_buf[ix .. ix+6],

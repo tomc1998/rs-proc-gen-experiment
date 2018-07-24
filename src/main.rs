@@ -217,7 +217,6 @@ fn main() {
         // Animation
         .with(sys_anim::AnimSpriteSys, "anim_sprite", &["control"])
 
-
         // Physics
         .with(sys_phys::PhysSys::<CollCircle, CollCircle>::new(), "phys_circ_circ", &["player_controller"])
         .with(MarkerSys, "phys", &["phys_circ_circ"])
@@ -235,8 +234,9 @@ fn main() {
         .with(sys_health::HealthSys, "health", &["phys"])
         .with(sys_on_hit::KnockbackSys, "oh_knockback", &["health"])
 
-        .with(MarkerSys, "update", &["phys", "anim_sprite", "health",
-                                     "oh_knockback", "track_pos", "match_anim"])
+        .with(MarkerSys, "update",
+              &["phys", "anim_sprite", "health", "follow_camera",
+                "oh_knockback", "track_pos", "match_anim"])
 
         // After-death effects
         .with(sys_death_drop::OnDeathDropSys::new(

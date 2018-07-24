@@ -46,15 +46,15 @@ impl<'a> System<'a> for FollowCameraSys {
             // Update camera pos
             camera.pos = pos.pos - Vec32::new(camera.w/2.0, camera.h/2.0);
 
-            // Set world mouse position
-            input_state.world_mouse = input_state.screen_mouse + camera.pos;
-
             // Additional translation for mouse pos. Also update mouse pos in input.
             // First, find the offset from the screen mouse-pos and the centre of the screen.
             let screen_m = input_state.screen_mouse - Vec32::new(camera.w/2.0, camera.h/2.0);
 
             // Apply additional translation
             camera.pos += screen_m * 0.25;
+
+            // Set world mouse position
+            input_state.world_mouse = input_state.screen_mouse + camera.pos;
         }
     }
 }
