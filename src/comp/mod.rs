@@ -16,6 +16,7 @@ pub use self::death::*;
 use inventory::InventoryItem;
 use vec::*;
 use specs::*;
+use equipment::*;
 
 /// Track the position of a given entity, as long as that entity is still alive.
 /// This assumes both this entity and the other entity have a position
@@ -69,4 +70,14 @@ pub struct Pickup {
 pub struct Collector {
     /// The range of the magnetism that attracts pickups
     pub magnet_radius: f32,
+}
+
+/// Equipment which should be drawn on a character and affect their stats in
+/// battle
+#[derive(Component, Default)]
+pub struct Equipment {
+    pub head: Option<Helmet>,
+    pub body: Option<Body>,
+    pub weapon: Option<Weapon>,
+    pub ring: Option<Ring>,
 }

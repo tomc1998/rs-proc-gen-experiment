@@ -37,6 +37,7 @@ mod math_util;
 mod item;
 mod inventory;
 mod drop_tables;
+mod equipment;
 
 use comp::*;
 use vec::*;
@@ -100,6 +101,7 @@ fn create_world() -> specs::World {
     world.register::<OnDeathDrop>();
     world.register::<TrackPos>();
     world.register::<MatchAnim>();
+    world.register::<Equipment>();
     world
 }
 
@@ -124,7 +126,7 @@ fn main() {
     let mut world = create_world();
     use specs::Builder;
     // Player
-    let player = world.create_entity()
+    world.create_entity()
         .with(Pos { pos: Vec32::new(32.0, 32.0) })
         .with(Vel { vel: Vec32::zero() })
         .with(Alliance::good())
@@ -132,18 +134,14 @@ fn main() {
         .with(FollowCamera)
         .with(Health::new(8, Hitmask(HITMASK_PLAYER)))
         .with(Collector { magnet_radius: 64.0 })
+        .with(Equipment {
+            head: Some(equipment::Helmet::BronzeHelmet),
+            .. Default::default()
+        })
         .with(CollCircle { r: 8.0, off: Vec32::zero(),
                            flags: COLL_SOLID})
         .with(AnimSprite::new(32.0, 32.0, 100.0,
                               4, renderer::TextureKey::Human00Anim))
-        .build();
-    // Test Helmet
-    world.create_entity()
-        .with(Pos { pos: Vec32::new(100.0, 200.0) })
-        .with(TrackPos { offset: Vec32::zero(), e: player })
-        .with(MatchAnim { e: player })
-        .with(AnimSprite::new(32.0, 32.0, 40.0, 6,
-                              renderer::TextureKey::BronzeHelmetAnim))
         .build();
     // Tree
     world.create_entity()

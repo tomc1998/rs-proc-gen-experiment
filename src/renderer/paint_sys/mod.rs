@@ -61,13 +61,15 @@ impl<'a> System<'a> for SpritePainter {
         WriteExpect<'a, VertexBuffer>,
         ReadExpect<'a, TextureAtlas<TextureKey>>,
         ReadStorage<'a, Pos>,
+        ReadStorage<'a, Equipment>,
         ReadStorage<'a, Tint>,
         ReadStorage<'a, Rot>,
         ReadStorage<'a, comp::AnimSprite>,
         ReadStorage<'a, StaticSprite>);
 
-    fn run(&mut self, (entities_s, mut vertex_buffer, atlas, pos_s, tint_s,
-                       rot_s, anim_s, static_s): Self::SystemData) {
+    fn run(&mut self, (entities_s, mut vertex_buffer, atlas, pos_s,
+                       equipment_s, tint_s, rot_s, anim_s, static_s):
+           Self::SystemData) {
         use specs::Join;
 
         // Animated
@@ -85,8 +87,27 @@ impl<'a> System<'a> for SpritePainter {
             SpritePainter::draw_sprite(
                 &mut vertex_buffer, &mut ix, &pos, e, sprite.w, sprite.h, &tint_s, &rot_s, &tex);
         }
-        vertex_buffer.size = ix as u32;
 
+        // Equipment
+        for (e, pos, anim, equipment) in (&*entities_s, &pos_s, &anim_s,
+                                          &equipment_s).join() {
+            if let Some(ref equipment) = equipment.body {
+                let tex = atlas.rect_for_anim_sprite(equipment.get_anim_key()).unwrap()
+                    .frame(anim.anim, anim.curr_frame, &atlas.frame_set_map);
+                SpritePainter::draw_sprite(
+                    &mut vertex_buffer, &mut ix, &pos, e, anim.w, anim.h,
+                    &tint_s, &rot_s, &tex);
+            }
+            if let Some(ref equipment) = equipment.head {
+                let tex = atlas.rect_for_anim_sprite(equipment.get_anim_key()).unwrap()
+                    .frame(anim.anim, anim.curr_frame, &atlas.frame_set_map);
+                SpritePainter::draw_sprite(
+                    &mut vertex_buffer, &mut ix, &pos, e, anim.w, anim.h,
+                    &tint_s, &rot_s, &tex);
+            }
+        }
+
+        vertex_buffer.size = ix as u32;
     }
 }
 
