@@ -27,6 +27,15 @@ pub struct TrackPos {
     pub offset: Vec32,
 }
 
+/// Similar to trackpos, but simply copies over the anim number and frame
+/// number.
+/// This assumes the two animations have the same framesets. If they don't, this
+/// could lead to a panic.
+#[derive(Clone, Component)]
+pub struct MatchAnim {
+    pub e: Entity,
+}
+
 #[derive(Clone, Component)]
 pub struct Pos {
     pub pos: Vec32,

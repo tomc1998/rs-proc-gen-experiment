@@ -29,6 +29,7 @@ mod sys_on_hit;
 mod sys_pickup;
 mod sys_death_drop;
 mod sys_track_pos;
+mod sys_match_anim;
 mod vec;
 mod ui;
 mod camera;
@@ -98,6 +99,7 @@ fn create_world() -> specs::World {
     world.register::<Collector>();
     world.register::<OnDeathDrop>();
     world.register::<TrackPos>();
+    world.register::<MatchAnim>();
     world
 }
 
@@ -139,7 +141,9 @@ fn main() {
     world.create_entity()
         .with(Pos { pos: Vec32::new(100.0, 200.0) })
         .with(TrackPos { offset: Vec32::zero(), e: player })
-        .with(AnimSprite::new(16.0, 16.0, 40.0, 6, renderer::TextureKey::GoldCoinAnim))
+        .with(MatchAnim { e: player })
+        .with(AnimSprite::new(32.0, 32.0, 40.0, 6,
+                              renderer::TextureKey::BronzeHelmetAnim))
         .build();
     // Tree
     world.create_entity()
@@ -221,6 +225,7 @@ fn main() {
         .with(MarkerSys, "phys", &["phys_circ_circ"])
 
         .with(sys_track_pos::TrackPosSys, "track_pos", &["phys"])
+        .with(sys_match_anim::MatchAnimSys, "match_anim", &["phys"])
 
         // Camera control
         .with(camera::FollowCameraSys, "follow_camera", &["phys"])
@@ -232,7 +237,8 @@ fn main() {
         .with(sys_health::HealthSys, "health", &["phys"])
         .with(sys_on_hit::KnockbackSys, "oh_knockback", &["health"])
 
-        .with(MarkerSys, "update", &["phys", "anim_sprite", "health", "oh_knockback", "track_pos"])
+        .with(MarkerSys, "update", &["phys", "anim_sprite", "health",
+                                     "oh_knockback", "track_pos", "match_anim"])
 
         // After-death effects
         .with(sys_death_drop::OnDeathDropSys::new(
