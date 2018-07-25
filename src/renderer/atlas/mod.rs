@@ -390,12 +390,27 @@ impl<K : Ord> AtlasBuilder<K> {
 
     /// Map a texture key to the first frame of a given animation. Panics if the
     /// animation is not available.
-    pub fn add_anim_icon(mut self, key: K, anim_key: K) -> Self {
-        let frame;
+    /// # Params
+    /// * x, y, w, h - Additional cropping parameters, to crop the first frame.
+    /// From 0 to 1, where 0,0 is the top left of the frame, and the frame has a
+    /// w/h of 1/1
+    /// # OOB offsets
+    /// Given that the spacing for stuff is SPACING, you can go OOB with x, y by
+    /// a small amount depending on the pixel spacing. This is not recommend
+    /// however, as a change in the spacing will fuck some icons up subtly.
+    pub fn add_anim_icon(mut self, key: K, anim_key: K,
+                         x: f32, y: f32, w: f32, h: f32) -> Self {
+        let mut frame;
         {
             let anim = self.atlas.rect_for_anim_sprite(anim_key).unwrap();
             frame = anim.frame(0, 0, &self.atlas.frame_set_map);
         }
+        let frame_w = frame.right - frame.left;
+        let frame_h = frame.bottom - frame.top;
+        frame.left += x * frame_w;
+        frame.right = frame.left + w * frame_w;
+        frame.top += y * frame_h;
+        frame.bottom = frame.top + h * frame_h;
         self.atlas.textures.insert(key, frame);
         self
     }
