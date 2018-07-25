@@ -4,11 +4,11 @@ use renderer::{INVENTORY_NUM_COLUMNS, INVENTORY_SLOT_SIZE};
 
 /// A reference into the inventory. We need an enum becvause we could be
 /// referring to either an equipment slot or an inventory slot.
-#[derive(Clone, Debug)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
 #[allow(dead_code)]
 pub enum InventorySlotRef {
     Inventory(usize),
-    Head,
+    Helmet,
     Body,
     Weapon,
     Ring,
@@ -53,6 +53,21 @@ pub fn process_ui(input_state: &InputState,
             inventory_state.curr_over = Some(InventorySlotRef::Inventory(ix));
             break;
         }
+    }
 
+    // Check equipment slots for hovering
+    let position_iter = [
+        (17.0 * 4.0,  113.0 * 4.0, InventorySlotRef::Helmet),
+        (49.0 * 4.0,  113.0 * 4.0, InventorySlotRef::Body),
+        (81.0 * 4.0,  113.0 * 4.0, InventorySlotRef::Weapon),
+        (113.0 * 4.0, 113.0 * 4.0, InventorySlotRef::Ring)].into_iter();
+    for (x, y, slot) in position_iter {
+        let x = camera_w / 2.0 - 300.0 + x;
+        let y = camera_h / 2.0 - 300.0 + y;
+        if input_state.is_screen_mouse_in_rect(
+            x, y, INVENTORY_SLOT_SIZE, INVENTORY_SLOT_SIZE) {
+            inventory_state.curr_over = Some(*slot);
+            break;
+        }
     }
 }

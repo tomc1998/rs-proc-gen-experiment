@@ -99,6 +99,28 @@ impl<'a> System<'a> for InventoryPainter {
             ix += 6;
         }
 
+        // Draw equipment slots
+        let position_iter = [
+            (17.0 * 4.0,  113.0 * 4.0, InventorySlotRef::Helmet),
+            (49.0 * 4.0,  113.0 * 4.0, InventorySlotRef::Body),
+            (81.0 * 4.0,  113.0 * 4.0, InventorySlotRef::Weapon),
+            (113.0 * 4.0, 113.0 * 4.0, InventorySlotRef::Ring)].into_iter();
+        for (x, y, slot) in position_iter {
+            let x = camera.pos.x + camera.w / 2.0 - 300.0 + x;
+            let y = camera.pos.y + camera.h / 2.0 - 300.0 + y;
+            // Draw hover
+            match ui_state.inventory_state.curr_over {
+                Some(slot_ref) if slot_ref == *slot => {
+                    Renderer::rect(&mut vertex_buffer.v_buf[ix .. ix+6],
+                                   &white,                  // UV
+                                   x, y, 1000.0, // X, Y, Z
+                                   56.0, 56.0, // W, H
+                                   [1.0, 1.0, 1.0, 0.5]); // Col
+                    ix += 6;
+                }
+                _ => ()
+            }
+        }
 
         vertex_buffer.size = ix as u32;
     }
