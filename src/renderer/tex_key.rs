@@ -1,5 +1,5 @@
 /// Textures available in the atlas
-#[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Debug)]
+#[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Debug)]
 pub enum TextureKey {
     // White texture for drawing just colour
     White,

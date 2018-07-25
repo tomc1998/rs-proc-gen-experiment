@@ -16,7 +16,7 @@ pub use self::death::*;
 use inventory::InventoryItem;
 use vec::*;
 use specs::*;
-use equipment::*;
+use item::ItemType;
 
 /// Track the position of a given entity, as long as that entity is still alive.
 /// This assumes both this entity and the other entity have a position
@@ -76,8 +76,8 @@ pub struct Collector {
 /// battle
 #[derive(Component, Default)]
 pub struct Equipment {
-    pub helmet: Option<Helmet>,
-    pub body: Option<Body>,
-    pub weapon: Option<Weapon>,
-    pub ring: Option<Ring>,
+    pub helmet: Option<ItemType>,
+    pub body: Option<ItemType>,
+    pub weapon: Option<ItemType>,
+    pub ring: Option<ItemType>,
 }

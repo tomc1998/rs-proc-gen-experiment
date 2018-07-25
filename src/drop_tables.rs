@@ -75,12 +75,13 @@ impl DropTableMap {
     /// Create a new standard drop table map which has the normal drops and
     /// probabilities
     pub fn new_standard_map() -> DropTableMap {
+        let money = get_item_type_with_name("Money").expect("Money item type not found");
         let mut map = BTreeMap::new();
         map.insert(DropTableKey::Slime,
                    DropTable {items: vec![
-                       (2500.0, Drop { item: ItemType::Money, min_num: 1, max_num: 3 }),
-                       (7500.0, Drop { item: ItemType::Money, min_num: 3, max_num: 9 }),
-                       (9000.0, Drop { item: ItemType::Money, min_num: 9, max_num: 20 }),
+                       (2500.0, Drop { item: money, min_num: 1, max_num: 3 }),
+                       (7500.0, Drop { item: money, min_num: 3, max_num: 9 }),
+                       (9000.0, Drop { item: money, min_num: 9, max_num: 20 }),
                    ]});
         DropTableMap(map)
     }

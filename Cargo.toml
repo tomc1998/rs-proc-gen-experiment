@@ -18,6 +18,7 @@ rand = "0.5"
 rusttype = "0.6"
 rayon = "*"
 num-integer = "*"
+lazy_static = "*"
 
 [features]
 bench = []

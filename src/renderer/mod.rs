@@ -5,7 +5,7 @@ pub mod frame_sets;
 
 pub use self::tex_key::TextureKey;
 pub use self::paint_sys::*;
-pub use self::atlas::FrameSetMap;
+pub use self::atlas::{FrameSetMap, AtlasBuilder};
 
 use math_util;
 use glutin::GlWindow;

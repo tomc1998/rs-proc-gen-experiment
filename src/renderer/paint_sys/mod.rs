@@ -95,14 +95,16 @@ impl<'a> System<'a> for SpritePainter {
         for (e, pos, anim, equipment) in (&*entities_s, &pos_s, &anim_s,
                                           &equipment_s).join() {
             if let Some(ref equipment) = equipment.body {
-                let tex = atlas.rect_for_anim_sprite(equipment.get_anim_key()).unwrap()
+                let tex = atlas.rect_for_anim_sprite(
+                    equipment.get_equipment_anim()).unwrap()
                     .frame(anim.anim, anim.curr_frame, &atlas.frame_set_map);
                 SpritePainter::draw_sprite(
                     &mut vertex_buffer, &mut ix, &pos, e, anim.w, anim.h,
                     &tint_s, &rot_s, &tex);
             }
             if let Some(ref equipment) = equipment.helmet {
-                let tex = atlas.rect_for_anim_sprite(equipment.get_anim_key()).unwrap()
+                let tex = atlas.rect_for_anim_sprite(
+                    equipment.get_equipment_anim()).unwrap()
                     .frame(anim.anim, anim.curr_frame, &atlas.frame_set_map);
                 SpritePainter::draw_sprite(
                     &mut vertex_buffer, &mut ix, &pos, e, anim.w, anim.h,

@@ -101,13 +101,13 @@ impl Inventory {
         match slot {
             InventorySlotRef::Inventory(_) => true,
             InventorySlotRef::Helmet =>
-                item_type.equipment_type() == EquipmentType::Helmet,
+                item_type.equipment_type() == Some(EquipmentType::Helmet),
             InventorySlotRef::Body =>
-                item_type.equipment_type() == EquipmentType::Body,
+                item_type.equipment_type() == Some(EquipmentType::Body),
             InventorySlotRef::Weapon =>
-                item_type.equipment_type() == EquipmentType::Weapon,
+                item_type.equipment_type() == Some(EquipmentType::Weapon),
             InventorySlotRef::Ring =>
-                item_type.equipment_type() == EquipmentType::Ring,
+                item_type.equipment_type() == Some(EquipmentType::Ring),
         }
     }
 

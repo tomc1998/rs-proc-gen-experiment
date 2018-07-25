@@ -13,6 +13,7 @@ extern crate specs;
 extern crate rayon;
 #[macro_use] extern crate specs_derive;
 extern crate num_integer;
+#[macro_use] extern crate lazy_static;
 
 #[cfg(test)]
 extern crate test;
@@ -38,7 +39,6 @@ mod math_util;
 mod item;
 mod inventory;
 mod drop_tables;
-mod equipment;
 
 use comp::*;
 use vec::*;
@@ -121,6 +121,10 @@ fn main() {
     let (w, h) = window.get_inner_size().unwrap();
     let (mut renderer, atlas) = renderer::Renderer::new(
         &mut factory, color_view, depth_view, Default::default());
+
+    // Load items
+    item::load_item_definitions();
+
     let camera = camera::Camera::new(w as f32, h as f32);
 
     // Create the ECS world, and a test entity, plus trees
@@ -136,7 +140,6 @@ fn main() {
         .with(Health::new(8, Hitmask(HITMASK_PLAYER)))
         .with(Collector { magnet_radius: 64.0 })
         .with(Equipment {
-            helmet: Some(equipment::Helmet::BronzeHelmet),
             .. Default::default()
         })
         .with(CollCircle { r: 8.0, off: Vec32::zero(),
@@ -186,10 +189,11 @@ fn main() {
         }
     }
 
-    // Create test inventory
     let mut inventory = inventory::Inventory::new();
-    inventory.items[0] = Some(inventory::InventoryItem::new(item::ItemType::Money, 10));
-    inventory.items[1] = Some(inventory::InventoryItem::new(item::ItemType::BronzeHelmet, 1));
+    inventory.add_item(inventory::InventoryItem {
+        item_type: item::get_item_type_with_name("Bronze Helmet").unwrap(),
+        num: 1,
+    });
 
     let input_map = input::InputMap::new();
     // Allocate cpu side v_buf
