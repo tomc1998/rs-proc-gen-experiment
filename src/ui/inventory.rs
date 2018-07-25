@@ -1,4 +1,5 @@
 use inventory::Inventory;
+use vec::*;
 use input::*;
 use renderer::{INVENTORY_NUM_COLUMNS, INVENTORY_SLOT_SIZE};
 
@@ -22,8 +23,13 @@ pub struct InventoryState {
     /// current IX is being dragged / dropped.
     pub curr_drag_drop: Option<InventorySlotRef>,
 
+    /// World pos of the mouse whilst drag / dropping
+    pub drag_drop_world_pos: Vec32,
+
     /// A reference into the inventory. If this is Some, then the item at the
     /// current IX is being hovered over.
+    /// Slight misnomer, we don't drag drop, we click to pickup and click to put
+    /// down
     pub curr_over: Option<InventorySlotRef>,
 }
 
@@ -70,4 +76,17 @@ pub fn process_ui(input_state: &InputState,
             break;
         }
     }
+
+    // Check mouse press pickups
+    if let Some(_over) = inventory_state.curr_over {
+        if *input_state.pressed.get(&Command::Primary).unwrap() {
+            if inventory_state.curr_drag_drop.is_none() {
+                inventory_state.curr_drag_drop = inventory_state.curr_over;
+            } else {
+                inventory_state.curr_drag_drop = None;
+            }
+        }
+    }
+
+    inventory_state.drag_drop_world_pos = input_state.world_mouse;
 }

@@ -1,4 +1,5 @@
 use item::ItemType;
+use ui::InventorySlotRef;
 
 pub const INVENTORY_SIZE: usize = 18;
 
@@ -65,5 +66,17 @@ impl Inventory {
         }
 
         return false;
+    }
+
+    /// Gets the item type of a given slot
+    pub fn get_item_type(&self, slot: InventorySlotRef) -> Option<ItemType> {
+        match slot {
+            InventorySlotRef::Inventory(i) => self.items[i]
+                .map(|i| i.item_type),
+            InventorySlotRef::Helmet => self.helmet,
+            InventorySlotRef::Body => self.body,
+            InventorySlotRef::Weapon => self.weapon,
+            InventorySlotRef::Ring => self.ring,
+        }
     }
 }
