@@ -6,7 +6,10 @@ use comp;
 
 mod ui_inventory;
 
-pub use self::ui_inventory::InventoryPainter;
+pub use self::ui_inventory::{
+    InventoryPainter,
+    NUM_COLUMNS as INVENTORY_NUM_COLUMNS,
+    SLOT_SIZE as INVENTORY_SLOT_SIZE};
 
 #[derive(Clone, Debug)]
 pub struct VertexBuffer {

@@ -1,13 +1,13 @@
-use ui::UIState;
+use ui::*;
 use inventory::*;
 use camera::Camera;
 use specs::*;
-use input::*;
 use super::*;
 
 pub struct InventoryPainter;
 
-const NUM_COLUMNS : usize = 6;
+pub const NUM_COLUMNS : usize = 6;
+pub const SLOT_SIZE : f32 = 56.0;
 const NUMBER_COLOR : [f32; 4] = [143.0 / 255.0,
                                  126.0 / 255.0,
                                  110.0 / 255.0, 1.0];
@@ -15,14 +15,13 @@ const NUMBER_COLOR : [f32; 4] = [143.0 / 255.0,
 impl<'a> System<'a> for InventoryPainter {
     type SystemData = (
         WriteExpect<'a, VertexBuffer>,
-        Read<'a, InputState>,
         Read<'a, UIState>,
         ReadExpect<'a, Inventory>,
         ReadExpect<'a, Camera>,
         ReadExpect<'a, TextureAtlas<TextureKey>>
     );
 
-    fn run(&mut self, (mut vertex_buffer, input_state, ui_state, inventory,
+    fn run(&mut self, (mut vertex_buffer, ui_state, inventory,
                        camera, atlas): Self::SystemData) {
         if !ui_state.inventory_open { return }
 
@@ -61,13 +60,16 @@ impl<'a> System<'a> for InventoryPainter {
 
             // Before drawing the icon, if the mouse is over, draw a highlight
             // square
-            if input_state.is_world_mouse_in_rect(x, y, 56.0, 56.0) {
-                Renderer::rect(&mut vertex_buffer.v_buf[ix .. ix+6],
-                               &white,                  // UV
-                               x, y, 1000.0, // X, Y, Z
-                               56.0, 56.0, // W, H
-                               [1.0, 1.0, 1.0, 0.5]); // Col
-                ix += 6;
+            match ui_state.inventory_state.curr_over {
+                Some(InventorySlotRef::Inventory(i)) if i == inv_ix => {
+                    Renderer::rect(&mut vertex_buffer.v_buf[ix .. ix+6],
+                                &white,                  // UV
+                                x, y, 1000.0, // X, Y, Z
+                                56.0, 56.0, // W, H
+                                [1.0, 1.0, 1.0, 0.5]); // Col
+                    ix += 6;
+                }
+                _ => (),
             }
 
             if item.is_none() { continue }

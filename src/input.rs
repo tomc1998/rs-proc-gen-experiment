@@ -116,11 +116,11 @@ impl InputState {
         self.window_dimensions_need_update = false;
     }
 
-    /// Checks if the (world) mouse is in the given XYWH rect.
-    pub fn is_world_mouse_in_rect(&self, x: f32, y: f32,
+    /// Checks if the (screen) mouse is in the given XYWH rect.
+    pub fn is_screen_mouse_in_rect(&self, x: f32, y: f32,
                                    w: f32, h: f32) -> bool {
-        self.world_mouse.x > x && self.world_mouse.x < x + w &&
-            self.world_mouse.y > y && self.world_mouse.y < y + h
+        self.screen_mouse.x > x && self.screen_mouse.x < x + w &&
+            self.screen_mouse.y > y && self.screen_mouse.y < y + h
     }
 
     pub fn process_input(&mut self, map: &InputMap,
