@@ -120,6 +120,18 @@ impl<'a> System<'a> for InventoryPainter {
                 }
                 _ => ()
             }
+
+            // Draw item
+            if let Some(item) = inventory.get_item_type(*slot) {
+                let tex = atlas.rect_for_tex(
+                    item.get_icon_tex_key()).unwrap();
+                Renderer::rect(&mut vertex_buffer.v_buf[ix .. ix+6],
+                               &tex,                  // UV
+                               x, y, 1000.0, // X, Y, Z
+                               56.0, 56.0, // W, H
+                               [1.0, 1.0, 1.0, 1.0]); // Col
+                ix += 6;
+            }
         }
 
         // Draw 'picked up' item
