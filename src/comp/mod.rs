@@ -76,7 +76,7 @@ pub struct Collector {
 /// battle
 #[derive(Component, Default)]
 pub struct Equipment {
-    pub head: Option<Helmet>,
+    pub helmet: Option<Helmet>,
     pub body: Option<Body>,
     pub weapon: Option<Weapon>,
     pub ring: Option<Ring>,

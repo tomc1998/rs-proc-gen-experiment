@@ -149,6 +149,7 @@ impl Renderer {
                              human_frame_set, 8, 8).unwrap()
             .add_anim_sprite("res/sprites/equipment/bronze/helmet.png", TextureKey::BronzeHelmetAnim,
                              human_frame_set, 8, 8).unwrap()
+            .add_anim_icon(TextureKey::IconBronzeHelmet, TextureKey::BronzeHelmetAnim)
             .add_anim_sprite("res/sprites/pickup/gold-coin.png", TextureKey::GoldCoinAnim,
                              gold_coin_frame_set, 8, 8).unwrap()
             .add_anim_sprite("res/sprites/slime-00.png", TextureKey::SlimeAnim,

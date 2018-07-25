@@ -28,12 +28,17 @@ impl InventoryItem {
 pub struct Inventory {
     /// The items in this inventory. Non indicates the slot is empty.
     pub items: Box<[Option<InventoryItem>; INVENTORY_SIZE]>,
+    pub helmet: Option<ItemType>,
+    pub body: Option<ItemType>,
+    pub weapon: Option<ItemType>,
+    pub ring: Option<ItemType>,
 }
 
 impl Inventory {
     pub fn new() -> Inventory {
         Inventory {
-            items: Box::new([None; INVENTORY_SIZE])
+            items: Box::new([None; INVENTORY_SIZE]),
+            .. Default::default()
         }
     }
 

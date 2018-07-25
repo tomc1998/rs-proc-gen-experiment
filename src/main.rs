@@ -30,6 +30,7 @@ mod sys_pickup;
 mod sys_death_drop;
 mod sys_track_pos;
 mod sys_match_anim;
+mod sys_set_equipment;
 mod vec;
 mod ui;
 mod camera;
@@ -135,7 +136,7 @@ fn main() {
         .with(Health::new(8, Hitmask(HITMASK_PLAYER)))
         .with(Collector { magnet_radius: 64.0 })
         .with(Equipment {
-            head: Some(equipment::Helmet::BronzeHelmet),
+            helmet: Some(equipment::Helmet::BronzeHelmet),
             .. Default::default()
         })
         .with(CollCircle { r: 8.0, off: Vec32::zero(),
@@ -188,6 +189,7 @@ fn main() {
     // Create test inventory
     let mut inventory = inventory::Inventory::new();
     inventory.items[0] = Some(inventory::InventoryItem::new(item::ItemType::Money, 10));
+    inventory.items[1] = Some(inventory::InventoryItem::new(item::ItemType::BronzeHelmet, 1));
 
     let input_map = input::InputMap::new();
     // Allocate cpu side v_buf
@@ -207,6 +209,7 @@ fn main() {
 
     // Build dispatcher
     let mut dispatcher = specs::DispatcherBuilder::new()
+        .with(sys_set_equipment::SetEquipmentSys, "set_equipment", &[])
         .with(sys_lifetime::LifetimeSys, "lifetime", &[])
         // Control
         .with(ui::UIInputSystem, "ui_input", &[])
@@ -231,8 +234,10 @@ fn main() {
         .with(sys_pickup::PickupSys, "pickup", &["phys"])
 
         // Combat
-        .with(sys_health::HealthSys, "health", &["phys"])
-        .with(sys_on_hit::KnockbackSys, "oh_knockback", &["health"])
+        .with(sys_health::HealthSys, "health",
+              &["phys", "set_equipment"])
+        .with(sys_on_hit::KnockbackSys, "oh_knockback",
+              &["health", "set_equipment"])
 
         .with(MarkerSys, "update",
               &["phys", "anim_sprite", "health", "follow_camera",

@@ -381,6 +381,25 @@ impl<K : Ord> AtlasBuilder<K> {
         glyphs.map(|_| self)
     }
 
+    /// Given a UVRect, map the given texture key to that. This makes it
+    /// possible to have a static texture which is a frame of an animation.
+    pub fn map_tex_to_uv_rect(mut self, key: K, rect: UvRect) -> Self {
+        self.atlas.textures.insert(key, rect);
+        self
+    }
+
+    /// Map a texture key to the first frame of a given animation. Panics if the
+    /// animation is not available.
+    pub fn add_anim_icon(mut self, key: K, anim_key: K) -> Self {
+        let frame;
+        {
+            let anim = self.atlas.rect_for_anim_sprite(anim_key).unwrap();
+            frame = anim.frame(0, 0, &self.atlas.frame_set_map);
+        }
+        self.atlas.textures.insert(key, frame);
+        self
+    }
+
     /// Add a frame set, return a usize to reference that frame set with later
     pub fn add_frame_set(&mut self, f: FrameSet) -> usize {
         let id = frame_set::gen_new_frame_set_id();

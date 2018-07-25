@@ -101,7 +101,7 @@ impl<'a> System<'a> for SpritePainter {
                     &mut vertex_buffer, &mut ix, &pos, e, anim.w, anim.h,
                     &tint_s, &rot_s, &tex);
             }
-            if let Some(ref equipment) = equipment.head {
+            if let Some(ref equipment) = equipment.helmet {
                 let tex = atlas.rect_for_anim_sprite(equipment.get_anim_key()).unwrap()
                     .frame(anim.anim, anim.curr_frame, &atlas.frame_set_map);
                 SpritePainter::draw_sprite(
