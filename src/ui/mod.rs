@@ -25,10 +25,10 @@ pub struct UIInputSystem;
 impl<'a> System<'a> for UIInputSystem {
     type SystemData = (ReadExpect<'a, InputState>,
                        ReadExpect<'a, Camera>,
-                       ReadExpect<'a, Inventory>,
+                       WriteExpect<'a, Inventory>,
                        Write<'a, UIState>);
 
-    fn run(&mut self, (input_state, camera, inventory,
+    fn run(&mut self, (input_state, camera, mut inventory,
                        mut ui_state): Self::SystemData) {
         // Open / close some UIs
         if *input_state.pressed.get(&input::Command::ToggleInventory).unwrap() {
@@ -38,7 +38,7 @@ impl<'a> System<'a> for UIInputSystem {
         // Process UIs that are open
         if ui_state.inventory_open {
             inventory::process_ui(&input_state, camera.w, camera.h,
-                                  &inventory, &mut ui_state.inventory_state);
+                                  &mut inventory, &mut ui_state.inventory_state);
         }
     }
 }

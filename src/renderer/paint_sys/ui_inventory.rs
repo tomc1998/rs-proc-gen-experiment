@@ -123,18 +123,16 @@ impl<'a> System<'a> for InventoryPainter {
         }
 
         // Draw 'picked up' item
-        if let Some(slot) = ui_state.inventory_state.curr_drag_drop {
-            if let Some(item_type) = inventory.get_item_type(slot) {
-                let tex = atlas.rect_for_tex(item_type.get_icon_tex_key()).unwrap();
-                let x = ui_state.inventory_state.drag_drop_world_pos.x - 27.0;
-                let y = ui_state.inventory_state.drag_drop_world_pos.y - 27.0;
-                Renderer::rect(&mut vertex_buffer.v_buf[ix .. ix+6],
-                               &tex,                  // UV
-                               x, y, 1000.0, // X, Y, Z
-                               56.0, 56.0, // W, H
-                               [1.0, 1.0, 1.0, 0.5]); // Col
-                ix += 6;
-            }
+        if let Some(item) = ui_state.inventory_state.curr_drag_drop {
+            let tex = atlas.rect_for_tex(item.item_type.get_icon_tex_key()).unwrap();
+            let x = ui_state.inventory_state.drag_drop_world_pos.x - 27.0;
+            let y = ui_state.inventory_state.drag_drop_world_pos.y - 27.0;
+            Renderer::rect(&mut vertex_buffer.v_buf[ix .. ix+6],
+                           &tex,                  // UV
+                           x, y, 1000.0, // X, Y, Z
+                           56.0, 56.0, // W, H
+                           [1.0, 1.0, 1.0, 0.5]); // Col
+            ix += 6;
         }
 
         vertex_buffer.size = ix as u32;

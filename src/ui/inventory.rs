@@ -1,4 +1,4 @@
-use inventory::Inventory;
+use inventory::*;
 use vec::*;
 use input::*;
 use renderer::{INVENTORY_NUM_COLUMNS, INVENTORY_SLOT_SIZE};
@@ -19,9 +19,8 @@ pub enum InventorySlotRef {
 /// update system and read from by the render system.
 #[derive(Default, Clone, Debug)]
 pub struct InventoryState {
-    /// A reference into the inventory. If this is Some, then the item at the
-    /// current IX is being dragged / dropped.
-    pub curr_drag_drop: Option<InventorySlotRef>,
+    /// If this is Some, then we're drag / dropping this item.
+    pub curr_drag_drop: Option<InventoryItem>,
 
     /// World pos of the mouse whilst drag / dropping
     pub drag_drop_world_pos: Vec32,
@@ -37,7 +36,7 @@ pub struct InventoryState {
 pub fn process_ui(input_state: &InputState,
                   camera_w: f32,
                   camera_h: f32,
-                  inventory: &Inventory,
+                  inventory: &mut Inventory,
                   inventory_state: &mut InventoryState) {
     // Check all inventory slots for mouse hovering
     inventory_state.curr_over = None;
@@ -78,15 +77,22 @@ pub fn process_ui(input_state: &InputState,
     }
 
     // Check mouse press pickups
-    if let Some(_over) = inventory_state.curr_over {
+    if let Some(over) = inventory_state.curr_over {
         if *input_state.pressed.get(&Command::Primary).unwrap() {
-            if inventory_state.curr_drag_drop.is_none() {
-                inventory_state.curr_drag_drop = inventory_state.curr_over;
-            } else {
-                inventory_state.curr_drag_drop = None;
-            }
+            // Only pickup if there's something in the slot
+            if inventory_state.curr_drag_drop.is_none() &&
+                inventory.get_item_type(over).is_some() {
+                    inventory_state.curr_drag_drop =
+                        inventory.take_item(over);
+                } else if let Ok(item) = inventory.set_item(
+                    over, inventory_state.curr_drag_drop) {
+                    // Swap this inventory slot with whatever we're carrying, if
+                    // we can place it here!
+                    inventory_state.curr_drag_drop = item;
+                }
         }
     }
 
+    // Copy over the mouse pos for use in the UI
     inventory_state.drag_drop_world_pos = input_state.world_mouse;
 }

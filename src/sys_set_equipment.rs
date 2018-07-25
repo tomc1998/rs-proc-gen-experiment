@@ -24,16 +24,16 @@ impl<'a> System<'a> for SetEquipmentSys {
         // inventory.
         if let Some((_, eq)) = (&pc_s, &mut eq_s).join().next() {
             if let Some(item) = inventory.helmet {
-                eq.helmet = Some(item.as_helmet());
+                eq.helmet = Some(item.item_type.as_helmet());
             } else { eq.helmet = None }
             if let Some(item) = inventory.body {
-                eq.body = Some(item.as_body());
+                eq.body = Some(item.item_type.as_body());
             } else { eq.body = None }
             if let Some(item) = inventory.weapon {
-                eq.weapon = Some(item.as_weapon());
+                eq.weapon = Some(item.item_type.as_weapon());
             } else { eq.weapon = None }
             if let Some(item) = inventory.ring {
-                eq.ring = Some(item.as_ring());
+                eq.ring = Some(item.item_type.as_ring());
             } else { eq.ring = None }
         }
     }

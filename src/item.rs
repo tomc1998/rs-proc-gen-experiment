@@ -6,6 +6,8 @@ use equipment::*;
 
 /// This is the type of equipment that an item is. It's either None, meaning
 /// this item is not a piece of equipment, or one of the other values.
+#[derive(Clone, Copy, PartialEq, Eq)]
+#[allow(dead_code)]
 pub enum EquipmentType {
     None,
     Helmet,

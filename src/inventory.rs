@@ -1,4 +1,4 @@
-use item::ItemType;
+use item::{ItemType, EquipmentType};
 use ui::InventorySlotRef;
 
 pub const INVENTORY_SIZE: usize = 18;
@@ -29,10 +29,10 @@ impl InventoryItem {
 pub struct Inventory {
     /// The items in this inventory. Non indicates the slot is empty.
     pub items: Box<[Option<InventoryItem>; INVENTORY_SIZE]>,
-    pub helmet: Option<ItemType>,
-    pub body: Option<ItemType>,
-    pub weapon: Option<ItemType>,
-    pub ring: Option<ItemType>,
+    pub helmet: Option<InventoryItem>,
+    pub body: Option<InventoryItem>,
+    pub weapon: Option<InventoryItem>,
+    pub ring: Option<InventoryItem>,
 }
 
 impl Inventory {
@@ -71,12 +71,76 @@ impl Inventory {
     /// Gets the item type of a given slot
     pub fn get_item_type(&self, slot: InventorySlotRef) -> Option<ItemType> {
         match slot {
-            InventorySlotRef::Inventory(i) => self.items[i]
-                .map(|i| i.item_type),
-            InventorySlotRef::Helmet => self.helmet,
-            InventorySlotRef::Body => self.body,
-            InventorySlotRef::Weapon => self.weapon,
-            InventorySlotRef::Ring => self.ring,
+            InventorySlotRef::Inventory(i) => self.items[i].map(|i| i.item_type),
+            InventorySlotRef::Helmet => self.helmet.map(|i| i.item_type),
+            InventorySlotRef::Body => self.body.map(|i| i.item_type),
+            InventorySlotRef::Weapon => self.weapon.map(|i| i.item_type),
+            InventorySlotRef::Ring => self.ring.map(|i| i.item_type),
         }
+    }
+
+    /// Takes an item from a slot, setting it to None and returning the item.
+    pub fn take_item(&mut self, slot: InventorySlotRef) -> Option<InventoryItem> {
+        let tmp = match slot {
+            InventorySlotRef::Inventory(i) => self.items[i].clone(),
+            InventorySlotRef::Helmet => self.helmet.clone(),
+            InventorySlotRef::Body => self.body.clone(),
+            InventorySlotRef::Weapon => self.weapon.clone(),
+            InventorySlotRef::Ring => self.ring.clone(),
+        };
+        let _ = self.set_item(slot, None);
+        tmp
+
+    }
+
+    /// Checks if the given item type can go in the given inventory slot. This
+    /// DOESN'T have any regard for the current stack size, it only 'type
+    /// checks' (i.e. only helmets in the helmet slot)
+    pub fn can_place_item(&self, slot: InventorySlotRef,
+                          item_type: ItemType) -> bool {
+        match slot {
+            InventorySlotRef::Inventory(_) => true,
+            InventorySlotRef::Helmet =>
+                item_type.equipment_type() == EquipmentType::Helmet,
+            InventorySlotRef::Body =>
+                item_type.equipment_type() == EquipmentType::Body,
+            InventorySlotRef::Weapon =>
+                item_type.equipment_type() == EquipmentType::Weapon,
+            InventorySlotRef::Ring =>
+                item_type.equipment_type() == EquipmentType::Ring,
+        }
+    }
+
+    /// Overwrite the given slot with an item. Checks item types (for equipment
+    /// slots).
+    /// Returns the item that was overwritten (or None if there wasn't one)
+    /// If typechecks failed, returns Err(()).
+    pub fn set_item(&mut self, slot: InventorySlotRef,
+                item: Option<InventoryItem>) -> Result<Option<InventoryItem>, ()> {
+        if item.is_some() && !self.can_place_item(slot, item.unwrap().item_type) { return Err(()); }
+        let tmp;
+        match slot {
+            InventorySlotRef::Inventory(ix) => {
+                tmp = self.items[ix];
+                self.items[ix] = item;
+            },
+            InventorySlotRef::Helmet => {
+                tmp = self.helmet;
+                self.helmet = item;
+            }
+            InventorySlotRef::Body => {
+                tmp = self.body;
+                self.body = item;
+            }
+            InventorySlotRef::Weapon => {
+                tmp = self.weapon;
+                self.weapon = item;
+            }
+            InventorySlotRef::Ring => {
+                tmp = self.ring;
+                self.ring = item;
+            }
+        }
+        Ok(tmp)
     }
 }
