@@ -246,10 +246,10 @@ impl<K : Ord> AtlasBuilder<K> {
     /// // Load a 32*32 image which is made up of 4 animations on each row,
     /// // where each frame is 8x8.
     /// let mut frame_map = BTreeMap::new();
-    /// frame_map.insert(TextureKey::WalkLeft,  &[(0, 0), (1, 0), (2, 0), (3, 0)][..]);
-    /// frame_map.insert(TextureKey::WalkRight, &[(0, 1), (1, 1), (2, 1), (3, 1)][..]);
-    /// frame_map.insert(TextureKey::WalkUp,    &[(0, 2), (1, 2), (2, 2), (3, 2)][..]);
-    /// frame_map.insert(TextureKey::WalkDown,  &[(0, 3), (1, 3), (2, 3), (3, 3)][..]);
+    /// frame_map.insert("WalkLeft",  &[(0, 0), (1, 0), (2, 0), (3, 0)][..]);
+    /// frame_map.insert("WalkRight", &[(0, 1), (1, 1), (2, 1), (3, 1)][..]);
+    /// frame_map.insert("WalkUp",    &[(0, 2), (1, 2), (2, 2), (3, 2)][..]);
+    /// frame_map.insert("WalkDown",  &[(0, 3), (1, 3), (2, 3), (3, 3)][..]);
     /// atlas.add_anim_sprite("spritesheet.png", frame_map, 8, 8);
     /// ```
     pub fn add_anim_sprite<P: AsRef<Path>>(mut self, img_path: P,

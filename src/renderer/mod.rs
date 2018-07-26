@@ -140,24 +140,24 @@ impl Renderer {
                       .and(Charset::common_punc())
                       .into_iter(),
                       32.0).unwrap()
-            .add_tex(TextureKey::White, "res/white.png").unwrap()
-            .add_tex(TextureKey::GreenTree00, "res/sprites/green-tree-00.png").unwrap()
-            .add_tex(TextureKey::InventoryMockup, "res/sprites/ui/inventory-mockup.png").unwrap()
-            .add_tex(TextureKey::IconMoney, "res/sprites/icon/money.png").unwrap()
-            .add_tileset(TextureKey::TilesetGrass, "res/tileset-grass.png", 8, 8).unwrap()
-            .add_anim_sprite("res/sprites/human-00.png", TextureKey::Human00Anim,
+            .add_tex("White", "res/white.png").unwrap()
+            .add_tex("GreenTree00", "res/sprites/green-tree-00.png").unwrap()
+            .add_tex("InventoryMockup", "res/sprites/ui/inventory-mockup.png").unwrap()
+            .add_tex("IconMoney", "res/sprites/icon/money.png").unwrap()
+            .add_tileset("TilesetGrass", "res/tileset-grass.png", 8, 8).unwrap()
+            .add_anim_sprite("res/sprites/human-00.png", "Human00Anim",
                              human_frame_set, 8, 8).unwrap()
-            .add_anim_sprite("res/sprites/equipment/bronze/helmet.png", TextureKey::BronzeHelmetAnim,
+            .add_anim_sprite("res/sprites/equipment/bronze/helmet.png", "BronzeHelmetAnim",
                              human_frame_set, 8, 8).unwrap()
-            .add_anim_icon(TextureKey::IconBronzeHelmet, TextureKey::BronzeHelmetAnim,
+            .add_anim_icon("IconBronzeHelmet", "BronzeHelmetAnim",
                            0.0, -0.125, 1.0, 0.75)
-            .add_anim_sprite("res/sprites/pickup/gold-coin.png", TextureKey::GoldCoinAnim,
+            .add_anim_sprite("res/sprites/pickup/gold-coin.png", "GoldCoinAnim",
                              gold_coin_frame_set, 8, 8).unwrap()
-            .add_anim_sprite("res/sprites/slime-00.png", TextureKey::SlimeAnim,
+            .add_anim_sprite("res/sprites/slime-00.png", "SlimeAnim",
                              slime_frame_set, 8, 8).unwrap()
-            .add_anim_sprite("res/sprites/fx/slice-00.png", TextureKey::SliceAnim,
+            .add_anim_sprite("res/sprites/fx/slice-00.png", "SliceAnim",
                              slice_frame_set, 16, 16).unwrap()
-            .add_bitmap_font(TextureKey::FontTinyNumbers, "res/sprites/ui/tiny-numbers.png",
+            .add_bitmap_font("FontTinyNumbers", "res/sprites/ui/tiny-numbers.png",
                              &[('1', (0, 0)), ('2', (1, 0)), ('3', (2, 0)), ('4', (3, 0)), ('5', (4, 0)),
                                ('6', (0, 1)), ('7', (1, 1)), ('8', (2, 1)), ('9', (3, 1)), ('0', (4, 1))][..],
                              3, 5).unwrap()

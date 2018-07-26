@@ -145,7 +145,7 @@ fn main() {
         .with(CollCircle { r: 8.0, off: Vec32::zero(),
                            flags: COLL_SOLID})
         .with(AnimSprite::new(32.0, 32.0, 100.0,
-                              4, renderer::TextureKey::Human00Anim))
+                              4, "Human00Anim"))
         .build();
     // Tree
     world.create_entity()
@@ -153,7 +153,7 @@ fn main() {
         .with(CollCircle { r: 12.0, off: Vec32::zero(),
                            flags: COLL_SOLID | COLL_STATIC})
         .with(StaticSprite { w: 64.0, h: 128.0,
-                             sprite: renderer::TextureKey::GreenTree00})
+                             sprite: "GreenTree00"})
         .build();
     // Slime
     world.create_entity()
@@ -175,7 +175,7 @@ fn main() {
                         state: SlimeState::Idle })
         .with(CollCircle { r: 8.0, off: Vec32::zero(), flags: COLL_SOLID})
         .with(AnimSprite::new(32.0, 32.0, 100000.0,
-                              1, renderer::TextureKey::SlimeAnim))
+                              1, "SlimeAnim"))
         .build();
 
     // Create tilemaps

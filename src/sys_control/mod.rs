@@ -8,7 +8,7 @@ use DeltaTime;
 use input;
 use specs::*;
 use comp::*;
-use renderer::{TextureKey, frame_sets::*};
+use renderer::frame_sets::*;
 use vec::*;
 use std::f32::consts::PI;
 
@@ -114,7 +114,7 @@ impl<'a> System<'a> for PlayerControllerSys {
                         })
                         .with(Lifetime { lifetime: 125.0 })
                         .with(AnimSprite::new(64.0, 64.0, 25.0, 5,
-                                              TextureKey::SliceAnim)
+                                              "SliceAnim")
                               .with_flags(ANIM_SPRITE_NO_LOOP))
                         .with(Rot { angle: vec.angle() - PI / 2.0 })
                         .build();

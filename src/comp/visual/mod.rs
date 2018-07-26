@@ -90,7 +90,7 @@ pub enum TilesetEnum {
 impl TilesetEnum {
     pub fn convert_to_tex_key(&self) -> renderer::TextureKey {
         match *self {
-            TilesetEnum::Grass => renderer::TextureKey::TilesetGrass,
+            TilesetEnum::Grass => "TilesetGrass",
         }
     }
 }

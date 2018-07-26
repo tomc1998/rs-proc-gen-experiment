@@ -166,7 +166,7 @@ pub fn load_item_definitions() {
 
     let money = ItemDetails {
         in_world_gfx: InWorldGfx {
-            tex_key: TextureKey::GoldCoinAnim,
+            tex_key: "GoldCoinAnim",
             width: 16.0,
             height: 16.0,
             anim_data: Some(AnimData {
@@ -176,7 +176,7 @@ pub fn load_item_definitions() {
                 flags: 0,
             })
         },
-        icon: TextureKey::IconMoney,
+        icon: "IconMoney",
         equipment_data: None,
         stacks: true,
         name: "Money".to_owned(),
@@ -184,15 +184,15 @@ pub fn load_item_definitions() {
 
     let bronze_helmet = ItemDetails {
         in_world_gfx: InWorldGfx {
-            tex_key: TextureKey::IconBronzeHelmet,
+            tex_key: "IconBronzeHelmet",
             width: 16.0,
             height: 16.0,
             anim_data: None,
         },
-        icon: TextureKey::IconBronzeHelmet,
+        icon: "IconBronzeHelmet",
         equipment_data: Some(EquipmentData {
             equipment_type: EquipmentType::Helmet,
-            anim_key: Some(TextureKey::BronzeHelmetAnim),
+            anim_key: Some("BronzeHelmetAnim"),
         }),
         stacks: false,
         name: "Bronze Helmet".to_owned(),

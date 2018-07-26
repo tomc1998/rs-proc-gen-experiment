@@ -1,27 +1,29 @@
 /// Textures available in the atlas
-#[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Debug)]
-pub enum TextureKey {
-    // White texture for drawing just colour
-    White,
+// #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Debug)]
+// pub enum TextureKey {
+//     // White texture for drawing just colour
+//     White,
 
-    // Tilesets
-    TilesetGrass,
+//     // Tilesets
+//     TilesetGrass,
 
-    // Sprites
-    Human00Anim,
-    BronzeHelmetAnim,
-    GoldCoinAnim,
-    SlimeAnim,
-    SliceAnim,
-    GreenTree00,
+//     // Sprites
+//     Human00Anim,
+//     BronzeHelmetAnim,
+//     GoldCoinAnim,
+//     SlimeAnim,
+//     SliceAnim,
+//     GreenTree00,
 
-    // UI
-    InventoryMockup,
+//     // UI
+//     InventoryMockup,
 
-    // Icons (for stuff like inventory)
-    IconMoney,
-    IconBronzeHelmet,
+//     // Icons (for stuff like inventory)
+//     IconMoney,
+//     IconBronzeHelmet,
 
-    // Fonts
-    FontTinyNumbers
-}
+//     // Fonts
+//     FontTinyNumbers
+// }
+
+pub type TextureKey = &'static str;
