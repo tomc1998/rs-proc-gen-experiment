@@ -84,19 +84,21 @@ impl<'a> System<'a> for InventoryPainter {
                            [1.0, 1.0, 1.0, 1.0]); // Col
             ix += 6;
 
-            // Draw numbers
-            let num0 = item.num / 10;
-            let num1 = item.num % 10;
-            let tex0 = font.rect_for_char(num0.to_string().chars().next().unwrap()).unwrap();
-            let tex1 = font.rect_for_char(num1.to_string().chars().next().unwrap()).unwrap();
-            Renderer::rect(&mut vertex_buffer.v_buf[ix .. ix+6],
-                           &tex0, x + num_off_x + 2.0, y + num_off_y, 1000.0,
-                           12.0, 20.0, NUMBER_COLOR);
-            ix += 6;
-            Renderer::rect(&mut vertex_buffer.v_buf[ix .. ix+6],
-                           &tex1, x + num_off_x + 20.0 - 2.0, y + num_off_y, 1000.0,
-                           12.0, 20.0, NUMBER_COLOR);
-            ix += 6;
+            // Draw numbers (only if we don't stack)
+            if item.item_type.stacks() {
+                let num0 = item.num / 10;
+                let num1 = item.num % 10;
+                let tex0 = font.rect_for_char(num0.to_string().chars().next().unwrap()).unwrap();
+                let tex1 = font.rect_for_char(num1.to_string().chars().next().unwrap()).unwrap();
+                Renderer::rect(&mut vertex_buffer.v_buf[ix .. ix+6],
+                            &tex0, x + num_off_x + 2.0, y + num_off_y, 1000.0,
+                            12.0, 20.0, NUMBER_COLOR);
+                ix += 6;
+                Renderer::rect(&mut vertex_buffer.v_buf[ix .. ix+6],
+                            &tex1, x + num_off_x + 20.0 - 2.0, y + num_off_y, 1000.0,
+                            12.0, 20.0, NUMBER_COLOR);
+                ix += 6;
+            }
         }
 
         // Draw equipment slots

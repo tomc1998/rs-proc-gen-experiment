@@ -49,7 +49,7 @@ impl Inventory {
         // First check for places to stack
         for i_slot in self.items.iter_mut() {
             match i_slot {
-                Some(i) if i.item_type == item.item_type && i.num + item.num < 100 => {
+                Some(i) if i.item_type == item.item_type && i.num + item.num < 100 && i.item_type.stacks() => {
                     i.num += item.num;
                     return true;
                 }

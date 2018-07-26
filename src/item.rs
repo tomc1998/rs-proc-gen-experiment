@@ -79,6 +79,9 @@ struct ItemDetails {
     icon: TextureKey,
     /// If this is equipment, this is Some.
     equipment_data: Option<EquipmentData>,
+    /// If true, this item can stack (up to 99) in the inventory. Otherwise,
+    /// separate stacks will be maintained.
+    stacks: bool,
     name: String,
 }
 
@@ -140,6 +143,10 @@ impl ItemType {
             .equipment_data.expect("Item is not equipment")
             .anim_key.expect("This equipment doesn't have an animation (is it a ring or weapon?)")
     }
+
+    pub fn stacks(self) -> bool {
+        ITEM_REGISTER.read().unwrap().get_details(self).stacks
+    }
 }
 
 /// Given a string, get the item type with that name. This is a linear search
@@ -171,6 +178,7 @@ pub fn load_item_definitions() {
         },
         icon: TextureKey::IconMoney,
         equipment_data: None,
+        stacks: true,
         name: "Money".to_owned(),
     };
 
@@ -186,6 +194,7 @@ pub fn load_item_definitions() {
             equipment_type: EquipmentType::Helmet,
             anim_key: Some(TextureKey::BronzeHelmetAnim),
         }),
+        stacks: false,
         name: "Bronze Helmet".to_owned(),
     };
 

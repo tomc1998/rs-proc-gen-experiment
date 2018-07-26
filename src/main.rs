@@ -194,6 +194,10 @@ fn main() {
         item_type: item::get_item_type_with_name("Bronze Helmet").unwrap(),
         num: 1,
     });
+    inventory.add_item(inventory::InventoryItem {
+        item_type: item::get_item_type_with_name("Bronze Helmet").unwrap(),
+        num: 1,
+    });
 
     let input_map = input::InputMap::new();
     // Allocate cpu side v_buf
