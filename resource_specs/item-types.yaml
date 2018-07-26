@@ -1,0 +1,64 @@
+## What follows is the documentation for item types.
+
+Item Types:
+  # Item types are defined in YAML. These are loaded into the game engine. They
+  # reference visual assets, so will probably be looked at in combination with the
+  # asset resource files.
+  #
+  # # Directory structure
+  # The directory structure for item types is simple.
+  # Item type files are placed in the res/item-types directory.
+  # File names don't matter.
+  # Each file contains a list of item type definitions, which are item names
+  # mapped to other data. Here is a (commented) example of an item type definition - one or
+  # more of these would make up an item type file:
+
+  ## This is the name of the item. This will appear in-game as "Bronze Helmet".
+  ## Names should always be human-readable, rather than snake case, kebab case, or
+  ## other cases.
+  Gold Coin: 
+    ## The icon for this item (how it's displayed in the inventory)
+    icon: IconMoney
+    ## If true, this will stack in the inventory - false otherwise. If this is
+    ## true AND this item is a piece of equipment, this will probably fuck shit
+    ## up. A runtime error will probably be added for this.
+    stacks: true
+    ## OPTIONAL
+    ## If this is included, this item is defined as wearable equipment
+    equipment_data:
+      ## One of 'Helmet', 'Body', 'Weapon', or 'Ring'
+      equipment_type: Helmet
+      ## The animation for this equipment in-world (when an entity is wielding
+      ## this equipment)
+      anim_key: BronzeHelmetAnim
+    ## A reference to the in-world graphics. This is the graphical representation
+    ## when this item is on the floor.
+    in_world_gfx:
+      ## A reference to an animation asset (defined in an asset file).
+      tex_key: GoldCoinAnim
+      ## The width and height of this in-game (in game units, not the width and
+      ## height of the asset).
+      width: 16.0
+      height: 16.0
+      ## OPTIONAL
+      ## If this is included, this in-world representation is implied to be an
+      ## animation. If the referenced asset is NOT an animation, this will cause a
+      ## runtime error (and vice-versa, if this isn't included but the referenced
+      ## asset IS an animation).
+      anim_data:
+        ## The animation index (each anim asset can contain multiple animations)
+        anim_num: 0
+        ## This should just be copied over from the animation asset. This is a
+        ## little bit lazy, and may be made optional in the future, but it does
+        ## simplify the code. Putting in less frames will loop the animation early
+        ## - more frames throw a runtime error.
+        num_frames: 6
+        ## Time per frame in millis
+        frame_time: 40.0
+        ## List of flags (see Anim Flags section below)
+        flags: []
+
+Anim Flags:
+  # Animation flags are applied per component, and can alter the way the
+  # animation plays. Following is a description of all the possible flags.
+  ANIM_SPRITE_NO_LOOP: Don't loop this animation.
