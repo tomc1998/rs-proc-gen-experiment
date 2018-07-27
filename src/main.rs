@@ -14,6 +14,9 @@ extern crate rayon;
 #[macro_use] extern crate specs_derive;
 extern crate num_integer;
 #[macro_use] extern crate lazy_static;
+extern crate serde;
+extern crate serde_yaml;
+#[macro_use] extern crate serde_derive;
 
 #[cfg(test)]
 extern crate test;
@@ -39,6 +42,7 @@ mod math_util;
 mod item;
 mod inventory;
 mod drop_tables;
+mod asset_loader;
 
 use comp::*;
 use vec::*;
@@ -118,6 +122,7 @@ fn main() {
         gfx_glutin::init::<renderer::ColorFormat, renderer::DepthFormat>(
             windowbuilder, contextbuilder, &events_loop);
 
+    // Create renderer
     let (w, h) = window.get_inner_size().unwrap();
     let (mut renderer, atlas) = renderer::Renderer::new(
         &mut factory, color_view, depth_view, Default::default());

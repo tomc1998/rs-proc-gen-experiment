@@ -19,6 +19,9 @@ rusttype = "0.6"
 rayon = "*"
 num-integer = "*"
 lazy_static = "*"
+serde_derive = "1.0"
+serde = "1.0"
+serde_yaml = "0.7"
 
 [features]
 bench = []
