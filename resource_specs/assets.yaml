@@ -15,10 +15,10 @@ Assets:
   # one or more of these would make up an asset definition file:
 
   # This is the name of the asset. Convention is a upper CamelCase name.
-  IconMoney:
+  Tex:
     # This type informs the rest of the structure. See further examples below for
     # different asset types.
-    asset_type: TEX
+    name: "IconMoney"
     # Filename is relative to the project root
     filename: "res/sprites/icon/money.png"
 
@@ -26,62 +26,80 @@ Assets:
 
 More asset examples:
 
-  # AnimSprite example
-  SliceAnim:
-    asset_type: Anim
-    filename: "res/sprites/fx/slice-00.png"
-    # See 'FrameSet Definitions' below.
-    frame_set: SliceFrameSet
-    # Width and height (in pixels) of individual frames in the sprite sheet
-    frame_w: 8
-    frame_h: 8
+  # animsprite example
+  - Anim:
+      name: "SliceAnim"
+      filename: "res/sprites/fx/slice-00.png"
+      # see 'frameset definitions' below.
+      frame_set: slice_frame_set
+      # width and height (in pixels) of individual frames in the sprite sheet
+      frame_w: 8
+      frame_h: 8
 
   # Tileset example
-  TilesetGrass:
-    asset_type: Tileset
-    filename: "res/tileset-grass.png"
-    # Width and height (in pixels) of individual tiles in the sprite sheet
-    frame_w: 8
-    frame_h: 8
+  - Tileset:
+      name: "TilesetGrass"
+      filename: "res/tileset-grass.png"
+      # Width and height (in pixels) of individual tiles in the sprite sheet
+      frame_w: 8
+      frame_h: 8
 
   # Anim icon example (this is just a texture, but is generated from the first
   # frame of an animation
-  IconBronzeHelmet:
-    asset_type: AnimIcon
-    # Reference another animation
-    anim: BronzeHelmetAnim
-    # X, Y, W, H:
-    # Additional cropping parameters, to crop the first frame.
-    # From 0 to 1, where 0,0 is the top left of the frame, and the frame has a
-    # w/h of 1/1
-    # # OOB offsets
-    # Given that the spacing for stuff is SPACING, you can go OOB with x, y by
-    # a small amount depending on the pixel spacing. This is not recommend
-    # however, as a change in the spacing will fuck some icons up subtly.
-    x: 0.0
-    y: 0.0
-    w: 1.0
-    h: 1.0
+  - AnimIcon:
+      name: "IconBronzeHelmet"
+      # Reference another animation
+      anim: BronzeHelmetAnim
+      # X, Y, W, H:
+      # Additional cropping parameters, to crop the first frame.
+      # From 0 to 1, where 0,0 is the top left of the frame, and the frame has a
+      # w/h of 1/1
+      # # OOB offsets
+      # Given that the spacing for stuff is SPACING, you can go OOB with x, y by
+      # a small amount depending on the pixel spacing. This is not recommend
+      # however, as a change in the spacing will fuck some icons up subtly.
+      x: 0.0
+      y: 0.0
+      w: 1.0
+      h: 1.0
 
   # Bitmap font example
-  FontTinyNumbers:
-    asset_type: BitmapFont
-    filename: "res/sprites/ui/tiny-numbers.png"
-    # Width / height of glyphs
-    frame_w: 8
-    frame_h: 8
-    # A map of chars to frame positions
-    char_map:
-      # An x, y offset (in frames) from the top-left of the image.
-      "1": [0, 0]
-      "2": [1, 0]
-      "3": [2, 0]
-      "4": [3, 0]
-      "5": [4, 0]
-      "6": [0, 1]
-      "7": [1, 2]
-      "8": [2, 3]
-      "9": [3, 4]
-      "0": [4, 5]
+  - BitmapFont:
+      name: "FontTinyNumbers"
+      filename: "res/sprites/ui/tiny-numbers.png"
+      # Width / height of glyphs
+      frame_w: 8
+      frame_h: 8
+      # A map of chars to frame positions
+      char_map:
+        # An x, y offset (in frames) from the top-left of the image.
+        "1": [0, 0]
+        "2": [1, 0]
+        "3": [2, 0]
+        "4": [3, 0]
+        "5": [4, 0]
+        "6": [0, 1]
+        "7": [1, 2]
+        "8": [2, 3]
+        "9": [3, 4]
+        "0": [4, 5]
 
 FrameSet Definitions:
+  # Currently the only supported framset type is Ordered. Here is an example of
+  # the walking animations for the human anim.
+
+  FrameSet:
+    name: "human_anim_frame_set"
+    frames: 
+      - type: Ordered # Walk down
+        start: 0
+        end: 3
+      - type: Ordered # Walk up
+        start: 4
+        end: 7
+      - type: Ordered # Walk right
+        start: 8
+        end: 11
+      # You can also use a more compact JSON notation
+      - { type: Ordered, start: 12, end: 15 } # Walk left
+  

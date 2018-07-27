@@ -1,0 +1,77 @@
+# A bunch of example resources just to make the game run for now. 
+
+- Tex:
+    name: "White"
+    filename: "res/white.png"
+- Tex:
+    name: "GreenTree00"
+    filename: "res/sprites/green-tree-00.png"
+- Tex:
+    name: "InventoryMockup"
+    filename: "res/sprites/ui/inventory-mockup.png"
+- Tex:
+    name: "IconMoney"
+    filename: "res/sprites/icon/money.png"
+
+# Tilesets
+- Tileset:
+    name: "TilesetGrass"
+    filename: "res/tileset-grass.png"
+    frame_w: 8
+    frame_h: 8
+
+# Animations
+- Anim:
+    name: "Human00Anim"
+    filename: "res/sprites/human-00.png"
+    frame_set: human_frame_set,
+    frame_w: 8
+    frame_h: 8
+- Anim:
+    name: "GoldCoinAnim"
+    filename: "res/sprites/pickup/gold-coin.png"
+    frame_set: gold_coin_frame_set,
+    frame_w: 8
+    frame_h: 8
+- Anim:
+    name: "SlimeAnim"
+    filename: "res/sprites/slime-00.png"
+    frame_set: slime_frame_set,
+    frame_w: 8
+    frame_h: 8
+- Anim:
+    name: "SliceAnim"
+    filename: "res/sprites/fx/slice-00.png"
+    frame_set: slice_frame_set,
+    frame_w: 8
+    frame_h: 8
+
+# Equipment
+
+- Anim:
+    name: "BronzeHelmetAnim"
+    filename: "res/sprites/equipment/bronze/helmet.png"
+    frame_set: human_frame_set,
+    frame_w: 8
+    frame_h: 8
+
+- AnimIcon:
+    name: "IconBronzeHelmet"
+    anim: BronzeHelmetAnim
+    x: 0.0
+    y: -0.125 # Assumes spacing is at least 1
+    w: 1.0
+    h: 0.75
+
+
+# Fonts
+- BitmapFont:
+    name: "FontTinyNumbers"
+    filename: "res/sprites/ui/tiny-numbers.png"
+    # Width / height of glyphs
+    glyph_w: 8
+    glyph_h: 8
+    char_map: {
+      "1": [0, 0], "2": [1, 0], "3": [2, 0], "4": [3, 0], "5": [4, 0],
+      "6": [0, 1], "7": [1, 2], "8": [2, 3], "9": [3, 4], "0": [4, 5]
+      }
