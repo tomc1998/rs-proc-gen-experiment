@@ -1,13 +1,18 @@
 //! A big list of possible items.
 #![allow(dead_code)]
 
+mod deser_structs;
+
+use serde_yaml;
 use comp::*;
 use renderer::*;
 use std::sync::RwLock;
+use std::fs;
+use std::collections::BTreeMap;
 
 /// This is the type of equipment that an item is. It's either None, meaning
 /// this item is not a piece of equipment, or one of the other values.
-#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug, Serialize, Deserialize)]
 #[allow(dead_code)]
 pub enum EquipmentType {
     Helmet,
@@ -16,9 +21,10 @@ pub enum EquipmentType {
     Ring,
 }
 
-#[derive(Copy, Clone, Debug, PartialOrd, Ord, PartialEq, Eq)]
+#[derive(Copy, Clone, Debug, PartialOrd, Ord, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ItemType(usize);
 
+#[derive(Serialize, Deserialize, Debug)]
 struct AnimData {
     /// The animation we play in the associated animsprite resource
     anim_num: usize,
@@ -29,6 +35,7 @@ struct AnimData {
 }
 
 /// Data to display an item in-world
+#[derive(Serialize, Deserialize, Debug)]
 struct InWorldGfx {
     /// The actual resource - either a texture key or animation (see anim_data
     /// value for which of these it is)
@@ -61,7 +68,7 @@ impl InWorldGfx {
     }
 }
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, Serialize, Deserialize)]
 struct EquipmentData {
     equipment_type: EquipmentType,
     /// The key of the animation to use to render this equipment on a creature.
@@ -72,7 +79,8 @@ struct EquipmentData {
     anim_key: Option<TextureKey>,
 }
 
-struct ItemDetails {
+#[derive(Serialize, Deserialize, Debug)]
+pub struct ItemDetails {
     /// Graphics used to display this in-world (when on the floor)
     in_world_gfx: InWorldGfx,
     /// Icon in the inventory / other stores
@@ -164,41 +172,17 @@ pub fn load_item_definitions() {
     // Hardcode items for now until we sort out YAML reading
     eprintln!("Warning: Not reading item defs from res files, just hardcoding items");
 
-    let money = ItemDetails {
-        in_world_gfx: InWorldGfx {
-            tex_key: get_asset_by_name("GoldCoinAnim"),
-            width: 16.0,
-            height: 16.0,
-            anim_data: Some(AnimData {
-                anim_num: 0,
-                num_frames: 6,
-                frame_time: 40.0,
-                flags: 0,
-            })
-        },
-        icon: get_asset_by_name("IconMoney"),
-        equipment_data: None,
-        stacks: true,
-        name: "Money".to_owned(),
-    };
+    // Load definitions
+    let definitions = deser_structs::load_defs();
 
-    let bronze_helmet = ItemDetails {
-        in_world_gfx: InWorldGfx {
-            tex_key: get_asset_by_name("IconBronzeHelmet"),
-            width: 16.0,
-            height: 16.0,
-            anim_data: None,
-        },
-        icon: get_asset_by_name("IconBronzeHelmet"),
-        equipment_data: Some(EquipmentData {
-            equipment_type: EquipmentType::Helmet,
-            anim_key: Some(get_asset_by_name("BronzeHelmetAnim")),
-        }),
-        stacks: false,
-        name: "Bronze Helmet".to_owned(),
-    };
+    // Get a list of item definitions, plus a map of item names to indices
+    let mut item_name_map = BTreeMap::new();
+    definitions.iter().enumerate().for_each(|(ix, (k, _))| { item_name_map.insert(k.clone(), ix); });
+    let definitions : Vec<ItemDetails>
+        = definitions.iter().map(|(k, v)| v.link_assets(k.clone())).collect();
+
+    println!("Details: {:?}", definitions);
 
     let mut ir = ITEM_REGISTER.write().unwrap();
-    ir.item_list.push(money);
-    ir.item_list.push(bronze_helmet);
+    definitions.into_iter().for_each(|d| ir.item_list.push(d));
 }

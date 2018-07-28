@@ -1,0 +1,23 @@
+Money: 
+  icon: IconMoney
+  stacks: true
+  in_world_gfx:
+    tex_key: GoldCoinAnim
+    width: 16.0
+    height: 16.0
+    anim_data:
+      anim_num: 0
+      num_frames: 6
+      frame_time: 40.0
+      flags: []
+      
+Bronze Helmet: 
+  icon: IconBronzeHelmet
+  stacks: false
+  equipment_data:
+    equipment_type: Helmet
+    anim_key: BronzeHelmetAnim
+  in_world_gfx:
+    tex_key: IconBronzeHelmet
+    width: 16.0
+    height: 16.0
