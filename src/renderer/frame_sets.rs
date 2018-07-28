@@ -1,5 +1,6 @@
 //! A collection of consts that represent animations in sprite sheets.
 
+// See test.yaml asset file for human walk animation loading
 pub const FS_HUMAN_WALK_DOWN    : usize = 0;
 pub const FS_HUMAN_WALK_UP      : usize = 1;
 pub const FS_HUMAN_WALK_RIGHT   : usize = 2;

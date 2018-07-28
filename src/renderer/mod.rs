@@ -101,69 +101,6 @@ pub struct Renderer {
 }
 
 impl Renderer {
-    // fn load_assets(factory: &mut Factory) -> (TextureAtlas<TextureKey>, ShaderResourceView<Resources, [f32; 4]>) {
-    //     let mut builder = AtlasBuilder::<TextureKey>::new(512, 512);
-
-    //     // Create frame sets
-    //     let human_frame_set = builder.add_frame_set(FrameSet {
-    //         frames: vec![
-    //             Frames::Ordered(0,  3),  // Walk down
-    //             Frames::Ordered(4,  7),  // Walk up
-    //             Frames::Ordered(8,  11), // Walk right
-    //             Frames::Ordered(12, 15), // Walk left
-    //             Frames::Ordered(0,  0),  // Idle down
-    //             Frames::Ordered(4,  4),  // Idle up
-    //             Frames::Ordered(8,  8),  // Idle right
-    //             Frames::Ordered(12, 12), // Idle left
-    //             Frames::Ordered(1,  1),  // Attack down
-    //             Frames::Ordered(5,  5),  // Attack up
-    //             Frames::Ordered(9,  9),  // Attack right
-    //             Frames::Ordered(13, 13), // Attack left
-    //             ]
-    //     });
-
-    //     let gold_coin_frame_set = builder.add_frame_set(FrameSet {
-    //         frames: vec![Frames::Ordered(0,  5)]
-    //     });
-    //     let slice_frame_set = builder.add_frame_set(FrameSet {
-    //         frames: vec![Frames::Ordered(0,  4)]
-    //     });
-    //     let slime_frame_set = builder.add_frame_set(FrameSet {
-    //         frames: vec![Frames::Ordered(0,  0)]
-    //     });
-
-    //     // Now build all the rest of the atlas
-    //     builder
-    //         .set_font("res/open-sans.ttf",
-    //                   Charset::alpha()
-    //                   .and(Charset::number())
-    //                   .and(Charset::common_punc())
-    //                   .into_iter(),
-    //                   32.0).unwrap()
-    //         .add_tex("White", "res/white.png").unwrap()
-    //         .add_tex("GreenTree00", "res/sprites/green-tree-00.png").unwrap()
-    //         .add_tex("InventoryMockup", "res/sprites/ui/inventory-mockup.png").unwrap()
-    //         .add_tex("IconMoney", "res/sprites/icon/money.png").unwrap()
-    //         .add_tileset("TilesetGrass", "res/tileset-grass.png", 8, 8).unwrap()
-    //         .add_anim_sprite("res/sprites/human-00.png", "Human00Anim",
-    //                          human_frame_set, 8, 8).unwrap()
-    //         .add_anim_sprite("res/sprites/equipment/bronze/helmet.png", "BronzeHelmetAnim",
-    //                          human_frame_set, 8, 8).unwrap()
-    //         .add_anim_icon("IconBronzeHelmet", "BronzeHelmetAnim",
-    //                        0.0, -0.125, 1.0, 0.75)
-    //         .add_anim_sprite("res/sprites/pickup/gold-coin.png", "GoldCoinAnim",
-    //                          gold_coin_frame_set, 8, 8).unwrap()
-    //         .add_anim_sprite("res/sprites/slime-00.png", "SlimeAnim",
-    //                          slime_frame_set, 8, 8).unwrap()
-    //         .add_anim_sprite("res/sprites/fx/slice-00.png", "SliceAnim",
-    //                          slice_frame_set, 16, 16).unwrap()
-    //         .add_bitmap_font("FontTinyNumbers", "res/sprites/ui/tiny-numbers.png",
-    //                          &[('1', (0, 0)), ('2', (1, 0)), ('3', (2, 0)), ('4', (3, 0)), ('5', (4, 0)),
-    //                            ('6', (0, 1)), ('7', (1, 1)), ('8', (2, 1)), ('9', (3, 1)), ('0', (4, 1))][..],
-    //                          3, 5).unwrap()
-    //         .build(factory)
-    // }
-
     pub fn new(factory: &mut Factory,
                color_view: RenderTargetView<Resources, ColorFormat>,
                depth_view: gfx::handle::DepthStencilView<Resources, DepthFormat>,
@@ -171,7 +108,6 @@ impl Renderer {
         use gfx::{Factory, traits::FactoryExt};
 
         // Load the texture atlas
-        // let (atlas, tex_view) = Renderer::load_assets(factory);
         let (atlas, tex_view) = asset_loader::load_assets(factory);
         let sampler = factory.create_sampler(
             gfx::texture::SamplerInfo::new(
