@@ -33,7 +33,7 @@ impl<'a> System<'a> for InventoryPainter {
         let inv_x = camera.pos.x + camera.w / 2.0 - 300.0;
         let inv_y = camera.pos.y + camera.h / 2.0 - 300.0;
 
-        let tex = atlas.rect_for_tex("InventoryMockup").unwrap();
+        let tex = atlas.rect_for_tex(get_asset_by_name("InventoryMockup")).unwrap();
         // Draw mockup
         Renderer::rect(&mut vertex_buffer.v_buf[ix .. ix+6],
                        &tex,                  // UV
@@ -49,8 +49,8 @@ impl<'a> System<'a> for InventoryPainter {
         let num_off_x = 3.0 * 4.0;
         let num_off_y = 17.0 * 4.0;
         // Get the number font
-        let font = atlas.bitmap_font("FontTinyNumbers").unwrap();
-        let white = atlas.rect_for_tex("White").unwrap();
+        let font = atlas.bitmap_font(get_asset_by_name("FontTinyNumbers")).unwrap();
+        let white = atlas.rect_for_tex(get_asset_by_name("White")).unwrap();
         // Draw items
         for (inv_ix, item) in inventory.items.iter().enumerate() {
             // Figure out the position to draw this icon at

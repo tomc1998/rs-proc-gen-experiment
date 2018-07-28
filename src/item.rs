@@ -2,7 +2,7 @@
 #![allow(dead_code)]
 
 use comp::*;
-use renderer::TextureKey;
+use renderer::*;
 use std::sync::RwLock;
 
 /// This is the type of equipment that an item is. It's either None, meaning
@@ -166,7 +166,7 @@ pub fn load_item_definitions() {
 
     let money = ItemDetails {
         in_world_gfx: InWorldGfx {
-            tex_key: "GoldCoinAnim",
+            tex_key: get_asset_by_name("GoldCoinAnim"),
             width: 16.0,
             height: 16.0,
             anim_data: Some(AnimData {
@@ -176,7 +176,7 @@ pub fn load_item_definitions() {
                 flags: 0,
             })
         },
-        icon: "IconMoney",
+        icon: get_asset_by_name("IconMoney"),
         equipment_data: None,
         stacks: true,
         name: "Money".to_owned(),
@@ -184,15 +184,15 @@ pub fn load_item_definitions() {
 
     let bronze_helmet = ItemDetails {
         in_world_gfx: InWorldGfx {
-            tex_key: "IconBronzeHelmet",
+            tex_key: get_asset_by_name("IconBronzeHelmet"),
             width: 16.0,
             height: 16.0,
             anim_data: None,
         },
-        icon: "IconBronzeHelmet",
+        icon: get_asset_by_name("IconBronzeHelmet"),
         equipment_data: Some(EquipmentData {
             equipment_type: EquipmentType::Helmet,
-            anim_key: Some("BronzeHelmetAnim"),
+            anim_key: Some(get_asset_by_name("BronzeHelmetAnim")),
         }),
         stacks: false,
         name: "Bronze Helmet".to_owned(),

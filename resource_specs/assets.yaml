@@ -40,9 +40,9 @@ More asset examples:
   - Tileset:
       name: "TilesetGrass"
       filename: "res/tileset-grass.png"
-      # Width and height (in pixels) of individual tiles in the sprite sheet
-      frame_w: 8
-      frame_h: 8
+      # Amount of tiles width-ways and height-ways
+      tiles_x: 8
+      tiles_y: 8
 
   # Anim icon example (this is just a texture, but is generated from the first
   # frame of an animation

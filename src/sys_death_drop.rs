@@ -3,6 +3,7 @@ use comp::*;
 use vec::*;
 use drop_tables::*;
 use rand::*;
+use renderer::*;
 use rand::rngs::StdRng;
 use inventory;
 use KilledEntities;
@@ -68,7 +69,7 @@ impl<'a> System<'a> for OnDeathDropSys {
                     .with(Vel { vel })
                     .with(Pickup { item: inventory::InventoryItem::new(d.item, num) })
                     .with(CollCircle { r: 8.0, off: Vec32::zero(), flags: 0})
-                    .with(AnimSprite::new(16.0, 16.0, 40.0, 6, "GoldCoinAnim"));
+                    .with(AnimSprite::new(16.0, 16.0, 40.0, 6, get_asset_by_name("GoldCoinAnim")));
                 match d.item.get_in_world_drawable() {
                     DrawableComponent::Static(c) => builder = builder.with(c),
                     DrawableComponent::Anim(c) => builder = builder.with(c),

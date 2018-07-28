@@ -1,5 +1,5 @@
 use specs::{DenseVecStorage, HashMapStorage};
-use renderer::{TextureKey, self};
+use renderer::{TextureKey, self, get_asset_by_name};
 
 mod fx;
 mod camera;
@@ -90,7 +90,7 @@ pub enum TilesetEnum {
 impl TilesetEnum {
     pub fn convert_to_tex_key(&self) -> renderer::TextureKey {
         match *self {
-            TilesetEnum::Grass => "TilesetGrass",
+            TilesetEnum::Grass => get_asset_by_name("TilesetGrass"),
         }
     }
 }

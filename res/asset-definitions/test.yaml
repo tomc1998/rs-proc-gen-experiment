@@ -1,5 +1,36 @@
 # A bunch of example resources just to make the game run for now. 
 
+- FrameSet:
+    name: "slime_frame_set"
+    frames: 
+      - { type: Ordered, start: 0, end: 0 }
+
+- FrameSet:
+    name: "slice_frame_set"
+    frames: 
+      - { type: Ordered, start: 0, end: 4 }
+
+- FrameSet:
+    name: "gold_coin_frame_set"
+    frames: 
+      - { type: Ordered, start: 0, end: 5 }
+
+- FrameSet:
+    name: "human_frame_set"
+    frames: 
+      - { type: Ordered, start: 0,  end: 3 } # Walk down
+      - { type: Ordered, start: 4,  end: 7 } # Walk up
+      - { type: Ordered, start: 8,  end: 11 } # Walk right
+      - { type: Ordered, start: 12, end: 15 } # Walk left
+      - { type: Ordered, start: 0,  end: 0 } # Idle down
+      - { type: Ordered, start: 4,  end: 4 } # Idle up
+      - { type: Ordered, start: 8,  end: 8 } # Idle right
+      - { type: Ordered, start: 12, end: 12 } # Idle left
+      - { type: Ordered, start: 1,  end: 1 } # Attack down
+      - { type: Ordered, start: 5,  end: 5 } # Attack up
+      - { type: Ordered, start: 9,  end: 9 } # Attack right
+      - { type: Ordered, start: 13, end: 13 } # Attack left
+
 - Tex:
     name: "White"
     filename: "res/white.png"
@@ -17,41 +48,41 @@
 - Tileset:
     name: "TilesetGrass"
     filename: "res/tileset-grass.png"
-    frame_w: 8
-    frame_h: 8
+    tiles_x: 8
+    tiles_y: 8
 
 # Animations
 - Anim:
     name: "Human00Anim"
     filename: "res/sprites/human-00.png"
-    frame_set: human_frame_set,
+    frame_set: human_frame_set
     frame_w: 8
     frame_h: 8
 - Anim:
     name: "GoldCoinAnim"
     filename: "res/sprites/pickup/gold-coin.png"
-    frame_set: gold_coin_frame_set,
+    frame_set: gold_coin_frame_set
     frame_w: 8
     frame_h: 8
 - Anim:
     name: "SlimeAnim"
     filename: "res/sprites/slime-00.png"
-    frame_set: slime_frame_set,
+    frame_set: slime_frame_set
     frame_w: 8
     frame_h: 8
 - Anim:
     name: "SliceAnim"
     filename: "res/sprites/fx/slice-00.png"
-    frame_set: slice_frame_set,
-    frame_w: 8
-    frame_h: 8
+    frame_set: slice_frame_set
+    frame_w: 16
+    frame_h: 16
 
 # Equipment
 
 - Anim:
     name: "BronzeHelmetAnim"
     filename: "res/sprites/equipment/bronze/helmet.png"
-    frame_set: human_frame_set,
+    frame_set: human_frame_set
     frame_w: 8
     frame_h: 8
 
@@ -69,9 +100,9 @@
     name: "FontTinyNumbers"
     filename: "res/sprites/ui/tiny-numbers.png"
     # Width / height of glyphs
-    glyph_w: 8
-    glyph_h: 8
+    glyph_w: 3
+    glyph_h: 5
     char_map: {
       "1": [0, 0], "2": [1, 0], "3": [2, 0], "4": [3, 0], "5": [4, 0],
-      "6": [0, 1], "7": [1, 2], "8": [2, 3], "9": [3, 4], "0": [4, 5]
+      "6": [0, 0], "7": [1, 1], "8": [2, 1], "9": [3, 1], "0": [4, 1]
       }

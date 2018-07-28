@@ -54,6 +54,7 @@ use glutin::Api::OpenGl;
 use std::time;
 use std::thread;
 use rand::SeedableRng;
+use renderer::get_asset_by_name;
 
 pub struct CollisionMeta {
     /// This normal points outwards from entity B to entity A (and is also used
@@ -150,7 +151,7 @@ fn main() {
         .with(CollCircle { r: 8.0, off: Vec32::zero(),
                            flags: COLL_SOLID})
         .with(AnimSprite::new(32.0, 32.0, 100.0,
-                              4, "Human00Anim"))
+                              4, get_asset_by_name("Human00Anim")))
         .build();
     // Tree
     world.create_entity()
@@ -158,7 +159,7 @@ fn main() {
         .with(CollCircle { r: 12.0, off: Vec32::zero(),
                            flags: COLL_SOLID | COLL_STATIC})
         .with(StaticSprite { w: 64.0, h: 128.0,
-                             sprite: "GreenTree00"})
+                             sprite: get_asset_by_name("GreenTree00")})
         .build();
     // Slime
     world.create_entity()
@@ -180,7 +181,7 @@ fn main() {
                         state: SlimeState::Idle })
         .with(CollCircle { r: 8.0, off: Vec32::zero(), flags: COLL_SOLID})
         .with(AnimSprite::new(32.0, 32.0, 100000.0,
-                              1, "SlimeAnim"))
+                              1, get_asset_by_name("SlimeAnim")))
         .build();
 
     // Create tilemaps
@@ -196,8 +197,8 @@ fn main() {
 
     let mut inventory = inventory::Inventory::new();
     inventory.add_item(inventory::InventoryItem {
-        item_type: item::get_item_type_with_name("Bronze Helmet").unwrap(),
-        num: 1,
+        item_type: item::get_item_type_with_name("Money").unwrap(),
+        num: 10,
     });
     inventory.add_item(inventory::InventoryItem {
         item_type: item::get_item_type_with_name("Bronze Helmet").unwrap(),

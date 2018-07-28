@@ -190,8 +190,8 @@ impl<K : Ord> AtlasBuilder<K> {
     }
 
     /// # Params
-    pub fn add_tex<P: AsRef<Path>>(mut self, key: K, img_path: P)
-                                   -> Result<Self, AtlasPackErr> {
+    pub fn add_tex<P: AsRef<Path>>(&mut self, key: K, img_path: P)
+                                   -> Result<(), AtlasPackErr> {
         // Load the texture
         let img = image::open(img_path)?.to_rgba();
         let (w, h) = img.dimensions();
@@ -207,14 +207,14 @@ impl<K : Ord> AtlasBuilder<K> {
             UvRect::from_pixel_rect(&pixel_rect_unpadded,
                                     self.width, self.height));
         self.blit(&img_buf[..], &pixel_rect_unpadded);
-        Ok(self)
+        Ok(())
     }
 
     /// # Params
     /// * `tiles_x` - Amount of tiles width-wise
     /// * `tiles_y` - Amount of tiles height-wise
-    pub fn add_tileset<P: AsRef<Path>>(mut self, key: K, img_path: P,
-                                   tiles_x: u32, tiles_y: u32) -> Result<Self, AtlasPackErr> {
+    pub fn add_tileset<P: AsRef<Path>>(&mut self, key: K, img_path: P,
+                                   tiles_x: u32, tiles_y: u32) -> Result<(), AtlasPackErr> {
         // Load the texture
         let img = image::open(img_path)?.to_rgba();
         let (w, h) = img.dimensions();
@@ -230,7 +230,7 @@ impl<K : Ord> AtlasBuilder<K> {
             Tileset::from_pixel_rect(&pixel_rect_unpadded, self.width,
                                      self.height, tiles_x, tiles_y));
         self.blit(&img_buf[..], &pixel_rect_unpadded);
-        Ok(self)
+        Ok(())
     }
 
     /// # Params
@@ -252,10 +252,10 @@ impl<K : Ord> AtlasBuilder<K> {
     /// frame_map.insert("WalkDown",  &[(0, 3), (1, 3), (2, 3), (3, 3)][..]);
     /// atlas.add_anim_sprite("spritesheet.png", frame_map, 8, 8);
     /// ```
-    pub fn add_anim_sprite<P: AsRef<Path>>(mut self, img_path: P,
+    pub fn add_anim_sprite<P: AsRef<Path>>(&mut self, img_path: P,
                                            key: K,
                                            frame_set: usize,
-                                           frame_w: u16, frame_h: u16) -> Result<Self, AtlasPackErr> {
+                                           frame_w: u16, frame_h: u16) -> Result<(), AtlasPackErr> {
         // Load the texture
         let img = image::open(img_path)?.to_rgba();
         let (img_w, img_h) = img.dimensions();
@@ -287,7 +287,7 @@ impl<K : Ord> AtlasBuilder<K> {
                 sprite_sheet: SpriteSheet::new(
                     sprite_sheet_uv_rect, columns as usize, frame_w, frame_h),
             });
-        Ok(self)
+        Ok(())
     }
 
     /// Add a bitmap which can be divided into uniform regions (like a tilemap),
@@ -296,10 +296,10 @@ impl<K : Ord> AtlasBuilder<K> {
     /// * `chars` - a map of chars to corresponding glyph positions in the grid
     /// * `frame_w` - The width of a glyph
     /// * `frame_h` - The height of a glyph
-    pub fn add_bitmap_font<P: AsRef<Path>>(mut self, key: K,
+    pub fn add_bitmap_font<P: AsRef<Path>>(&mut self, key: K,
                                            img_path: P,
                                            chars: &[(char, (u16, u16))],
-                                           frame_w: u16, frame_h: u16) -> Result<Self, AtlasPackErr> {
+                                           frame_w: u16, frame_h: u16) -> Result<(), AtlasPackErr> {
         let img = image::open(img_path)?.to_rgba();
         let (img_w, img_h) = img.dimensions();
         let img_buf = img.into_raw();
@@ -320,7 +320,7 @@ impl<K : Ord> AtlasBuilder<K> {
                 frame_h], self.width, self.height));
         }
         self.atlas.bitmap_fonts.insert(key, BitmapFont { glyphs });
-        Ok(self)
+        Ok(())
     }
 
     /// Set the font to use, with the given charset. Duplicate chars will
@@ -330,7 +330,7 @@ impl<K : Ord> AtlasBuilder<K> {
     /// * font_path - The path to the .ttf file
     /// * chars - This is an iterator through the chars to extract from the font
     /// * size - This is the size of the font - for example, 24.0.
-    pub fn set_font<P, I>(mut self, font_path: P, chars: I, size: f32) -> Result<Self, AtlasPackErr> where
+    pub fn set_font<P, I>(&mut self, font_path: P, chars: I, size: f32) -> Result<(), AtlasPackErr> where
         P : AsRef<Path>, I : Iterator<Item=char> + Clone
     {
         use rusttype::{Scale, Point};
@@ -378,14 +378,13 @@ impl<K : Ord> AtlasBuilder<K> {
                 self.blit(&buf[..], &pixel_rect_unpadded);
                 Ok(())
             }).collect();
-        glyphs.map(|_| self)
+        glyphs.map(|_| ())
     }
 
     /// Given a UVRect, map the given texture key to that. This makes it
     /// possible to have a static texture which is a frame of an animation.
-    pub fn map_tex_to_uv_rect(mut self, key: K, rect: UvRect) -> Self {
+    pub fn map_tex_to_uv_rect(&mut self, key: K, rect: UvRect) {
         self.atlas.textures.insert(key, rect);
-        self
     }
 
     /// Map a texture key to the first frame of a given animation. Panics if the
@@ -398,8 +397,8 @@ impl<K : Ord> AtlasBuilder<K> {
     /// Given that the spacing for stuff is SPACING, you can go OOB with x, y by
     /// a small amount depending on the pixel spacing. This is not recommend
     /// however, as a change in the spacing will fuck some icons up subtly.
-    pub fn add_anim_icon(mut self, key: K, anim_key: K,
-                         x: f32, y: f32, w: f32, h: f32) -> Self {
+    pub fn add_anim_icon(&mut self, key: K, anim_key: K,
+                         x: f32, y: f32, w: f32, h: f32) {
         let mut frame;
         {
             let anim = self.atlas.rect_for_anim_sprite(anim_key).unwrap();
@@ -412,7 +411,6 @@ impl<K : Ord> AtlasBuilder<K> {
         frame.top += y * frame_h;
         frame.bottom = frame.top + h * frame_h;
         self.atlas.textures.insert(key, frame);
-        self
     }
 
     /// Add a frame set, return a usize to reference that frame set with later

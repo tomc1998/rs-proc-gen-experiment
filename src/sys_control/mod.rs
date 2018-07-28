@@ -9,6 +9,7 @@ use input;
 use specs::*;
 use comp::*;
 use renderer::frame_sets::*;
+use renderer::*;
 use vec::*;
 use std::f32::consts::PI;
 
@@ -114,7 +115,7 @@ impl<'a> System<'a> for PlayerControllerSys {
                         })
                         .with(Lifetime { lifetime: 125.0 })
                         .with(AnimSprite::new(64.0, 64.0, 25.0, 5,
-                                              "SliceAnim")
+                                              get_asset_by_name("SliceAnim"))
                               .with_flags(ANIM_SPRITE_NO_LOOP))
                         .with(Rot { angle: vec.angle() - PI / 2.0 })
                         .build();

@@ -3,7 +3,7 @@ mod tex_key;
 mod paint_sys;
 pub mod frame_sets;
 
-pub use self::tex_key::TextureKey;
+pub use self::tex_key::{TextureKey, get_asset_by_name, ASSET_NAME_MAP};
 pub use self::paint_sys::*;
 
 use math_util;
