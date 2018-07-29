@@ -249,7 +249,7 @@ impl Renderer {
         };
         // Create transform buffer
         let transform = Transform {
-            proj: camera.gen_ortho_mat(),
+            proj: camera.gen_persp_proj_mat(),
             view: camera.gen_view_mat(),
         };
         self.encoder.update_buffer(&self.game_pipe_data.transform, &[transform], 0).unwrap();
@@ -268,7 +268,7 @@ impl Renderer {
         };
         // Update the view (no camera transform)
         let transform = Transform {
-            proj: camera.gen_ortho_mat(),
+            proj: camera.gen_ortho_proj_mat(),
             view: Camera::gen_ui_view_mat(),
         };
 

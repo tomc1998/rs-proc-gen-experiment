@@ -21,15 +21,20 @@ pub struct Camera {
 impl Camera {
     pub fn new(w: f32, h: f32) -> Camera {
         Camera { pos: Vec32::zero(), w: w, h: h,
-                 height: 10.0,
+                 height: 300.0,
                  rot: -PI / 2.0,
-                 dis: 10.0,
+                 dis: 400.0,
         }
     }
-    pub fn gen_ortho_mat(&self) -> [[f32; 4]; 4] {
+
+    pub fn gen_ortho_proj_mat(&self) -> [[f32; 4]; 4] {
         cgmath::ortho(-self.w/2.0, self.w/2.0,
                       self.h/2.0, -self.h/2.0,
                       -10000.0, 10000.0).into()
+    }
+    pub fn gen_persp_proj_mat(&self) -> [[f32; 4]; 4] {
+        (cgmath::perspective(cgmath::Deg(45.0), self.w / self.h, 0.1, 10000.0)
+            * cgmath::Matrix4::from_nonuniform_scale(-1.0, 1.0, 1.0)).into()
     }
 
     /// Generate a view matrix from this camera, given a position to look at.
@@ -40,7 +45,7 @@ impl Camera {
         let view = cgmath::Matrix4::look_at(
             cgmath::Point3::new(camera_pos.x, -self.height, camera_pos.y),
             cgmath::Point3::new(self.pos.x, 0.0, self.pos.y),
-            cgmath::Vector3::new(0.0, 1.0, 0.0));
+            cgmath::Vector3::new(0.0, -1.0, 0.0));
         view.into()
     }
 
