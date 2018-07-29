@@ -94,7 +94,7 @@ impl<'a> System<'a> for PlayerControllerSys {
                     // Spawn attack
                     lazy_update.create_entity(&*entities_s)
                         .with(Pos {
-                            pos: pos.pos + (vec.nor() * 16.0) + Vec32::new(0.0, 16.0),
+                            pos: pos.pos + (vec.nor() * 16.0),
                             z: 24.0
                         })
                         .with(Hurt { damage: 2,
@@ -118,7 +118,7 @@ impl<'a> System<'a> for PlayerControllerSys {
                         .with(AnimSprite::new(64.0, 64.0, 25.0, 5,
                                               get_asset_by_name("SliceAnim"))
                               .with_flags(ANIM_SPRITE_NO_LOOP))
-                        .with(Rot { angle: vec.angle() - PI / 2.0 })
+                        .with(Rot { angle: vec.angle() })
                         .build();
                 }
                 if let Some(anim_change) = anim_change {
