@@ -11,7 +11,6 @@ use comp::*;
 use renderer::frame_sets::*;
 use renderer::*;
 use vec::*;
-use std::f32::consts::PI;
 
 pub struct PlayerControllerSys;
 

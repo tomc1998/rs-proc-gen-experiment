@@ -70,6 +70,11 @@ pub struct Collisions(Vec<(Entity, Entity, CollisionMeta)>);
 
 pub struct DeltaTime(pub f32);
 
+/// Vertex buffer for game objects
+pub struct GameVertexBuffer(renderer::VertexBuffer);
+/// Vertex buffer for UI objects (camera transform isn't applied)
+pub struct UIVertexBuffer(renderer::VertexBuffer);
+
 /// Entities that have been 'killed' and need to produce on-death effects. This
 /// doesn't mean all deleted entities - it means alive characters have been
 /// killed by combat or other effects.
@@ -212,6 +217,8 @@ fn main() {
     let input_map = input::InputMap::new();
     // Allocate cpu side v_buf
     let v_buf = vec![Default::default(); renderer::V_BUF_SIZE];
+
+    // Add specs resources
     world.add_resource(atlas);
     world.add_resource(camera);
     world.add_resource(DeltaTime(0.016));
@@ -221,9 +228,12 @@ fn main() {
     world.add_resource(drop_tables::DropTableMap::new_standard_map());
     world.add_resource(inventory);
     world.add_resource(KilledEntities(Vec::new()));
-    world.add_resource(renderer::VertexBuffer {
-        v_buf: v_buf, size: 0,
-    });
+    world.add_resource(UIVertexBuffer(renderer::VertexBuffer {
+        v_buf: v_buf.clone(), size: 0,
+    }));
+    world.add_resource(GameVertexBuffer(renderer::VertexBuffer {
+        v_buf: v_buf.clone(), size: 0,
+    }));
 
     // Build dispatcher
     let mut dispatcher = specs::DispatcherBuilder::new()
@@ -295,15 +305,18 @@ fn main() {
         // Update & paint the world
         {
             dispatcher.dispatch_seq(&mut world.res);
-            let mut v_buf = world.write_resource::<renderer::VertexBuffer>();
+            let mut ui_v_buf = world.write_resource::<UIVertexBuffer>();
+            let mut game_v_buf = world.write_resource::<GameVertexBuffer>();
             renderer.clear();
-            renderer.flush_render(&mut device, &v_buf, &world.read_resource::<camera::Camera>());
+            renderer.flush_render(&mut device, &game_v_buf.0, &ui_v_buf.0,
+                                  &world.read_resource::<camera::Camera>());
             window.swap_buffers().unwrap();
             device.cleanup();
 
             // Reset ECS state after rendering
             // After painting, we need to clear the v_buf
-            v_buf.size = 0;
+            ui_v_buf.0.size = 0;
+            game_v_buf.0.size = 0;
             // Clear collision list for next frame
             let mut collisions = world.write_resource::<Collisions>();
             collisions.0.clear();

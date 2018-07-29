@@ -20,6 +20,7 @@ use gfx::memory::{Usage, Bind};
 use gfx_device_gl::{Resources, CommandBuffer, Device};
 use asset_loader;
 
+
 pub const V_BUF_SIZE: usize = 262144;
 const BLACK: [f32; 4] = [0.0, 0.0, 0.0, 1.0];
 
@@ -91,13 +92,13 @@ pub struct Renderer {
     /// Gfx encoder for drawing & updating buffers
     encoder: gfx::Encoder<Resources, CommandBuffer>,
 
-    /// Pipeline data
-    data: pipe::Data<Resources>,
+    /// Pipeline data for main render
+    game_pipe_data: pipe::Data<Resources>,
+
+    /// Pipeline data for UI render
+    ui_pipe_data: pipe::Data<Resources>,
 
     pso: gfx::pso::PipelineState<Resources, pipe::Meta>,
-
-    /// Transform uniform block, to avoid repeated allocations on render() calls
-    transform: Transform,
 }
 
 impl Renderer {
@@ -118,23 +119,26 @@ impl Renderer {
         let encoder : gfx::Encoder<_, _> = factory.create_command_buffer().into();
 
         // Allocate buffers
-        let transform_buffer = factory.create_constant_buffer(1);
+        let ui_transform_buffer = factory.create_constant_buffer(1);
+        let game_transform_buffer = factory.create_constant_buffer(1);
 
-        let vertex_buffer = factory.create_buffer::<Vertex>(
+        let ui_vertex_buffer = factory.create_buffer::<Vertex>(
+            V_BUF_SIZE, Role::Vertex, Usage::Dynamic, Bind::SHADER_RESOURCE).unwrap();
+        let game_vertex_buffer = factory.create_buffer::<Vertex>(
             V_BUF_SIZE, Role::Vertex, Usage::Dynamic, Bind::SHADER_RESOURCE).unwrap();
 
-        let transform = Transform {
-            proj: [[0.0; 4]; 4], // Filled in by camera later
-            view: [[1.0, 0.0, 0.0, 0.0],
-                   [0.0, 1.0, 0.0, 0.0],
-                   [0.0, 0.0, 1.0, 0.0],
-                   [0.0, 0.0, 0.0, 1.0]],
+        // Create the pipeline data
+        let game_pipe_data = pipe::Data {
+            v_buf: game_vertex_buffer,
+            transform: game_transform_buffer,
+            tex: (tex_view.clone(), sampler.clone()),
+            out_col: color_view.clone(),
+            out_depth: depth_view.clone(),
         };
 
-        // Create the pipeline data
-        let data = pipe::Data {
-            v_buf: vertex_buffer,
-            transform: transform_buffer,
+        let ui_pipe_data = pipe::Data {
+            v_buf: ui_vertex_buffer,
+            transform: ui_transform_buffer,
             tex: (tex_view, sampler),
             out_col: color_view.clone(),
             out_depth: depth_view.clone(),
@@ -147,13 +151,7 @@ impl Renderer {
             pipe::new()
         ).unwrap();
 
-        (Renderer {
-            settings: settings,
-            encoder: encoder,
-            data: data,
-            pso: pso,
-            transform: transform,
-        }, atlas)
+        (Renderer { settings, encoder, game_pipe_data, ui_pipe_data, pso }, atlas)
     }
 
     /// Render a rect on the horizontal plane
@@ -211,40 +209,74 @@ impl Renderer {
 
     pub fn update_window_size(&mut self, window: &GlWindow) {
         // Update the render target size
-        gfx_window_glutin::update_views(window, &mut self.data.out_col, &mut self.data.out_depth);
+        gfx_window_glutin::update_views(window, &mut self.ui_pipe_data.out_col,
+                                        &mut self.ui_pipe_data.out_depth);
+        gfx_window_glutin::update_views(window, &mut self.game_pipe_data.out_col,
+                                        &mut self.game_pipe_data.out_depth);
     }
 
     /// Clear the screen.
     pub fn clear(&mut self) {
-        self.encoder.clear(&self.data.out_col, BLACK);
-        self.encoder.clear_depth(&self.data.out_depth, 1.0);
+        self.encoder.clear(&self.ui_pipe_data.out_col, BLACK);
+        self.encoder.clear(&self.game_pipe_data.out_col, BLACK);
+        self.encoder.clear_depth(&self.ui_pipe_data.out_depth, 1.0);
+        self.encoder.clear_depth(&self.game_pipe_data.out_depth, 1.0);
     }
 
     /// Actually issue the draw commands to the GPU. This should be called after
     /// the ECS has run. Device can't be sent over threads, so this is the
     /// simplest way to call draw.
     pub fn flush_render(&mut self, device: &mut Device,
-                        vertex_buffer: &VertexBuffer,
+                        game_vertex_buffer: &VertexBuffer,
+                        ui_vertex_buffer: &VertexBuffer,
                         camera: &Camera) {
-        // Update the GPU side vertices
-        // TODO: if we haven't updated v_buf cpu side we can potentially skip
-        // this as an optimisation
-        self.encoder.update_buffer(&self.data.v_buf,
-                                   &vertex_buffer.v_buf[0..vertex_buffer.size as usize],
+        // // Update the GPU side vertices
+        // // TODO: if we haven't updated v_buf cpu side we can potentially skip
+        // // this as an optimisation
+        self.encoder.update_buffer(&self.game_pipe_data.v_buf,
+                                   &game_vertex_buffer.v_buf[0..game_vertex_buffer.size as usize],
+                                   0).unwrap();
+        self.encoder.update_buffer(&self.ui_pipe_data.v_buf,
+                                   &ui_vertex_buffer.v_buf[0..ui_vertex_buffer.size as usize],
                                    0).unwrap();
 
         let slice = Slice {
             start: 0,
-            end: vertex_buffer.size,
+            end: game_vertex_buffer.size,
             base_vertex: 0,
             instances: None,
             buffer: IndexBuffer::Auto,
         };
+        // Create transform buffer
+        let transform = Transform {
+            proj: camera.gen_ortho_mat(),
+            view: camera.gen_view_mat(),
+        };
+        self.encoder.update_buffer(&self.game_pipe_data.transform, &[transform], 0).unwrap();
+        self.encoder.draw(&slice, &self.pso, &self.game_pipe_data);
 
-        self.transform.proj = camera.gen_ortho_mat();
-        self.transform.view = camera.gen_view_mat();
-        self.encoder.update_buffer(&self.data.transform, &[self.transform], 0).unwrap();
-        self.encoder.draw(&slice, &self.pso, &self.data);
+        // Clear UI depth
+        self.encoder.clear_depth(&self.ui_pipe_data.out_depth, 1.0);
+
+        // render UI
+        let slice = Slice {
+            start: 0,
+            end: ui_vertex_buffer.size,
+            base_vertex: 0,
+            instances: None,
+            buffer: IndexBuffer::Auto,
+        };
+        // Update the view (no camera transform)
+        let transform = Transform {
+            proj: camera.gen_ortho_mat(),
+            view: Camera::gen_ui_view_mat(),
+        };
+
+        self.encoder.update_buffer(&self.ui_pipe_data.transform, &[transform], 0).unwrap();
+        // No need to use the same depth buffer, UI will always be rendered over
+        // the main world
+        self.encoder.draw(&slice, &self.pso, &self.ui_pipe_data);
+
         self.encoder.flush(device); // execute draw commands
     }
 }

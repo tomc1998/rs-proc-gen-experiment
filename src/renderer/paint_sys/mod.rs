@@ -3,7 +3,7 @@ use renderer::Camera;
 use specs::*;
 use comp::*;
 use comp;
-
+use GameVertexBuffer;
 mod ui_inventory;
 
 pub use self::ui_inventory::{
@@ -72,7 +72,7 @@ impl SpritePainter {
 impl<'a> System<'a> for SpritePainter {
     type SystemData = (
         Entities<'a>,
-        WriteExpect<'a, VertexBuffer>,
+        WriteExpect<'a, GameVertexBuffer>,
         ReadExpect<'a, TextureAtlas<TextureKey>>,
         ReadStorage<'a, Pos>,
         ReadStorage<'a, Equipment>,
@@ -86,13 +86,15 @@ impl<'a> System<'a> for SpritePainter {
            Self::SystemData) {
         use specs::Join;
 
+        let vertex_buffer = &mut vertex_buffer.0;
+
         // Animated
         let mut ix = vertex_buffer.size as usize;
         for (e, pos, anim) in (&*entities_s, &pos_s, &anim_s).join() {
             let tex = atlas.rect_for_anim_sprite(anim.anim_key.clone()).unwrap()
                 .frame(anim.anim, anim.curr_frame, &atlas.frame_set_map);
             SpritePainter::draw_sprite(
-                &mut vertex_buffer, &mut ix, &pos, e, anim.w, anim.h,
+                vertex_buffer, &mut ix, &pos, e, anim.w, anim.h,
                 &tint_s, &rot_s,
                 anim.flags & ANIM_SPRITE_UPRIGHT > 0,
                 &tex);
@@ -102,7 +104,7 @@ impl<'a> System<'a> for SpritePainter {
         for (e, pos, sprite) in (&*entities_s, &pos_s, &static_s).join() {
             let tex = atlas.rect_for_tex(sprite.sprite.clone()).unwrap();
             SpritePainter::draw_sprite(
-                &mut vertex_buffer, &mut ix, &pos, e, sprite.w, sprite.h, &tint_s, &rot_s,
+                vertex_buffer, &mut ix, &pos, e, sprite.w, sprite.h, &tint_s, &rot_s,
                 sprite.flags & STATIC_SPRITE_UPRIGHT > 0,
                 &tex);
         }
@@ -115,7 +117,7 @@ impl<'a> System<'a> for SpritePainter {
                     equipment.get_equipment_anim()).unwrap()
                     .frame(anim.anim, anim.curr_frame, &atlas.frame_set_map);
                 SpritePainter::draw_sprite(
-                    &mut vertex_buffer, &mut ix, &pos, e, anim.w, anim.h,
+                    vertex_buffer, &mut ix, &pos, e, anim.w, anim.h,
                     &tint_s, &rot_s, true, &tex);
             }
             if let Some(ref equipment) = equipment.helmet {
@@ -123,7 +125,7 @@ impl<'a> System<'a> for SpritePainter {
                     equipment.get_equipment_anim()).unwrap()
                     .frame(anim.anim, anim.curr_frame, &atlas.frame_set_map);
                 SpritePainter::draw_sprite(
-                    &mut vertex_buffer, &mut ix, &pos, e, anim.w, anim.h,
+                    vertex_buffer, &mut ix, &pos, e, anim.w, anim.h,
                     &tint_s, &rot_s, true, &tex);
             }
         }
@@ -136,7 +138,7 @@ impl<'a> System<'a> for SpritePainter {
 pub struct TilemapPainter;
 impl<'a> System<'a> for TilemapPainter {
     type SystemData = (
-        WriteExpect<'a, VertexBuffer>,
+        WriteExpect<'a, GameVertexBuffer>,
         ReadExpect<'a, Camera>,
         ReadExpect<'a, TextureAtlas<TextureKey>>,
         ReadStorage<'a, Pos>,
@@ -144,6 +146,7 @@ impl<'a> System<'a> for TilemapPainter {
 
     fn run(&mut self, (mut vertex_buffer, camera, atlas, pos_s, tm_s): Self::SystemData) {
         use specs::Join;
+        let vertex_buffer = &mut vertex_buffer.0;
 
         let mut ix = vertex_buffer.size as usize;
         for (pos, tm) in (&pos_s, &tm_s).join() {

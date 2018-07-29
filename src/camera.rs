@@ -43,6 +43,14 @@ impl Camera {
             cgmath::Vector3::new(0.0, 1.0, 0.0));
         view.into()
     }
+
+    /// Generate a view matrix for the UI
+    pub fn gen_ui_view_mat() -> [[f32; 4]; 4] {
+        cgmath::Matrix4::look_at_dir(
+            cgmath::Point3::new(0.0, 0.0, 0.0),
+            cgmath::Vector3::new(0.0, 1.0, 0.0),
+            cgmath::Vector3::new(0.0, 0.0, 1.0)).into()
+    }
 }
 
 /// System to make the camera follow an entity, should that entity exist

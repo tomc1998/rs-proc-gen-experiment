@@ -23,7 +23,7 @@ pub struct InventoryState {
     pub curr_drag_drop: Option<InventoryItem>,
 
     /// World pos of the mouse whilst drag / dropping
-    pub drag_drop_world_pos: Vec32,
+    pub drag_drop_pos: Vec32,
 
     /// A reference into the inventory. If this is Some, then the item at the
     /// current IX is being hovered over.
@@ -94,5 +94,6 @@ pub fn process_ui(input_state: &InputState,
     }
 
     // Copy over the mouse pos for use in the UI
-    inventory_state.drag_drop_world_pos = input_state.world_mouse;
+    inventory_state.drag_drop_pos = input_state.screen_mouse -
+        Vec32::new(camera_w, camera_h) / 2.0
 }
