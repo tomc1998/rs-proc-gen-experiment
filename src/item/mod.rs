@@ -54,7 +54,7 @@ impl InWorldGfx {
             Some(ref data) => {
                 DrawableComponent::Anim(AnimSprite::new(
                     self.width, self.height, data.frame_time,
-                    data.num_frames, self.tex_key).with_flags(data.flags))
+                    data.num_frames, self.tex_key).with_flags(data.flags | ANIM_SPRITE_UPRIGHT))
             },
             // Static
             None => {
@@ -62,6 +62,7 @@ impl InWorldGfx {
                     w: self.width,
                     h: self.height,
                     sprite: self.tex_key,
+                    flags: STATIC_SPRITE_UPRIGHT
                 })
             }
         }

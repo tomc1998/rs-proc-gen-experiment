@@ -16,6 +16,7 @@ extern crate num_integer;
 #[macro_use] extern crate lazy_static;
 extern crate serde;
 extern crate serde_yaml;
+extern crate cgmath;
 #[macro_use] extern crate serde_derive;
 
 #[cfg(test)]
@@ -138,7 +139,7 @@ fn main() {
     use specs::Builder;
     // Player
     world.create_entity()
-        .with(Pos { pos: Vec32::new(32.0, 32.0) })
+        .with(Pos { pos: Vec32::new(32.0, 32.0), z: 0.0 })
         .with(Vel { vel: Vec32::zero() })
         .with(Alliance::good())
         .with(PlayerControlled::new())
@@ -151,19 +152,21 @@ fn main() {
         .with(CollCircle { r: 8.0, off: Vec32::zero(),
                            flags: COLL_SOLID})
         .with(AnimSprite::new(32.0, 32.0, 100.0,
-                              4, get_asset_by_name("Human00Anim")))
+                              4, get_asset_by_name("Human00Anim"))
+              .with_flags(ANIM_SPRITE_UPRIGHT))
         .build();
     // Tree
     world.create_entity()
-        .with(Pos { pos: Vec32::new(100.0, 100.0) })
+        .with(Pos { pos: Vec32::new(100.0, 100.0), z: 0.0 })
         .with(CollCircle { r: 12.0, off: Vec32::zero(),
                            flags: COLL_SOLID | COLL_STATIC})
         .with(StaticSprite { w: 64.0, h: 128.0,
-                             sprite: get_asset_by_name("GreenTree00")})
+                             sprite: get_asset_by_name("GreenTree00"),
+                             flags: STATIC_SPRITE_UPRIGHT})
         .build();
     // Slime
     world.create_entity()
-        .with(Pos { pos: Vec32::new(200.0, 200.0) })
+        .with(Pos { pos: Vec32::new(200.0, 200.0), z: 0.0 })
         .with(Vel { vel: Vec32::zero() })
         .with(Health::new(4, Hitmask(HITMASK_ENEMY)))
         .with(Hurt { damage: 2,
@@ -181,14 +184,15 @@ fn main() {
                         state: SlimeState::Idle })
         .with(CollCircle { r: 8.0, off: Vec32::zero(), flags: COLL_SOLID})
         .with(AnimSprite::new(32.0, 32.0, 100000.0,
-                              1, get_asset_by_name("SlimeAnim")))
+                              1, get_asset_by_name("SlimeAnim"))
+              .with_flags(ANIM_SPRITE_UPRIGHT))
         .build();
 
     // Create tilemaps
     for x in 0..10 {
         for y in 0..10 {
             world.create_entity()
-                .with(Pos { pos: Vec32::new(x as f32, y as f32) })
+                .with(Pos { pos: Vec32::new(x as f32, y as f32), z: 0.0 })
                 .with(Tilemap { tileset: TilesetEnum::Grass,
                                 data: [1u8; TILEMAP_SIZE * TILEMAP_SIZE] })
                 .build();

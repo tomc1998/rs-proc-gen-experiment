@@ -40,6 +40,8 @@ pub struct MatchAnim {
 #[derive(Clone, Component)]
 pub struct Pos {
     pub pos: Vec32,
+    /// world height of this entity
+    pub z: f32,
 }
 
 #[derive(Component)]

@@ -20,10 +20,16 @@ pub struct StaticSprite {
     pub w: f32,
     pub h: f32,
     pub sprite: TextureKey,
+    pub flags: u8,
 }
 
 /// If set, the anim sprite will not loop.
 pub const ANIM_SPRITE_NO_LOOP : u8 = 1;
+/// If set, draw this 'upright' rather than on the horizontal plane
+pub const ANIM_SPRITE_UPRIGHT : u8 = 2;
+
+/// If set, draw this 'upright' rather than on the horizontal plane
+pub const STATIC_SPRITE_UPRIGHT : u8 = 1;
 
 /// Draw an animated sprite, using the Pos component as the bottom centre
 #[derive(Component)]

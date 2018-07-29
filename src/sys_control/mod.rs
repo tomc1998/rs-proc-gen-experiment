@@ -65,7 +65,9 @@ impl<'a> System<'a> for PlayerControllerSys {
                     pc.state = PlayerState::Attacking;
                     pc.attack_time = 125.0;
                     // Figure out attack dir
-                    let vec = input_state.world_mouse - pos.pos;
+                    let vec = input_state.screen_mouse -
+                        Vec32::new(input_state.window_size.0 as f32,
+                                   input_state.window_size.1 as f32) / 2.0;
                     let dir = if vec.x.abs() > vec.y.abs() {
                         if vec.x > 0.0 {
                             Direction::Right
@@ -92,9 +94,8 @@ impl<'a> System<'a> for PlayerControllerSys {
                     // Spawn attack
                     lazy_update.create_entity(&*entities_s)
                         .with(Pos {
-                            pos: pos.pos + (vec.nor() * 16.0)
-                                // Add a constant offset
-                                + Vec32::new(0.0, 16.0)
+                            pos: pos.pos + (vec.nor() * 16.0) + Vec32::new(0.0, 16.0),
+                            z: 24.0
                         })
                         .with(Hurt { damage: 2,
                                      mask: Hitmask::default_player_attack(),

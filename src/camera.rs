@@ -2,29 +2,46 @@ use comp::*;
 use input::*;
 use specs::*;
 use vec::*;
-
-/// State for rendering. Passed to the render function.
-fn gen_ortho_mat(l: f32, r: f32, t: f32, b: f32, n: f32, f: f32) -> [[f32; 4]; 4] {
-    [[2.0/(r-l),       0.0,        0.0, -(r+l)/(r-l)],
-     [0.0,       2.0/(t-b),        0.0, -(t+b)/(t-b)],
-     [0.0,             0.0, -2.0/(f-n), -(f+n)/(f-n)],
-     [0.0,             0.0,        0.0,          1.0]]
-}
+use cgmath;
+use std::f32::consts::PI;
 
 pub struct Camera {
+    /// x / y position in space to look at
     pub pos: Vec32,
+    /// Height of the camera above the plane
+    pub height: f32,
     pub w: f32,
     pub h: f32,
+    /// An angle for the camera in radians. Camera always points at the player, but can rotate around.
+    pub rot: f32,
+    /// Distance from the focal point of the camera
+    pub dis: f32,
 }
 
 impl Camera {
     pub fn new(w: f32, h: f32) -> Camera {
-        Camera { pos: Vec32::zero(), w: w, h: h }
+        Camera { pos: Vec32::zero(), w: w, h: h,
+                 height: 10.0,
+                 rot: -PI / 2.0,
+                 dis: 10.0,
+        }
     }
     pub fn gen_ortho_mat(&self) -> [[f32; 4]; 4] {
-        gen_ortho_mat(self.pos.x, self.pos.x + self.w,
-                      self.pos.y, self.pos.y + self.h,
-                      -10000.0, 10000.0)
+        cgmath::ortho(-self.w/2.0, self.w/2.0,
+                      self.h/2.0, -self.h/2.0,
+                      -10000.0, 10000.0).into()
+    }
+
+    /// Generate a view matrix from this camera, given a position to look at.
+    pub fn gen_view_mat(&self) -> [[f32; 4]; 4] {
+        // Calculate the camera pos
+        let camera_pos = self.pos + Vec32::new((-self.rot).cos(), (-self.rot).sin()) * self.dis;
+        // Lookat matrix
+        let view = cgmath::Matrix4::look_at(
+            cgmath::Point3::new(camera_pos.x, -self.height, camera_pos.y),
+            cgmath::Point3::new(self.pos.x, 0.0, self.pos.y),
+            cgmath::Vector3::new(0.0, 1.0, 0.0));
+        view.into()
     }
 }
 
@@ -44,14 +61,7 @@ impl<'a> System<'a> for FollowCameraSys {
             camera.h = input_state.window_size.1 as f32;
 
             // Update camera pos
-            camera.pos = pos.pos - Vec32::new(camera.w/2.0, camera.h/2.0);
-
-            // Additional translation for mouse pos. Also update mouse pos in input.
-            // First, find the offset from the screen mouse-pos and the centre of the screen.
-            let screen_m = input_state.screen_mouse - Vec32::new(camera.w/2.0, camera.h/2.0);
-
-            // Apply additional translation
-            camera.pos += screen_m * 0.25;
+            camera.pos = pos.pos;
 
             // Set world mouse position
             input_state.world_mouse = input_state.screen_mouse + camera.pos;

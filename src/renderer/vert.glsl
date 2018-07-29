@@ -13,7 +13,7 @@ out vec4 v_col;
 out vec2 v_uv;
 
 void main() {
-    gl_Position = vec4(pos, 1.0) * u_proj;
+    gl_Position = u_view * vec4(pos, 1.0) * u_proj;
     v_col = col;
     v_uv = uv;
 }

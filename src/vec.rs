@@ -1,3 +1,6 @@
+//! Implementation of vectors. Whilst we have the cgmath library, a lot of that
+//! stuff has pretty long-winded names, cgmath is only really used for the more
+//! complex matrix functions like lookats.
 #![allow(dead_code)]
 
 use std::ops::{Add, AddAssign, Sub, SubAssign, Mul, MulAssign, Div, DivAssign, Neg};

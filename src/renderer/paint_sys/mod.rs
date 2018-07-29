@@ -22,6 +22,9 @@ pub struct SpritePainter;
 
 impl SpritePainter {
     /// Draw a sprite (origin is bottom center)
+    /// # Params
+    /// * upright - Render this sprite 'upright', i.e. spanning some depth.
+    /// Ignored if rot is not 0.0.
     #[inline]
     fn draw_sprite<'a>(vertex_buffer: &mut VertexBuffer, ix: &mut usize,
                        // Components
@@ -31,6 +34,7 @@ impl SpritePainter {
                        // Additional systems
                        tint_s: &ReadStorage<'a, Tint>,
                        rot_s: &ReadStorage<'a, Rot>,
+                       upright: bool,
                        // Tex
                        tex: &UvRect) {
         let col = if let Some(tint) = tint_s.get(e) {
@@ -43,15 +47,22 @@ impl SpritePainter {
             Renderer::rect_rot(&mut vertex_buffer.v_buf[*ix .. *ix+6],
                                tex,                          // UV
                                pos.pos.x - w/2.0, // X
-                               pos.pos.y - h,     // Y
-                               pos.pos.y,         // Z
+                               pos.pos.y - h/2.0, // Y
+                               -pos.z,         // Z
                                w, h, col, rot);
+        } else if upright {
+            Renderer::rect_upright(&mut vertex_buffer.v_buf[*ix .. *ix+6],
+                           tex,                          // UV
+                           pos.pos.x - w/2.0, // X
+                           pos.pos.y,     // Y
+                           -pos.z,         // Z
+                           w, h, col);
         } else {
             Renderer::rect(&mut vertex_buffer.v_buf[*ix .. *ix+6],
                            tex,                          // UV
                            pos.pos.x - w/2.0, // X
-                           pos.pos.y - h,     // Y
-                           pos.pos.y,         // Z
+                           pos.pos.y,     // Y
+                           -pos.z,         // Z
                            w, h, col);
         }
         *ix += 6;
@@ -81,14 +92,19 @@ impl<'a> System<'a> for SpritePainter {
             let tex = atlas.rect_for_anim_sprite(anim.anim_key.clone()).unwrap()
                 .frame(anim.anim, anim.curr_frame, &atlas.frame_set_map);
             SpritePainter::draw_sprite(
-                &mut vertex_buffer, &mut ix, &pos, e, anim.w, anim.h, &tint_s, &rot_s, &tex);
+                &mut vertex_buffer, &mut ix, &pos, e, anim.w, anim.h,
+                &tint_s, &rot_s,
+                anim.flags & ANIM_SPRITE_UPRIGHT > 0,
+                &tex);
         }
 
         // Static
         for (e, pos, sprite) in (&*entities_s, &pos_s, &static_s).join() {
             let tex = atlas.rect_for_tex(sprite.sprite.clone()).unwrap();
             SpritePainter::draw_sprite(
-                &mut vertex_buffer, &mut ix, &pos, e, sprite.w, sprite.h, &tint_s, &rot_s, &tex);
+                &mut vertex_buffer, &mut ix, &pos, e, sprite.w, sprite.h, &tint_s, &rot_s,
+                sprite.flags & STATIC_SPRITE_UPRIGHT > 0,
+                &tex);
         }
 
         // Equipment
@@ -100,7 +116,7 @@ impl<'a> System<'a> for SpritePainter {
                     .frame(anim.anim, anim.curr_frame, &atlas.frame_set_map);
                 SpritePainter::draw_sprite(
                     &mut vertex_buffer, &mut ix, &pos, e, anim.w, anim.h,
-                    &tint_s, &rot_s, &tex);
+                    &tint_s, &rot_s, true, &tex);
             }
             if let Some(ref equipment) = equipment.helmet {
                 let tex = atlas.rect_for_anim_sprite(
@@ -108,7 +124,7 @@ impl<'a> System<'a> for SpritePainter {
                     .frame(anim.anim, anim.curr_frame, &atlas.frame_set_map);
                 SpritePainter::draw_sprite(
                     &mut vertex_buffer, &mut ix, &pos, e, anim.w, anim.h,
-                    &tint_s, &rot_s, &tex);
+                    &tint_s, &rot_s, true, &tex);
             }
         }
 
@@ -141,8 +157,8 @@ impl<'a> System<'a> for TilemapPainter {
                     // draw.
                     let x_pos = pos.pos.x * 32.0 * TILEMAP_SIZE as f32 + x as f32 * 32.0;
                     let y_pos = pos.pos.y * 32.0 * TILEMAP_SIZE as f32 + y as f32 * 32.0;
-                    if x_pos + 32.0 < camera.pos.x || x_pos > camera.pos.x + camera.w ||
-                        y_pos + 32.0 < camera.pos.y || y_pos > camera.pos.y + camera.h {
+                    if x_pos + 32.0 < camera.pos.x - camera.w/2.0 || x_pos > camera.pos.x + camera.w/2.0 ||
+                        y_pos + 32.0 < camera.pos.y - camera.h || y_pos > camera.pos.y + camera.h {
                             continue;
                         }
                     // Figure out the tile ix
@@ -156,7 +172,7 @@ impl<'a> System<'a> for TilemapPainter {
                     };
                     Renderer::rect(&mut vertex_buffer.v_buf[ix .. ix+6],
                                    &tileset.tile(tx, ty), // UV
-                                   x_pos, y_pos, -2000.0, // X, Y, Z
+                                   x_pos, y_pos, 0.0, // X, Y, Z
                                    32.0, 32.0,            // W, H
                                    [1.0, 1.0, 1.0, 1.0]); // Col
                     ix += 6;

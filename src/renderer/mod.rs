@@ -156,17 +156,32 @@ impl Renderer {
         }, atlas)
     }
 
+    /// Render a rect on the horizontal plane
     fn rect(v_buf: &mut [Vertex], tex: &UvRect,
+                    x: f32, y: f32, z: f32,
+                    w: f32, h: f32,
+                    col: [f32; 4]) {
+        debug_assert!(v_buf.len() >= 6, "Drawing rect but v_buf < 6 in len");
+        v_buf[0] = Vertex {pos: [x, z, y], col: col, uv: [tex.left, tex.top]};
+        v_buf[1] = Vertex {pos: [x+w, z, y], col: col, uv: [tex.right, tex.top]};
+        v_buf[2] = Vertex {pos: [x+w, z, y+h], col: col, uv: [tex.right, tex.bottom]};
+        v_buf[3] = Vertex {pos: [x, z, y], col: col, uv: [tex.left, tex.top]};
+        v_buf[4] = Vertex {pos: [x, z, y+h], col: col, uv: [tex.left, tex.bottom]};
+        v_buf[5] = Vertex {pos: [x+w, z, y+h], col: col, uv: [tex.right, tex.bottom]};
+    }
+
+    /// Render an 'upright' rect (i.e. across the z-plane)
+    fn rect_upright(v_buf: &mut [Vertex], tex: &UvRect,
             x: f32, y: f32, z: f32,
             w: f32, h: f32,
             col: [f32; 4]) {
         debug_assert!(v_buf.len() >= 6, "Drawing rect but v_buf < 6 in len");
-        v_buf[0] = Vertex {pos: [x, y, z], col: col, uv: [tex.left, tex.top]};
-        v_buf[1] = Vertex {pos: [x+w, y, z], col: col, uv: [tex.right, tex.top]};
-        v_buf[2] = Vertex {pos: [x+w, y+h, z], col: col, uv: [tex.right, tex.bottom]};
-        v_buf[3] = Vertex {pos: [x, y, z], col: col, uv: [tex.left, tex.top]};
-        v_buf[4] = Vertex {pos: [x, y+h, z], col: col, uv: [tex.left, tex.bottom]};
-        v_buf[5] = Vertex {pos: [x+w, y+h, z], col: col, uv: [tex.right, tex.bottom]};
+        v_buf[0] = Vertex {pos: [x, z-h, y], col: col, uv: [tex.left, tex.top]};
+        v_buf[1] = Vertex {pos: [x+w, z-h, y], col: col, uv: [tex.right, tex.top]};
+        v_buf[2] = Vertex {pos: [x+w, z, y], col: col, uv: [tex.right, tex.bottom]};
+        v_buf[3] = Vertex {pos: [x, z-h, y], col: col, uv: [tex.left, tex.top]};
+        v_buf[4] = Vertex {pos: [x, z, y], col: col, uv: [tex.left, tex.bottom]};
+        v_buf[5] = Vertex {pos: [x+w, z, y], col: col, uv: [tex.right, tex.bottom]};
     }
 
     /// Helper function for buffering a rect to a vec
@@ -186,12 +201,12 @@ impl Renderer {
         let p1 = math_util::rotate_point([x+w, y], &origin, rot);
         let p2 = math_util::rotate_point([x+w, y+h], &origin, rot);
         let p3 = math_util::rotate_point([x, y+h], &origin, rot);
-        v_buf[0] = Vertex {pos: [p0[0], p0[1], z], col: col, uv: [tex.left, tex.top]};
-        v_buf[1] = Vertex {pos: [p1[0], p1[1], z], col: col, uv: [tex.right, tex.top]};
-        v_buf[2] = Vertex {pos: [p2[0], p2[1], z], col: col, uv: [tex.right, tex.bottom]};
-        v_buf[3] = Vertex {pos: [p0[0], p0[1], z], col: col, uv: [tex.left, tex.top]};
-        v_buf[4] = Vertex {pos: [p3[0], p3[1], z], col: col, uv: [tex.left, tex.bottom]};
-        v_buf[5] = Vertex {pos: [p2[0], p2[1], z], col: col, uv: [tex.right, tex.bottom]};
+        v_buf[0] = Vertex {pos: [p0[0], z, p0[1]], col: col, uv: [tex.left, tex.top]};
+        v_buf[1] = Vertex {pos: [p1[0], z, p1[1]], col: col, uv: [tex.right, tex.top]};
+        v_buf[2] = Vertex {pos: [p2[0], z, p2[1]], col: col, uv: [tex.right, tex.bottom]};
+        v_buf[3] = Vertex {pos: [p0[0], z, p0[1]], col: col, uv: [tex.left, tex.top]};
+        v_buf[4] = Vertex {pos: [p3[0], z, p3[1]], col: col, uv: [tex.left, tex.bottom]};
+        v_buf[5] = Vertex {pos: [p2[0], z, p2[1]], col: col, uv: [tex.right, tex.bottom]};
     }
 
     pub fn update_window_size(&mut self, window: &GlWindow) {
@@ -227,6 +242,7 @@ impl Renderer {
         };
 
         self.transform.proj = camera.gen_ortho_mat();
+        self.transform.view = camera.gen_view_mat();
         self.encoder.update_buffer(&self.data.transform, &[self.transform], 0).unwrap();
         self.encoder.draw(&slice, &self.pso, &self.data);
         self.encoder.flush(device); // execute draw commands
