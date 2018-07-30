@@ -76,6 +76,8 @@ pub struct GameVertexBuffer(renderer::VertexBuffer);
 /// tilesets all the tiem, and means we don't have to implement perspective
 /// frustum culling
 pub struct TerrainVertexBuffer(renderer::VertexBuffer);
+/// If true, we should update the terrain vertex buffer.
+pub struct TerrainVertexBufferNeedsUpdate(bool);
 /// Vertex buffer for UI objects (camera transform isn't applied)
 pub struct UIVertexBuffer(renderer::VertexBuffer);
 
@@ -241,6 +243,7 @@ fn main() {
     world.add_resource(GameVertexBuffer(renderer::VertexBuffer {
         v_buf: v_buf.clone(), size: 0,
     }));
+    world.add_resource(TerrainVertexBufferNeedsUpdate(true));
 
     // Build dispatcher
     let mut dispatcher = specs::DispatcherBuilder::new()
@@ -285,7 +288,7 @@ fn main() {
               "on_death_drop", &["update"])
 
         // Paint
-        .with(renderer::TilemapPainter, "tilemap_paint", &["update"])
+        .with(renderer::TilemapPainter::new(), "tilemap_paint", &["update"])
         .with(renderer::SpritePainter, "sprite_paint", &["update"])
         .with(renderer::InventoryPainter, "ui_inventory_paint", &["update"])
         .build();
@@ -315,11 +318,16 @@ fn main() {
             let mut ui_v_buf = world.write_resource::<UIVertexBuffer>();
             let mut game_v_buf = world.write_resource::<GameVertexBuffer>();
             let mut terrain_v_buf = world.write_resource::<TerrainVertexBuffer>();
+            let mut terrain_v_buf_needs_update =
+                world.write_resource::<TerrainVertexBufferNeedsUpdate>();
             let camera = &world.read_resource::<camera::Camera>();
             // Update buffers
             renderer.update_buffer(&ui_v_buf.0, renderer::BufferType::UI);
             renderer.update_buffer(&game_v_buf.0, renderer::BufferType::Game);
-            renderer.update_buffer(&terrain_v_buf.0, renderer::BufferType::Terrain);
+            if terrain_v_buf_needs_update.0 {
+                renderer.update_buffer(&terrain_v_buf.0, renderer::BufferType::Terrain);
+                terrain_v_buf_needs_update.0 = false;
+            }
             // Clear & render
             renderer.clear();
             renderer.render_buffer(&camera, renderer::BufferType::Terrain);

@@ -251,6 +251,8 @@ impl Renderer {
         // Update the render target size
         gfx_window_glutin::update_views(window, &mut self.ui_pipe_data.out_col,
                                         &mut self.ui_pipe_data.out_depth);
+        gfx_window_glutin::update_views(window, &mut self.terrain_pipe_data.out_col,
+                                        &mut self.terrain_pipe_data.out_depth);
         gfx_window_glutin::update_views(window, &mut self.game_pipe_data.out_col,
                                         &mut self.game_pipe_data.out_depth);
     }

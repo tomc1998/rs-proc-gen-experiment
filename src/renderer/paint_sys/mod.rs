@@ -3,7 +3,7 @@ use renderer::Camera;
 use specs::*;
 use comp::*;
 use comp;
-use {GameVertexBuffer, TerrainVertexBuffer};
+use {GameVertexBuffer, TerrainVertexBuffer, TerrainVertexBufferNeedsUpdate};
 mod ui_inventory;
 
 pub use self::ui_inventory::{
@@ -135,17 +135,33 @@ impl<'a> System<'a> for SpritePainter {
 }
 
 /// Paints components with a Pos and Tilemap
-pub struct TilemapPainter;
+pub struct TilemapPainter {
+    /// If false will re-buffer tilemaps
+    buffered: bool
+}
+
+impl TilemapPainter {
+    pub fn new() -> TilemapPainter {
+        TilemapPainter {
+            buffered: false,
+        }
+    }
+}
+
 impl<'a> System<'a> for TilemapPainter {
     type SystemData = (
         WriteExpect<'a, TerrainVertexBuffer>,
+        WriteExpect<'a, TerrainVertexBufferNeedsUpdate>,
         ReadExpect<'a, Camera>,
         ReadExpect<'a, TextureAtlas<TextureKey>>,
         ReadStorage<'a, Pos>,
         ReadStorage<'a, Tilemap>);
 
-    fn run(&mut self, (mut vertex_buffer, camera, atlas, pos_s, tm_s): Self::SystemData) {
-        use specs::Join;
+    fn run(&mut self, (mut vertex_buffer, mut needs_update, camera, atlas, pos_s, tm_s): Self::SystemData) {
+        if self.buffered { return }
+        self.buffered = true;
+        needs_update.0 = true;
+
         let vertex_buffer = &mut vertex_buffer.0;
 
         let mut ix = vertex_buffer.size as usize;
