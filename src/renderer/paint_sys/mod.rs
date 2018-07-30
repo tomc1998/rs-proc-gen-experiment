@@ -3,7 +3,7 @@ use renderer::Camera;
 use specs::*;
 use comp::*;
 use comp;
-use GameVertexBuffer;
+use {GameVertexBuffer, TerrainVertexBuffer};
 mod ui_inventory;
 
 pub use self::ui_inventory::{
@@ -138,7 +138,7 @@ impl<'a> System<'a> for SpritePainter {
 pub struct TilemapPainter;
 impl<'a> System<'a> for TilemapPainter {
     type SystemData = (
-        WriteExpect<'a, GameVertexBuffer>,
+        WriteExpect<'a, TerrainVertexBuffer>,
         ReadExpect<'a, Camera>,
         ReadExpect<'a, TextureAtlas<TextureKey>>,
         ReadStorage<'a, Pos>,

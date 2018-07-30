@@ -72,6 +72,10 @@ pub struct DeltaTime(pub f32);
 
 /// Vertex buffer for game objects
 pub struct GameVertexBuffer(renderer::VertexBuffer);
+/// Vertex buffer for terrain (tilesets). This is so we don't have to re-buffer
+/// tilesets all the tiem, and means we don't have to implement perspective
+/// frustum culling
+pub struct TerrainVertexBuffer(renderer::VertexBuffer);
 /// Vertex buffer for UI objects (camera transform isn't applied)
 pub struct UIVertexBuffer(renderer::VertexBuffer);
 
@@ -231,6 +235,9 @@ fn main() {
     world.add_resource(UIVertexBuffer(renderer::VertexBuffer {
         v_buf: v_buf.clone(), size: 0,
     }));
+    world.add_resource(TerrainVertexBuffer(renderer::VertexBuffer {
+        v_buf: v_buf.clone(), size: 0,
+    }));
     world.add_resource(GameVertexBuffer(renderer::VertexBuffer {
         v_buf: v_buf.clone(), size: 0,
     }));
@@ -307,16 +314,29 @@ fn main() {
             dispatcher.dispatch_seq(&mut world.res);
             let mut ui_v_buf = world.write_resource::<UIVertexBuffer>();
             let mut game_v_buf = world.write_resource::<GameVertexBuffer>();
+            let mut terrain_v_buf = world.write_resource::<TerrainVertexBuffer>();
+            let camera = &world.read_resource::<camera::Camera>();
+            // Update buffers
+            renderer.update_buffer(&ui_v_buf.0, renderer::BufferType::UI);
+            renderer.update_buffer(&game_v_buf.0, renderer::BufferType::Game);
+            renderer.update_buffer(&terrain_v_buf.0, renderer::BufferType::Terrain);
+            // Clear & render
             renderer.clear();
-            renderer.flush_render(&mut device, &game_v_buf.0, &ui_v_buf.0,
-                                  &world.read_resource::<camera::Camera>());
+            renderer.render_buffer(&camera, renderer::BufferType::Terrain);
+            renderer.render_buffer(&camera, renderer::BufferType::Game);
+            renderer.clear_depth();
+            renderer.render_buffer(&camera, renderer::BufferType::UI);
+            renderer.flush(&mut device);
+
             window.swap_buffers().unwrap();
+
             device.cleanup();
 
             // Reset ECS state after rendering
             // After painting, we need to clear the v_buf
             ui_v_buf.0.size = 0;
             game_v_buf.0.size = 0;
+            terrain_v_buf.0.size = 0;
             // Clear collision list for next frame
             let mut collisions = world.write_resource::<Collisions>();
             collisions.0.clear();

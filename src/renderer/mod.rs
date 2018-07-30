@@ -20,12 +20,16 @@ use gfx::memory::{Usage, Bind};
 use gfx_device_gl::{Resources, CommandBuffer, Device};
 use asset_loader;
 
-
 pub const V_BUF_SIZE: usize = 262144;
 const BLACK: [f32; 4] = [0.0, 0.0, 0.0, 1.0];
 
 pub type ColorFormat = gfx::format::Srgba8;
 pub type DepthFormat = gfx::format::DepthStencil;
+
+/// Vertex buffers that exist on the GPU
+pub enum BufferType {
+    Game, UI, Terrain
+}
 
 /// Mask preset for alpha blending
 fn mask() -> gfx::state::ColorMask {
@@ -92,11 +96,18 @@ pub struct Renderer {
     /// Gfx encoder for drawing & updating buffers
     encoder: gfx::Encoder<Resources, CommandBuffer>,
 
+    game_buf_slice: gfx::Slice<Resources>,
+    ui_buf_slice: gfx::Slice<Resources>,
+    terrain_buf_slice: gfx::Slice<Resources>,
+
     /// Pipeline data for main render
     game_pipe_data: pipe::Data<Resources>,
 
     /// Pipeline data for UI render
     ui_pipe_data: pipe::Data<Resources>,
+
+    /// Pipeline data for terrain render
+    terrain_pipe_data: pipe::Data<Resources>,
 
     pso: gfx::pso::PipelineState<Resources, pipe::Meta>,
 }
@@ -121,16 +132,27 @@ impl Renderer {
         // Allocate buffers
         let ui_transform_buffer = factory.create_constant_buffer(1);
         let game_transform_buffer = factory.create_constant_buffer(1);
+        let terrain_transform_buffer = factory.create_constant_buffer(1);
 
         let ui_vertex_buffer = factory.create_buffer::<Vertex>(
             V_BUF_SIZE, Role::Vertex, Usage::Dynamic, Bind::SHADER_RESOURCE).unwrap();
         let game_vertex_buffer = factory.create_buffer::<Vertex>(
+            V_BUF_SIZE, Role::Vertex, Usage::Dynamic, Bind::SHADER_RESOURCE).unwrap();
+        let terrain_vertex_buffer = factory.create_buffer::<Vertex>(
             V_BUF_SIZE, Role::Vertex, Usage::Dynamic, Bind::SHADER_RESOURCE).unwrap();
 
         // Create the pipeline data
         let game_pipe_data = pipe::Data {
             v_buf: game_vertex_buffer,
             transform: game_transform_buffer,
+            tex: (tex_view.clone(), sampler.clone()),
+            out_col: color_view.clone(),
+            out_depth: depth_view.clone(),
+        };
+
+        let terrain_pipe_data = pipe::Data {
+            v_buf: terrain_vertex_buffer,
+            transform: terrain_transform_buffer,
             tex: (tex_view.clone(), sampler.clone()),
             out_col: color_view.clone(),
             out_depth: depth_view.clone(),
@@ -151,7 +173,25 @@ impl Renderer {
             pipe::new()
         ).unwrap();
 
-        (Renderer { settings, encoder, game_pipe_data, ui_pipe_data, pso }, atlas)
+        let empty_slice = Slice {
+            start: 0,
+            end: 0,
+            base_vertex: 0,
+            instances: None,
+            buffer: IndexBuffer::Auto,
+        };
+
+        (Renderer {
+            settings: settings,
+            encoder: encoder,
+            game_buf_slice: empty_slice.clone(),
+            ui_buf_slice: empty_slice.clone(),
+            terrain_buf_slice: empty_slice,
+            game_pipe_data: game_pipe_data,
+            ui_pipe_data: ui_pipe_data,
+            terrain_pipe_data: terrain_pipe_data,
+            pso: pso,
+        }, atlas)
     }
 
     /// Render a rect on the horizontal plane
@@ -215,68 +255,85 @@ impl Renderer {
                                         &mut self.game_pipe_data.out_depth);
     }
 
-    /// Clear the screen.
+    /// Clear the screen (AND depth).
     pub fn clear(&mut self) {
         self.encoder.clear(&self.ui_pipe_data.out_col, BLACK);
         self.encoder.clear(&self.game_pipe_data.out_col, BLACK);
+        self.encoder.clear(&self.terrain_pipe_data.out_col, BLACK);
         self.encoder.clear_depth(&self.ui_pipe_data.out_depth, 1.0);
         self.encoder.clear_depth(&self.game_pipe_data.out_depth, 1.0);
+        self.encoder.clear_depth(&self.terrain_pipe_data.out_depth, 1.0);
     }
 
-    /// Actually issue the draw commands to the GPU. This should be called after
-    /// the ECS has run. Device can't be sent over threads, so this is the
-    /// simplest way to call draw.
-    pub fn flush_render(&mut self, device: &mut Device,
-                        game_vertex_buffer: &VertexBuffer,
-                        ui_vertex_buffer: &VertexBuffer,
-                        camera: &Camera) {
-        // // Update the GPU side vertices
-        // // TODO: if we haven't updated v_buf cpu side we can potentially skip
-        // // this as an optimisation
-        self.encoder.update_buffer(&self.game_pipe_data.v_buf,
-                                   &game_vertex_buffer.v_buf[0..game_vertex_buffer.size as usize],
-                                   0).unwrap();
-        self.encoder.update_buffer(&self.ui_pipe_data.v_buf,
-                                   &ui_vertex_buffer.v_buf[0..ui_vertex_buffer.size as usize],
-                                   0).unwrap();
-
-        let slice = Slice {
-            start: 0,
-            end: game_vertex_buffer.size,
-            base_vertex: 0,
-            instances: None,
-            buffer: IndexBuffer::Auto,
-        };
-        // Create transform buffer
-        let transform = Transform {
-            proj: camera.gen_persp_proj_mat(),
-            view: camera.gen_view_mat(),
-        };
-        self.encoder.update_buffer(&self.game_pipe_data.transform, &[transform], 0).unwrap();
-        self.encoder.draw(&slice, &self.pso, &self.game_pipe_data);
-
-        // Clear UI depth
+    /// Clear only the depth buffers
+    pub fn clear_depth(&mut self) {
         self.encoder.clear_depth(&self.ui_pipe_data.out_depth, 1.0);
+        self.encoder.clear_depth(&self.game_pipe_data.out_depth, 1.0);
+        self.encoder.clear_depth(&self.terrain_pipe_data.out_depth, 1.0);
+    }
 
-        // render UI
-        let slice = Slice {
+    /// Update the GPU buffer with CPU data
+    /// # Params
+    /// * vertex_buffer - The CPU-side vertex buffer
+    /// * buffer_type - The buffer to update
+    pub fn update_buffer(&mut self, vertex_buffer: &VertexBuffer, buffer_type: BufferType) {
+        let buffer = match buffer_type {
+            BufferType::Game => &self.game_pipe_data.v_buf,
+            BufferType::UI => &self.ui_pipe_data.v_buf,
+            BufferType::Terrain => &self.terrain_pipe_data.v_buf,
+        };
+        let slice = match buffer_type {
+            BufferType::Game => &mut self.game_buf_slice,
+            BufferType::UI => &mut self.ui_buf_slice,
+            BufferType::Terrain => &mut self.terrain_buf_slice,
+        };
+        self.encoder.update_buffer(
+            buffer, &vertex_buffer.v_buf[0..vertex_buffer.size as usize], 0).unwrap();
+        *slice = Slice {
             start: 0,
-            end: ui_vertex_buffer.size,
+            end: vertex_buffer.size,
             base_vertex: 0,
             instances: None,
             buffer: IndexBuffer::Auto,
         };
-        // Update the view (no camera transform)
-        let transform = Transform {
-            proj: camera.gen_ortho_proj_mat(),
-            view: Camera::gen_ui_view_mat(),
+    }
+
+    /// Render a vertex buffer.
+    /// # Params
+    /// * buffer_type - The buffer to render
+    pub fn render_buffer(&mut self, camera: &Camera, buffer_type: BufferType) {
+        // Create transform buffer
+        let transform = match buffer_type {
+            BufferType::Game | BufferType::Terrain => Transform {
+                proj: camera.gen_persp_proj_mat(),
+                view: camera.gen_view_mat(),
+            },
+            BufferType::UI => Transform {
+                proj: camera.gen_ortho_proj_mat(),
+                view: Camera::gen_ui_view_mat(),
+            },
+        };
+        let transform_buffer = match buffer_type {
+            BufferType::Game => &self.game_pipe_data.transform,
+            BufferType::UI => &self.ui_pipe_data.transform,
+            BufferType::Terrain => &self.terrain_pipe_data.transform,
+        };
+        // Update the transform buffer
+        self.encoder.update_buffer(transform_buffer, &[transform], 0).unwrap();
+
+        // Draw the buffer
+        let (pipe_data, slice) = match buffer_type {
+            BufferType::Game => (&self.game_pipe_data, &self.game_buf_slice),
+            BufferType::UI => (&self.ui_pipe_data, &self.ui_buf_slice),
+            BufferType::Terrain => (&self.terrain_pipe_data, &self.terrain_buf_slice),
         };
 
-        self.encoder.update_buffer(&self.ui_pipe_data.transform, &[transform], 0).unwrap();
-        // No need to use the same depth buffer, UI will always be rendered over
-        // the main world
-        self.encoder.draw(&slice, &self.pso, &self.ui_pipe_data);
+        self.encoder.draw(slice, &self.pso, pipe_data);
 
+    }
+
+    /// Actually execute commands
+    pub fn flush(&mut self, device: &mut Device) {
         self.encoder.flush(device); // execute draw commands
     }
 }
