@@ -152,12 +152,11 @@ impl<'a> System<'a> for TilemapPainter {
     type SystemData = (
         WriteExpect<'a, TerrainVertexBuffer>,
         WriteExpect<'a, TerrainVertexBufferNeedsUpdate>,
-        ReadExpect<'a, Camera>,
         ReadExpect<'a, TextureAtlas<TextureKey>>,
         ReadStorage<'a, Pos>,
         ReadStorage<'a, Tilemap>);
 
-    fn run(&mut self, (mut vertex_buffer, mut needs_update, camera, atlas, pos_s, tm_s): Self::SystemData) {
+    fn run(&mut self, (mut vertex_buffer, mut needs_update, atlas, pos_s, tm_s): Self::SystemData) {
         if self.buffered { return }
         self.buffered = true;
         needs_update.0 = true;
@@ -169,17 +168,8 @@ impl<'a> System<'a> for TilemapPainter {
             let tileset = atlas.rect_for_tileset(tm.tileset.convert_to_tex_key()).unwrap();
             for x in 0..TILEMAP_SIZE {
                 for y in 0..TILEMAP_SIZE {
-                    // Camera frustum cull.
-                    // TODO: This is slower than it could be, even though branch
-                    // prediction for something like this should be pretty fast
-                    // - we should just loop over the tiles that we need to
-                    // draw.
                     let x_pos = pos.pos.x * 32.0 * TILEMAP_SIZE as f32 + x as f32 * 32.0;
                     let y_pos = pos.pos.y * 32.0 * TILEMAP_SIZE as f32 + y as f32 * 32.0;
-                    if x_pos + 32.0 < camera.pos.x - camera.w/2.0 || x_pos > camera.pos.x + camera.w/2.0 ||
-                        y_pos + 32.0 < camera.pos.y - camera.h || y_pos > camera.pos.y + camera.h {
-                            continue;
-                        }
                     // Figure out the tile ix
                     let (tx, ty) = match tm.tileset {
                         TilesetEnum::Grass => match tm.data[x + y * TILEMAP_SIZE] {
