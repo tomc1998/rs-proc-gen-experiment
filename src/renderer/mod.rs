@@ -21,7 +21,7 @@ use gfx_device_gl::{Resources, CommandBuffer, Device};
 use asset_loader;
 
 pub const V_BUF_SIZE: usize = 262144;
-const BLACK: [f32; 4] = [0.0, 0.0, 0.0, 1.0];
+const CLEAR: [f32; 4] = [0.5, 0.5, 0.5, 1.0];
 
 pub type ColorFormat = gfx::format::Srgba8;
 pub type DepthFormat = gfx::format::DepthStencil;
@@ -54,13 +54,20 @@ gfx_defines!{
     }
 
     constant Transform {
-        proj: [[f32; 4];4] = "u_proj",
-        view: [[f32; 4];4] = "u_view",
+        proj: [[f32; 4];4] = "proj",
+        view: [[f32; 4];4] = "view",
+    }
+
+    constant Fog {
+        fog_center: [f32; 4] = "fog_center",
+        fog_color: [f32; 4] = "fog_color",
+        fog_density: f32 = "fog_density",
     }
 
     pipeline pipe {
         v_buf: gfx::VertexBuffer<Vertex> = (),
         transform: gfx::ConstantBuffer<Transform> = "Transform",
+        fog: gfx::ConstantBuffer<Fog> = "Fog",
         tex: gfx::TextureSampler<[f32; 4]> = "tex",
         out_col: gfx::BlendTarget<ColorFormat> = ("col", super::mask(), super::blend()),
         out_depth: gfx::DepthTarget<DepthFormat> = gfx::preset::depth::LESS_EQUAL_WRITE,
@@ -133,6 +140,9 @@ impl Renderer {
         let ui_transform_buffer = factory.create_constant_buffer(1);
         let game_transform_buffer = factory.create_constant_buffer(1);
         let terrain_transform_buffer = factory.create_constant_buffer(1);
+        let ui_fog_buffer = factory.create_constant_buffer(1);
+        let game_fog_buffer = factory.create_constant_buffer(1);
+        let terrain_fog_buffer = factory.create_constant_buffer(1);
 
         let ui_vertex_buffer = factory.create_buffer::<Vertex>(
             V_BUF_SIZE, Role::Vertex, Usage::Dynamic, Bind::SHADER_RESOURCE).unwrap();
@@ -145,6 +155,7 @@ impl Renderer {
         let game_pipe_data = pipe::Data {
             v_buf: game_vertex_buffer,
             transform: game_transform_buffer,
+            fog: game_fog_buffer,
             tex: (tex_view.clone(), sampler.clone()),
             out_col: color_view.clone(),
             out_depth: depth_view.clone(),
@@ -153,6 +164,7 @@ impl Renderer {
         let terrain_pipe_data = pipe::Data {
             v_buf: terrain_vertex_buffer,
             transform: terrain_transform_buffer,
+            fog: terrain_fog_buffer,
             tex: (tex_view.clone(), sampler.clone()),
             out_col: color_view.clone(),
             out_depth: depth_view.clone(),
@@ -161,6 +173,7 @@ impl Renderer {
         let ui_pipe_data = pipe::Data {
             v_buf: ui_vertex_buffer,
             transform: ui_transform_buffer,
+            fog: ui_fog_buffer,
             tex: (tex_view, sampler),
             out_col: color_view.clone(),
             out_depth: depth_view.clone(),
@@ -259,9 +272,9 @@ impl Renderer {
 
     /// Clear the screen (AND depth).
     pub fn clear(&mut self) {
-        self.encoder.clear(&self.ui_pipe_data.out_col, BLACK);
-        self.encoder.clear(&self.game_pipe_data.out_col, BLACK);
-        self.encoder.clear(&self.terrain_pipe_data.out_col, BLACK);
+        self.encoder.clear(&self.ui_pipe_data.out_col, CLEAR);
+        self.encoder.clear(&self.game_pipe_data.out_col, CLEAR);
+        self.encoder.clear(&self.terrain_pipe_data.out_col, CLEAR);
         self.encoder.clear_depth(&self.ui_pipe_data.out_depth, 1.0);
         self.encoder.clear_depth(&self.game_pipe_data.out_depth, 1.0);
         self.encoder.clear_depth(&self.terrain_pipe_data.out_depth, 1.0);
@@ -303,7 +316,7 @@ impl Renderer {
     /// Render a vertex buffer.
     /// # Params
     /// * buffer_type - The buffer to render
-    pub fn render_buffer(&mut self, camera: &Camera, buffer_type: BufferType) {
+    pub fn render_buffer(&mut self, camera: &Camera, player_pos: [f32; 3], buffer_type: BufferType) {
         // Create transform buffer
         let transform = match buffer_type {
             BufferType::Game | BufferType::Terrain => Transform {
@@ -315,13 +328,31 @@ impl Renderer {
                 view: Camera::gen_ui_view_mat(),
             },
         };
+        let fog = match buffer_type {
+            BufferType::Game | BufferType::Terrain => Fog {
+                fog_center: [player_pos[0], player_pos[1], player_pos[2], 0.0],
+                fog_color: [0.5, 0.5, 0.5, 1.0],
+                fog_density: 0.0005,
+            },
+            BufferType::UI => Fog {
+                fog_center: [0.0, 0.0, 0.0, 0.0],
+                fog_color: [0.5, 0.5, 0.5, 1.0],
+                fog_density: 0.0,
+            },
+        };
+        let fog_buffer = match buffer_type {
+            BufferType::Game => &self.game_pipe_data.fog,
+            BufferType::UI => &self.ui_pipe_data.fog,
+            BufferType::Terrain => &self.terrain_pipe_data.fog,
+        };
         let transform_buffer = match buffer_type {
             BufferType::Game => &self.game_pipe_data.transform,
             BufferType::UI => &self.ui_pipe_data.transform,
             BufferType::Terrain => &self.terrain_pipe_data.transform,
         };
-        // Update the transform buffer
+        // Update the transform & fog buffer
         self.encoder.update_buffer(transform_buffer, &[transform], 0).unwrap();
+        self.encoder.update_buffer(fog_buffer, &[fog], 0).unwrap();
 
         // Draw the buffer
         let (pipe_data, slice) = match buffer_type {

@@ -149,7 +149,7 @@ fn main() {
     let mut world = create_world();
     use specs::Builder;
     // Player
-    world.create_entity()
+    let player = world.create_entity()
         .with(Pos { pos: Vec32::new(32.0, 32.0), z: 0.0 })
         .with(Vel { vel: Vec32::zero() })
         .with(Alliance::good())
@@ -315,6 +315,9 @@ fn main() {
         // Update & paint the world
         {
             dispatcher.dispatch_seq(&mut world.res);
+            // Get the player position
+            let player_pos = world.read_storage::<Pos>().get(player).unwrap().clone();
+            let player_pos = [player_pos.pos.x, player_pos.z, player_pos.pos.y];
             let mut ui_v_buf = world.write_resource::<UIVertexBuffer>();
             let mut game_v_buf = world.write_resource::<GameVertexBuffer>();
             let mut terrain_v_buf = world.write_resource::<TerrainVertexBuffer>();
@@ -330,10 +333,10 @@ fn main() {
             }
             // Clear & render
             renderer.clear();
-            renderer.render_buffer(&camera, renderer::BufferType::Terrain);
-            renderer.render_buffer(&camera, renderer::BufferType::Game);
+            renderer.render_buffer(&camera, player_pos, renderer::BufferType::Terrain);
+            renderer.render_buffer(&camera, player_pos, renderer::BufferType::Game);
             renderer.clear_depth();
-            renderer.render_buffer(&camera, renderer::BufferType::UI);
+            renderer.render_buffer(&camera, [0.0, 0.0, 0.0], renderer::BufferType::UI);
             renderer.flush(&mut device);
 
             window.swap_buffers().unwrap();

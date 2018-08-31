@@ -1,5 +1,4 @@
 use super::*;
-use renderer::Camera;
 use specs::*;
 use comp::*;
 use comp;

@@ -21,7 +21,7 @@ pub struct Camera {
 impl Camera {
     pub fn new(w: f32, h: f32) -> Camera {
         Camera { pos: Vec32::zero(), w: w, h: h,
-                 height: 300.0,
+                 height: 400.0,
                  rot: -PI / 2.0,
                  dis: 400.0,
         }
@@ -33,7 +33,7 @@ impl Camera {
                       -10000.0, 10000.0).into()
     }
     pub fn gen_persp_proj_mat(&self) -> [[f32; 4]; 4] {
-        (cgmath::perspective(cgmath::Deg(45.0), self.w / self.h, 0.1, 10000.0)
+        (cgmath::perspective(cgmath::Deg(60.0), self.w / self.h, 0.1, 10000.0)
             * cgmath::Matrix4::from_nonuniform_scale(-1.0, 1.0, 1.0)).into()
     }
 
